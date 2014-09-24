@@ -67,7 +67,7 @@ class MarketItemPricePoint(BModel):
     lowest = FloatField()
     median = FloatField()
 
-    time = DateTimeField(default=datetime.datetime.utcnow())
+    time = DateTimeField(default=datetime.datetime.utcnow)
 
     def toDict(self):
         return {

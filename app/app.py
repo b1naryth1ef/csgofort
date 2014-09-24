@@ -13,6 +13,7 @@ def register_views():
     from views.public import public
     from marketdex.marketdex import marketdex
     from vacdex.vacdex import vacdex
+
     csgofort.register_blueprint(public)
     csgofort.register_blueprint(marketdex)
     csgofort.register_blueprint(vacdex)

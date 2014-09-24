@@ -61,7 +61,10 @@ def marketdex_route_items():
 @marketdex.route("/item/<id>")
 def marketdex_route_item(id):
     try:
-        mi = MarketItem.get(MarketItem.id == id)
+        mi = MarketItem.get(
+            (MarketItem.id == id) |
+            (MarketItem.name == id)
+        )
     except MarketItem.DoesNotExist:
         return jsonify({
             "success": False,
@@ -157,4 +160,99 @@ def marketdex_route_aggregate():
         "results": results_enc,
         "size": len(results_enc),
         "success": True
+    })
+
+def identify_trend(q, trend=.7):
+    up, down, none = 0, 0, 0
+
+    last = None
+    for mipp in q:
+        if not last:
+            last = mipp
+            continue
+
+        if last.median == mipp.median:
+            none += 1
+
+        if last.median < mipp.median:
+            up += 1
+
+        if last.median > mipp.median:
+            down += 1
+
+        last = mipp
+
+    trend_c = int(len(q) * trend)
+
+    print trend_c, up, down, none
+
+    if up >= trend_c:
+        return "UP"
+
+    if down >= trend_c:
+        return "DOWN"
+
+    return "NONE"
+
+
+@marketdex.route("/history/<id>")
+def marketdex_route_history(id):
+    try:
+        mi = MarketItem.get(MarketItem.id == id)
+    except MarketItem.DoesNotExist:
+        return jsonify({
+            "success": False,
+            "error": "Invalid Item ID!"
+        })
+
+    q = MarketItemPricePoint.select().where(
+        MarketItemPricePoint.item == mi).order_by(
+            MarketItemPricePoint.time.desc())
+    q = list(q)
+
+    return jsonify({
+        "prices": map(lambda i: i.toDict(), q),
+        "trend": identify_trend(q),
+        "success": True,
+    })
+
+# TODO: cache this one!
+@marketdex.route("/pricechanges")
+def marktedex_route_pricechanges():
+    # Last 30 minutes
+    default_time_window = datetime.datetime.utcnow() + datetime.timedelta(seconds=60 * 30)
+
+    drops = []
+
+    for mi in MarketItem.select():
+        q = MarketItemPricePoint.select().where(
+            (MarketItemPricePoint.item == mi) &
+            (MarketItemPricePoint.time >= default_time_window)
+        ).order_by(MarketItemPricePoint.time.desc())
+        
+        if q.count() != 2:
+            continue
+
+        q = list(q)
+
+        window = q[-1].median * .30
+
+        diff = q[0].median - q[-1].median
+        if abs(diff) >= window:
+            if diff > 0:
+                drops.append({
+                    "id": mi.id,
+                    "type": "rise",
+                    "change": diff
+                })
+            else:
+                drops.append({
+                    "id": mi.id,
+                    "type": "drop",
+                    "change": diff
+                })
+
+    return jsonify({
+        "success": True,
+        "drops": drops
     })
