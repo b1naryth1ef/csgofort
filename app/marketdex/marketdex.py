@@ -61,10 +61,10 @@ def marketdex_route_items():
 @marketdex.route("/item/<id>")
 def marketdex_route_item(id):
     try:
-        mi = MarketItem.get(
-            (MarketItem.id == id) |
-            (MarketItem.name == id)
-        )
+        if id.isdigit():
+            mi = MarketItem.get(MarketItem.id == id)
+        else:
+            mi = MarketItem.get(Marketitem.name == id)
     except MarketItem.DoesNotExist:
         return jsonify({
             "success": False,
