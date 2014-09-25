@@ -1,5 +1,5 @@
 function run() {
-    $.ajax("/value", {
+    $.ajax("/value/total", {
         success: function(data) {
             if (data.success) {
                 draw_dashboard_graphs(data.data)
@@ -12,7 +12,7 @@ function run() {
 
 function draw_dashboard_graphs(data) {
     key = ["x"].concat(_.keys(data))
-    val = ["Value"].concat(_.values(data))
+    val = ["value"].concat(_.values(data))
 
     c3.generate({
         bindto: '#market_value',
@@ -23,7 +23,7 @@ function draw_dashboard_graphs(data) {
                 val
             ],
             types: {
-                '2014': 'line'
+                'value': 'line'
             }
         },
         axis: {
@@ -32,7 +32,7 @@ function draw_dashboard_graphs(data) {
                 tick: {
                     culling: false,
                     fit: true,
-                    format: "%Y-%m-%d"
+                    format: "%A %B %d"
                 }
             },
             y : {
@@ -67,7 +67,7 @@ function draw_dashboard_graphs(data) {
         }
     });
 
-        // $(window).on("debouncedresize", function() {
-        //     c3_7_days_chart.resize();
-        // });
+        $(window).on("debouncedresize", function() {
+            c3_7_days_chart.resize();
+        });
 }
