@@ -244,7 +244,7 @@ def market_route_value_total():
         })
 
     data = {}
-    for dt in rrule(DAILY, count=7, dtstart=datetime.datetime.utcnow() - datetime.timedelta(days=7)):
+    for dt in rrule(DAILY, count=7, dtstart=datetime.datetime.utcnow() - datetime.timedelta(days=6)):
         start = dt - datetime.timedelta(days=1)
         data[dt.strftime("%Y-%d-%m")] = get_market_value_total(start, dt)
 
