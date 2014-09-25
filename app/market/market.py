@@ -18,7 +18,7 @@ def market_route_info():
         "latest": list(MarketItem.select(MarketItem.id).order_by(MarketItem.discovered.desc()).limit(1))[0].id,
         "value": {
             "total": get_market_value_total(),
-            "average": get_market_value_avg()
+            # "average": get_market_value_avg()
         }
     })
 
