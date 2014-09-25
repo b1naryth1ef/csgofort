@@ -242,8 +242,8 @@ def market_route_value():
     data = {}
     for dt in rrule(DAILY, count=7, dtstart=datetime.datetime.utcnow() - datetime.timedelta(days=7)):
         start = dt - datetime.timedelta(days=1)
-        q = list(MarketItemPricePoint.select(fn.Avg(MarketItemPricePoint.median
-            )).group_by(MarketItemPricePoint.item).where(
+        q = map(lambda i: i.avg, MarketItemPricePoint.select(fn.Avg(MarketItemPricePoint.median).alias("avg")
+            ).group_by(MarketItemPricePoint.item).where(
                 (MarketItemPricePoint.time >= start) &
                 (MarketItemPricePoint.time <= dt)
             ))
