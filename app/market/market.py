@@ -1,51 +1,24 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, render_template
 from marketdb import *
 from collections import Counter
 
-marketdex = Blueprint("marketdex", __name__, subdomain="market")
+from dateutil.rrule import *
 
-@marketdex.route("/")
-def marketdex_route_index():
-    return jsonify({
-        "routes": [
-            {
-                "name": "info",
-                "route": "/info",
-                "fmt": []
-            },
-            {
-                "name": "items",
-                "route": "/items",
-                "fmt": []
-            },
-            {
-                "name": "item",
-                "route": "/item/<id>",
-                "fmt": ["id"]
-            },
-            {
-                "name": "price",
-                "route": "/price/<id>",
-                "fmt": ["id"]
-            },
-            {
-                "name": "removed",
-                "route": "/removed",
-                "fmt": []
-            }
-        ]
-    })
-    return ":D"
+market = Blueprint("market", __name__, subdomain="market")
 
-@marketdex.route("/info")
-def marketdex_route_info():
+@market.route("/")
+def market_route_index():
+    return render_template("market/index.html")
+
+@market.route("/info")
+def market_route_info():
     return jsonify({
         "total_items": MarketItem.select().count(),
-        "latest": list(MarketItem.select(MarketItem.id).order_by(MarketItem.discovered.desc()).limit(1))[0].id
+        "latest": list(MarketItem.select(MarketItem.id).order_by(MarketItem.discovered.desc()).limit(1))[0].id,
     })
 
-@marketdex.route("/items")
-def marketdex_route_items():
+@market.route("/items")
+def market_route_items():
     page = int(request.values.get("page", 1))
     per_page = int(request.values.get("per_page", 10))
     per_page = per_page if per_page <= 100 else 100
@@ -58,8 +31,8 @@ def marketdex_route_items():
         "success": True
     })
 
-@marketdex.route("/item/<id>")
-def marketdex_route_item(id):
+@market.route("/item/<id>")
+def market_route_item(id):
     try:
         if id.isdigit():
             mi = MarketItem.get(MarketItem.id == id)
@@ -76,8 +49,8 @@ def marketdex_route_item(id):
         "item": mi.toDict()
     })
 
-@marketdex.route("/price/<id>")
-def marketdex_route_price(id):
+@market.route("/price/<id>")
+def market_route_price(id):
     try:
         mi = MarketItem.get(MarketItem.id == id)
     except MarketItem.DoesNotExist:
@@ -91,8 +64,8 @@ def marketdex_route_price(id):
         "price": mi.get_latest_mipp().toDict()
     })
 
-@marketdex.route("/removed")
-def marketdex_route_removed():
+@market.route("/removed")
+def market_route_removed():
     page = int(request.values.get("page", 1))
     per_page = int(request.values.get("per_page", 10))
     per_page = per_page if per_page <= 100 else 100
@@ -108,8 +81,8 @@ def marketdex_route_removed():
         "success": True
     })
 
-@marketdex.route("/aggregate")
-def marketdex_route_aggregate():
+@market.route("/aggregate")
+def market_route_aggregate():
     wear = request.values.get("wear")
     skin = request.values.get("skin")
     item = request.values.get("item")
@@ -195,8 +168,8 @@ def identify_trend(q, trend=.7):
     return "NONE"
 
 
-@marketdex.route("/history/<id>")
-def marketdex_route_history(id):
+@market.route("/history/<id>")
+def market_route_history(id):
     try:
         mi = MarketItem.get(MarketItem.id == id)
     except MarketItem.DoesNotExist:
@@ -217,8 +190,8 @@ def marketdex_route_history(id):
     })
 
 # TODO: cache this one!
-@marketdex.route("/pricechanges")
-def marktedex_route_pricechanges():
+@market.route("/pricechanges")
+def market_route_pricechanges():
     # Last 30 minutes
     default_time_window = datetime.datetime.utcnow() + datetime.timedelta(seconds=60 * 30)
 
@@ -255,4 +228,33 @@ def marktedex_route_pricechanges():
     return jsonify({
         "success": True,
         "drops": drops
+    })
+
+@market.route("/value")
+def market_route_value():
+    res = request.values.get("res", "week")
+    if res not in ("week", "month", "year"):
+        return jsonify({
+            "error": "Invalid Data Resolution!",
+            "success": False
+        })
+
+    data = {}
+    for dt in rrule(DAILY, count=7, dtstart=datetime.datetime.utcnow() - datetime.timedelta(days=7)):
+        start = dt - datetime.timedelta(days=1)
+        q = list(MarketItemPricePoint.select(fn.Avg(MarketItemPricePoint.median
+            )).group_by(MarketItemPricePoint.item).where(
+                (MarketItemPricePoint.time >= start) &
+                (MarketItemPricePoint.time <= dt)
+            ))
+
+        dts = dt.strftime("%Y-%d-%m")
+        if len(q):
+            data[dts] = sum(q) / len(q)
+        else:
+            data[dts] = 0
+
+    return jsonify({
+        "data": data,
+        "success": True
     })

@@ -1,7 +1,7 @@
 import datetime
 from peewee import *
 from playhouse.postgres_ext import *
-from market import SteamMarketAPI
+from util.steam import SteamMarketAPI
 
 market_api = SteamMarketAPI(730)
 db = PostgresqlExtDatabase('fort', user="b1n", password="b1n", threadlocals=True, port=5433)

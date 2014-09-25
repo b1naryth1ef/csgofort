@@ -1,7 +1,12 @@
 import socket
+
 from flask import Flask
+from flask.ext.openid import OpenID
 
 csgofort = Flask("csgofort")
+csgofort.secret_key = "1337"
+
+openid = OpenID(csgofort)
 
 # Setup domain based on host
 if socket.gethostname() == "kato":
@@ -11,10 +16,12 @@ else:
 
 def register_views():
     from views.public import public
-    from marketdex.marketdex import marketdex
+    from views.auth import auth
+    from market.market import market
     from vacdex.vacdex import vacdex
 
     csgofort.register_blueprint(public)
-    csgofort.register_blueprint(marketdex)
+    csgofort.register_blueprint(auth)
+    csgofort.register_blueprint(market)
     csgofort.register_blueprint(vacdex)
 

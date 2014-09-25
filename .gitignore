@@ -1,3 +1,4 @@
 *.pyc
 *.db
 rip/
+config.py

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>CSGO Fort</title>
+
+        <meta name="viewport" content="initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+        <link rel="shortcut icon" type="image/x-icon" href="favicon.ico">
+        <link href="http://{{ DOMAIN }}/static/bootstrap/css/bootstrap.min.css" rel="stylesheet" media="screen">
+        
+        <link href="http://{{ DOMAIN }}/static/icons/elegant/style.css" rel="stylesheet" media="screen">
+        <link href="http://{{ DOMAIN }}/static/icons/elusive/css/elusive-webfont.css" rel="stylesheet" media="screen">
+        <link rel="stylesheet" href="http://{{ DOMAIN }}/static/icons/flags/flags.css">
+        <link href='http://fonts.googleapis.com/css?family=Open+Sans&amp;subset=latin,latin-ext' rel='stylesheet' type='text/css'>
+
+        <link href="http://{{ DOMAIN }}/static/css/main.css" rel="stylesheet" media="screen" id="mainCss">
+        <script src="http://{{ DOMAIN }}/static/js/moment-with-langs.min.js"></script>
+    </head>
+    <body class="fx_width">
+        <div id="page_wrapper">
+            <header id="main_header">
+                <div class="container-fluid">
+                    <div class="brand_section">
+                        <a href="/" style="color: white;"><h3 style="padding-top: 10px; margin-top: 0px">CSGO Fort</h3></a>
+                    </div>
+                    <ul class="header_notifications clearfix">
+                        <li {% if request.blueprint == "market" %} class="active" {% endif %}><a href="{{ build_url('market', '') }}">Market</a></li>
+                        <li {% if request.blueprint == "trading" %} class="active" {% endif %}><a href="{{ build_url('trade', '') }}">Trade</a></li>
+                        <li {% if request.blueprint == "betting" %} class="active" {% endif %}><a href="{{ build_url('bet', '') }}">Bet</a></li>
+                    </ul>
+                    <div class="header_user_actions dropdown">
+                        <div data-toggle="dropdown" class="dropdown-toggle user_dropdown">
+                            <div class="user_avatar">
+                                <img src="{{ g.user.get_avatar() }}" alt="" title="Carrol Clark (carrol@example.com)" width="38" height="38">
+                            </div>
+                            <span class="caret"></span>
+                        </div>
+                        <ul class="dropdown-menu dropdown-menu-right">
+                            <li><a href="{{ build_url('auth', 'logout') }}">Log Out</a></li>
+                        </ul>
+                    </div>
+                    <div class="search_section hidden-sm hidden-xs">
+                        <input type="text" class="form-control input-sm">
+                        <button class="btn btn-link btn-sm" type="button"><span class="icon_search"></span></button>
+                    </div>
+                </div>
+            </header>
+
+            <!-- main content -->
+            <div id="main_wrapper">
+                <div class="container-fluid">
+                    {% block content %}
+                    {% endblock %}
+                </div>
+            </div>
+        </div>
+
+        <script src="http://{{ DOMAIN }}/static/js/jquery.min.js"></script>
+        <script src="http://{{ DOMAIN }}/static/js/jqueryCookie.min.js"></script>
+        <script src="http://{{ DOMAIN }}/static/bootstrap/js/bootstrap.min.js"></script>
+        <script src="http://{{ DOMAIN }}/static/js/retina.min.js"></script>
+        <script src="http://{{ DOMAIN }}/static/js/yukon_all.js"></script>
+        <script src="http://{{ DOMAIN }}/static/lib/d3/d3.min.js"></script>
+        <script src="http://{{ DOMAIN }}/static/lib/c3/c3.min.js"></script>
+        <script src="http://{{ DOMAIN }}/static/lib/jvectormap/jquery-jvectormap-1.2.2.min.js"></script>
+        <script src="http://{{ DOMAIN }}/static/lib/jvectormap/maps/jquery-jvectormap-world-mill-en.js"></script>
+        <script src="http://{{ DOMAIN }}/static/js/countUp.min.js"></script>
+        <script src="http://{{ DOMAIN }}/static/lib/switchery/dist/switchery.min.js"></script>
+        <script src="http://{{ DOMAIN }}/static/lib/easy-pie-chart/dist/jquery.easypiechart.min.js"></script>
+        <script src="http://underscorejs.org/underscore-min.js"></script>
+
+        {% block scripts %}
+            <script src="http://{{ DOMAIN }}/static/js/app.js"></script>
+        {% endblock %}
+
+        <script>
+            $(function() {
+                // // c3 charts
+                // yukon_charts.p_dashboard();
+                // // countMeUp
+                // yukon_count_up.init();
+                // // easy pie chart
+                // yukon_easyPie_chart.p_dashboard();
+                // // vector maps
+                // yukon_vector_maps.p_dashboard();
+                // // switchery
+                // yukon_switchery.init();
+
+                run();
+            })
+        </script>
+    </body>
+</html>

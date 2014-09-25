@@ -3716,3 +3716,8 @@ body.login_page .login_container>form {
 .icon_list.list_small li>span {
     margin-top: 10px;
 }
+
+/* Header links active attr */
+.header_notifications .active {
+    background-color: gray;
+}
