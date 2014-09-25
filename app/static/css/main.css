@@ -939,6 +939,8 @@ h5 {
 #main_wrapper {
     padding: 25px 10px 40px;
     background: #fff;
+    -webkit-transition: 200ms ease;
+    transition: 200ms ease;
 }
 @media only screen and (min-width:1120px) {
     .fixed_layout {
@@ -3720,4 +3722,9 @@ body.login_page .login_container>form {
 /* Header links active attr */
 .header_notifications .active {
     background-color: gray;
+}
+
+.toplink {
+    padding-right: 0px;
+    padding-left: 0px;
 }

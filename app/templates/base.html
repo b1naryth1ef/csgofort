@@ -18,15 +18,51 @@
     </head>
     <body class="fx_width">
         <div id="page_wrapper">
+            <div id="topmenu" style="display: none; position: fixed; top: 0px; height: 76px; width: 100%; z-index: 100">
+                <div class="container-fluid">
+                    <div class="row" id="topcont">
+                        <div class="col-lg-3 col-sm-6 toplink">
+                            <a href="">
+                            <div class="info_box_var_1 box_bg_a topclick" rel="trading">
+                                <div class="info_box_footer">
+                                    <h1>Trading</h1>
+                                </div>
+                            </div>
+                            </a>
+                        </div>
+                        <div class="col-lg-3 col-sm-6 toplink">
+                            <div class="info_box_var_1 box_bg_b topclick" rel="betting">
+                                <div class="info_box_footer">
+                                    <h1>Betting</h1>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-sm-6 toplink">
+                            <div class="info_box_var_1 box_bg_c topclick" rel="market">
+                                <div class="info_box_footer">
+                                    <h1>Market</h1>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-sm-6 toplink">
+                            <div class="info_box_var_1 box_bg_d topclick" rel="wiki">
+                                <div class="info_box_footer">
+                                    <h1>Wiki</h1>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <header id="main_header">
                 <div class="container-fluid">
                     <div class="brand_section">
-                        <a href="/" style="color: white;"><h3 style="padding-top: 10px; margin-top: 0px">CSGO Fort</h3></a>
+                        <a style="color: white;" id="logo"><h3 style="padding-top: 10px; margin-top: 0px">Fort {{ REALM|title }}</h3></a>
                     </div>
                     <ul class="header_notifications clearfix">
-                        <li {% if request.blueprint == "market" %} class="active" {% endif %}><a href="{{ build_url('market', '') }}">Market</a></li>
-                        <li {% if request.blueprint == "trading" %} class="active" {% endif %}><a href="{{ build_url('trade', '') }}">Trade</a></li>
-                        <li {% if request.blueprint == "betting" %} class="active" {% endif %}><a href="{{ build_url('bet', '') }}">Bet</a></li>
+                        {% block header_links %}
+                        {% endblock %}
                     </ul>
                     {% if g.user %}
                     <div class="header_user_actions dropdown">
@@ -80,25 +116,15 @@
         <script src="http://{{ DOMAIN }}/static/lib/switchery/dist/switchery.min.js"></script>
         <script src="http://{{ DOMAIN }}/static/lib/easy-pie-chart/dist/jquery.easypiechart.min.js"></script>
         <script src="http://underscorejs.org/underscore-min.js"></script>
+        <script src="http://{{ DOMAIN }}/static/js/app.js"></script>
 
         {% block scripts %}
-            <script src="http://{{ DOMAIN }}/static/js/app.js"></script>
         {% endblock %}
 
         <script>
             $(function() {
-                // // c3 charts
-                // yukon_charts.p_dashboard();
-                // // countMeUp
-                // yukon_count_up.init();
-                // // easy pie chart
-                // yukon_easyPie_chart.p_dashboard();
-                // // vector maps
-                // yukon_vector_maps.p_dashboard();
-                // // switchery
-                // yukon_switchery.init();
-
-                run("{{ request.path }}");
+                app.setup_top_menu()
+                app.run("{{ request.path }}")
             })
         </script>
     </body>
