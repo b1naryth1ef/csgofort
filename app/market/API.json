@@ -1,0 +1,77 @@
+[
+    {
+        "method": "GET",
+        "route": "info",
+        "example": {
+            "latest": 211,
+            "total_items": 211,
+            "total_listings": 74,
+            "value": 12940,
+            "success": true
+        },
+        "doc": "This API returns some general information and statistics about the API, such as the total number of unique items stored (total_items), the total number of current listings (total_listings), and the current estimated market value (value). Latest represents the most recently added item."
+    },
+    {
+        "method": "GET",
+        "route": "status",
+        "example": {
+            "quota": "11",
+            "ttl": 83,
+            "success": true
+        },
+        "doc": "This endpoint will provide some overall information about the API based on your IP. Quota represents the number of requests you have made in your current 5-minute window, while ttl represents the number of seconds until that window ends and your quota is refreshed. NB: this endpoint is also effected by quota limits!"
+    },
+    {
+        "method": "GET",
+        "route": "items",
+        "params": {
+            "page": "Integer representing a valid page number (starting from 1)",
+            "per_page": "Integer from 1 to 100 representing the number of items to return per page (default 100)"
+        },
+        "example": {
+          "results": [
+            {
+              "discovered": "2014-09-25T06:38:58.568127",
+              "id": 1,
+              "info": {
+                "holo": false,
+                "item": "m9 bayonet",
+                "skin": "urban masked",
+                "stat": true,
+                "wear": "well-worn"
+              },
+              "name": "\u2605 StatTrak\u2122 M9 Bayonet | Urban Masked (Well-Worn)",
+              "points": 27,
+              "updated": "2014-09-25T23:19:27.783607",
+              "value": -0.0
+            }
+          ],
+          "size": 1,
+          "success": true
+        },
+        "doc": "This endpoint represents a global listing of all indexed items we have in our database. The most common use for this endpoint will be programmatically retrieving and updating a local copy of our item list. This endpoint returns our tokenized info about the item (e.g. extracted information from the market-name), along with our internal id, the official market name (warning, this contains unicode!), the number of MIPP's (points) we have, and the estimated market value for this item (volume * average_price). The total number of pages for this endpoint can be calculated based on the response from the /info endpoints 'total_items' key, divided by the per_page value."
+    },
+    {
+        "method": "GET",
+        "route": "item/<id>",
+        "example": {
+          "item": {
+            "discovered": "2014-09-25T06:38:58.568127",
+            "id": 1,
+            "info": {
+              "holo": false,
+              "item": "m9 bayonet",
+              "skin": "urban masked",
+              "stat": true,
+              "wear": "well-worn"
+            },
+            "name": "\u2605 StatTrak\u2122 M9 Bayonet | Urban Masked (Well-Worn)",
+            "points": 27,
+            "updated": "2014-09-25T23:19:27.783607",
+            "value": -0.0
+          },
+          "success": true
+        },
+        "doc": "This endpoint returns information for a single item, including a set of tokenized data, the official market name, our internal id, and some general statistics. Keep in mind this payload may contain unicode characters within the 'name' attribute."
+    }
+]

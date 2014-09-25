@@ -11,7 +11,7 @@ function run_api_docs() {
 }
 
 function run_market_index() {
-    $.ajax("/graph/totalvalue", {
+    $.ajax("/api/graph/totalvalue", {
         success: function(data) {
             if (data.success) {
                 draw_dashboard_graphs(data.data);
@@ -21,7 +21,7 @@ function run_market_index() {
         }
     })
 
-    $.ajax("/info", {
+    $.ajax("/api/info", {
         success: function(data) {
             if (!data.success) {
                 return console.log("Failed to load market info");

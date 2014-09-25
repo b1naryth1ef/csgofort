@@ -3,10 +3,35 @@ from marketdb import *
 from manalytics import *
 from collections import Counter
 
+import json
+
 from dateutil.rrule import *
 from dateutil.relativedelta import relativedelta
 
 market = Blueprint("market", __name__, subdomain="market")
+
+with open("market/API.json", "r") as f:
+    API_DOCS = json.load(f)
+
+RATE_LIMIT_UPPER = 5000
+
+@market.before_request
+def before_market_request():
+    KEY = "marketapi:limit:%s" % request.remote_addr
+
+    # API rate limiting
+    if red.exists(KEY):
+        if int(red.get(KEY)) > RATE_LIMIT_UPPER:
+            res = jsonify({
+                "success": False,
+                "error": "Rate limit hit!",
+                "ttl": red.ttl(KEY)
+            })
+            res.status_code = 429
+            return res
+        red.incr(KEY, 1)
+    else:
+        red.setex(KEY, 1, 5 * 60)
 
 @market.route("/")
 def market_route_index():
@@ -14,9 +39,18 @@ def market_route_index():
 
 @market.route("/api")
 def market_route_api():
-    return render_template("market/api.html")
+    return render_template("market/api.html", docs=API_DOCS)
 
-@market.route("/info")
+@market.route("/api/status")
+def market_route_status():
+    # TODO: pipeline?
+    return jsonify({
+        "success": True,
+        "quota": red.get("marketapi:limit:%s" % request.remote_addr),
+        "ttl": red.ttl("marketapi:limit:%s" % request.remote_addr)
+    })
+
+@market.route("/api/info")
 def market_route_info():
     """
     Returns information about the global dataset
@@ -31,7 +65,7 @@ def market_route_info():
         "success": True
     })
 
-@market.route("/items")
+@market.route("/api/items")
 def market_route_items():
     """
     A paginated endpoint for listing all items on the market
@@ -48,7 +82,7 @@ def market_route_items():
         "success": True
     })
 
-@market.route("/item/<id>")
+@market.route("/api/item/<id>")
 def market_route_item(id):
     """
     Returns information for a single item given a steam-market name or
@@ -70,7 +104,7 @@ def market_route_item(id):
         "item": mi.toDict()
     })
 
-@market.route("/item/<id>/price")
+@market.route("/api/item/<id>/price")
 def market_route_price(id):
     """
     Returns pricing information for a single item, given the items internal
@@ -89,7 +123,7 @@ def market_route_price(id):
         "price": mi.get_latest_mipp().toDict()
     })
 
-@market.route("/item/<id>/history")
+@market.route("/api/item/<id>/history")
 def market_route_history(id):
     """
     Returns a set of historical pricing data given the items internal ID
@@ -113,7 +147,7 @@ def market_route_history(id):
         "success": True,
     })
 
-@market.route("/removed")
+@market.route("/api/removed")
 def market_route_removed():
     """
     Returns a list of items that have been removed from the market
@@ -133,7 +167,7 @@ def market_route_removed():
         "success": True
     })
 
-@market.route("/aggregate")
+@market.route("/api/aggregate")
 def market_route_aggregate():
     """
     Returns aggergation data based on wear, skin, item, and stattrack.
@@ -191,7 +225,7 @@ def market_route_aggregate():
     })
 
 # TODO: cache this one! aggregate this!
-@market.route("/pricechanges")
+@market.route("/api/pricechanges")
 def market_route_pricechanges():
     # Last 30 minutes
     default_time_window = datetime.datetime.utcnow() + datetime.timedelta(seconds=60 * 30)
@@ -231,7 +265,7 @@ def market_route_pricechanges():
         "drops": drops
     })
 
-@market.route("/graph/totalvalue")
+@market.route("/api/graph/totalvalue")
 def market_route_value_total():
     """
     Returns a graph of the total market value given a resolution
