@@ -12,6 +12,7 @@ class BModel(Model):
 
 class MarketItem(BModel):
     name = CharField()
+    nameid = IntegerField(null=True)
 
     # Parsed name attributes
     wear = CharField(null=True)
@@ -24,7 +25,11 @@ class MarketItem(BModel):
     last_crawl = DateTimeField()
 
     def store_price(self):
-        volume, low, med = market_api.get_item_price(self.name)
+        if self.nameid:
+            low = 0
+            volume, med = market_api.get_bulkitem_price(self.nameid)
+        else:
+            volume, low, med = market_api.get_item_price(self.name)
 
         # TODO: find a MIPP in the last 5 minutes and update that instead
 

@@ -23,6 +23,7 @@ def index_all_items():
             except MarketItem.DoesNotExist:
                 mi = MarketItem(name=item_name, discovered=datetime.utcnow())
                 mi.item, mi.skin, mi.wear, mi.stat, mi.holo = api.parse_item_name(mi.name)
+                mi.nameid = api.get_item_nameid(mi.name)
             
             mi.last_crawl = datetime.utcnow()
             mi.save()

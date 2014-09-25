@@ -4,6 +4,10 @@ import requests, time
 COUNT_ITEMS_QUERY = u"http://steamcommunity.com/market/search/render/?query={query}&appid={appid}"
 LIST_ITEMS_QUERY = u"http://steamcommunity.com/market/search/render/?query={query}&start={start}&count={count}&search_descriptions=0&sort_column={sort}&sort_dir={order}&appid={appid}"
 ITEM_PRICE_QUERY = u"http://steamcommunity.com/market/priceoverview/?country=US&currency=1&appid={appid}&market_hash_name={name}"
+ITEM_PAGE_QUERY = u"http://steamcommunity.com/market/listings/{appid}/{name}"
+BULK_ITEM_PRICE_QUERY = u"http://steamcommunity.com/market/itemordershistogram?country=US&language=english&currency=1&item_nameid={nameid}"
+
+# r.content.split("Market_LoadOrderSpread(", 1)[-1].split(");", 1)[0]
 
 class SteamMarketAPI(object):
     def __init__(self, appid, retries=5):
@@ -91,6 +95,25 @@ class SteamMarketAPI(object):
 
         rows = pq(".market_listing_row .market_listing_item_name")
         return map(lambda i: i.text, rows)
+
+    def get_item_nameid(self, item_name):
+        url = ITEM_PAGE_QUERY.format(name=item_name, appid=self.appid)
+        r = requests.get(url)
+
+        if "Market_LoadOrderSpread(" in r.content:
+            return int(r.content.split("Market_LoadOrderSpread(", 1)[-1].split(");", 1)[0].strip())
+        else:
+            return None
+
+    def get_bulkitem_price(self, nameid):
+        url = BULK_ITEM_PRICE_QUERY.format(nameid=nameid)
+        r = requests.get(url).json()
+
+        data = PyQuery(r["sell_order_summary"])("span")
+        b_volume = int(data.text.split(" ", 1)[0])
+        b_price = r["lowest_sell_order"]
+
+        return b_volume, b_price
 
     def get_item_price(self, item_name):
         url = ITEM_PRICE_QUERY.format(
