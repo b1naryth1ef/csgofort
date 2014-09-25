@@ -1,30 +1,19 @@
 from marketdb import *
 
+
+MARKET_VALUE_QUERY = """
+SELECT t1.* FROM marketitempricepoint t1
+  JOIN (SELECT item_id, MAX(time) as time FROM marketitempricepoint GROUP BY item_id) t2
+    ON t1.item_id = t2.item_id AND t1.time = t2.time ORDER BY item_id
+"""
+
 def get_market_value_total(start=None, end=None):
-    q = MarketItemPricePoint.select().limit(1)
+    q = MARKET_VALUE_QUERY
 
     if start and end:
-        q = q.where(
-            (MarketItemPricePoint.time >= start) &
-            (MarketItemPricePoint.time <= dt)
-        )
+        q = q + "WHERE t1.time >= ? AND t1.time <= ?"
+        q = MarketItemPricePoint.raw(q, start, end)
+    else:
+        q = MarketItemPricePoint(q)
 
-    return sum(map(lambda i: i.median * i.volume, q))
-
-# WTF does this even mean tho?
-# def get_market_value_avg(start=None, end=None):
-#     q = MarketItemPricePoint.select(fn.Avg(MarketItemPricePoint.median).alias("avg"))
-#     q = q.group_by(MarketItemPricePoint.item)
-#     if start and end:
-#         q = q.where(
-#                 (MarketItemPricePoint.time >= start) &
-#                 (MarketItemPricePoint.time <= dt)
-#             )
-
-#     results = map(lambda i: i.avg, q)
-
-#     if not len(results):
-#         return 0
-
-#     return sum(results) / len(results)
-
+    return int(sum(map(lambda i: i.median * i.volume, list(q))))
