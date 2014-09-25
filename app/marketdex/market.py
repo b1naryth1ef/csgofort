@@ -110,7 +110,7 @@ class SteamMarketAPI(object):
         r = requests.get(url).json()
 
         data = PyQuery(r["sell_order_summary"])("span")
-        b_volume = int(data.text.split(" ", 1)[0])
+        b_volume = int(data.text().split(" ", 1)[0])
         b_price = r["lowest_sell_order"]
 
         return b_volume, b_price
