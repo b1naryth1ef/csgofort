@@ -12,6 +12,10 @@ market = Blueprint("market", __name__, subdomain="market")
 def market_route_index():
     return render_template("market/index.html")
 
+@market.route("/api")
+def market_route_api():
+    return render_template("market/api.html")
+
 @market.route("/info")
 def market_route_info():
     """

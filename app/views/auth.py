@@ -24,10 +24,15 @@ def auth_route_login():
 
 @auth.route("/logout")
 def auth_route_logout():
+    if 'redirect' in request.values or "realm" in request.values:
+        url = build_url(request.values.get("realm", ""), request.values.get("redirect", ""))
+    else:
+        url = build_url("", "")
+
     if g.user:
         del session['id']
-        return flashy("You have been logged out!", "success")
-    return flashy("You are not currently logged in!")
+        return flashy("You have been logged out!", "success", u=url)
+    return flashy("You are not currently logged in!", u=url)
 
 @openid.after_login
 def create_or_login(resp):
@@ -43,7 +48,7 @@ def create_or_login(resp):
 
     # Set the sessionid and welcome the user back
     session['id'] = g.user.id
-    return flashy("Welcome back %s!" % g.user.get_nickname(), u=build_url("", ""))
+    return flashy("Welcome back %s!" % g.user.get_nickname(), "success", u=build_url("", ""))
 
 @csgofort.before_request
 def before_request():

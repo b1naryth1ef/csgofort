@@ -32,12 +32,12 @@
                     <div class="header_user_actions dropdown">
                         <div data-toggle="dropdown" class="dropdown-toggle user_dropdown">
                             <div class="user_avatar">
-                                <img src="{{ g.user.get_avatar() }}" alt="" title="Carrol Clark (carrol@example.com)" width="38" height="38">
+                                <img src="{{ g.user.get_avatar() }}" alt="" title="{{ g.user.get_nickname() }}" width="38" height="38">
                             </div>
                             <span class="caret"></span>
                         </div>
                         <ul class="dropdown-menu dropdown-menu-right">
-                            <li><a href="{{ build_url('auth', 'logout') }}">Log Out</a></li>
+                            <li><a href="{{ build_url('auth', 'logout') }}?realm={{ REALM }}">Log Out</a></li>
                         </ul>
                     </div>
                     {% endif %}
@@ -51,6 +51,16 @@
             <!-- main content -->
             <div id="main_wrapper">
                 <div class="container-fluid">
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                          <div class="alert alert-{{ category }}">
+                            <button class="close" data-dismiss="alert">×</button>
+                            {{ message|safe }}
+                          </div>
+                        {% endfor %}
+                    {% endif %}
+                    {% endwith %}
                     {% block content %}
                     {% endblock %}
                 </div>
@@ -88,7 +98,7 @@
                 // // switchery
                 // yukon_switchery.init();
 
-                run();
+                run("{{ request.path }}");
             })
         </script>
     </body>

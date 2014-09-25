@@ -1,4 +1,4 @@
-from flask import flash, redirect
+from flask import flash, redirect, request
 from app import csgofort
 
 def flashy(m, f="danger", u="/"):
@@ -14,4 +14,5 @@ def util_ctx_proc():
     return {
         "build_url": build_url,
         "DOMAIN": csgofort.config["SERVER_NAME"],
+        "REALM": request.blueprint
     }

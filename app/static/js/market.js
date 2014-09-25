@@ -1,4 +1,16 @@
-function run() {
+function run(route) {
+    if (route === "" || route === "/") {
+        run_market_index()
+    } else if (route === "/api") {
+        run_api_docs()
+    }
+}
+
+function run_api_docs() {
+    
+}
+
+function run_market_index() {
     $.ajax("/graph/totalvalue", {
         success: function(data) {
             if (data.success) {
@@ -18,7 +30,7 @@ function run() {
             $("#stat-unique").text(data.total_items);
             $("#stat-listed").text(data.total_listings);
             $("#stat-value").text(data.value);
-            $("#stats").show();
+            $("#stats").fadeIn();
         }
     })
 }

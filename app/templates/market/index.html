@@ -1,36 +1,38 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="row">
-    <div class="col-lg-4 col-sm-6" id="stats" style="display:none">
-        <div class="info_box_var_1 box_bg_a">
-            <div class="info_box_body">
-                <span class="info_box_icon icon_group"></span>
-                <span id="stat-unique">0</span>
-            </div>
-            <div class="info_box_footer">
-                Total Unique Items
-            </div>
-        </div>
-    </div>
-    <div class="col-lg-4 col-sm-6">
-        <div class="info_box_var_1 box_bg_b">
-            <div class="info_box_body">
-                <span class="info_box_icon icon_cart_alt"></span>
-                <span id="stat-listed">0</span>
-            </div>
-            <div class="info_box_footer">
-                Total Listed Items
+    <div id="stats" style="display:none">
+        <div class="col-lg-4 col-sm-6">
+            <div class="info_box_var_1 box_bg_a">
+                <div class="info_box_body">
+                    <span class="info_box_icon el-icon-tags"></span>
+                    <span id="stat-unique">0</span>
+                </div>
+                <div class="info_box_footer">
+                    Total Unique Items
+                </div>
             </div>
         </div>
-    </div>
-    <div class="col-lg-4 col-sm-6">
-        <div class="info_box_var_1 box_bg_c">
-            <div class="info_box_body">
-                <span class="info_box_icon icon_wallet"></span>
-                $<span id="stat-value">0</span>
+        <div class="col-lg-4 col-sm-6">
+            <div class="info_box_var_1 box_bg_b">
+                <div class="info_box_body">
+                    <span class="info_box_icon icon_cart_alt"></span>
+                    <span id="stat-listed">0</span>
+                </div>
+                <div class="info_box_footer">
+                    Total Listed Items
+                </div>
             </div>
-            <div class="info_box_footer">
-                Global Market Value
+        </div>
+        <div class="col-lg-4 col-sm-6">
+            <div class="info_box_var_1 box_bg_c">
+                <div class="info_box_body">
+                    <span class="info_box_icon icon_wallet"></span>
+                    $<span id="stat-value">0</span>
+                </div>
+                <div class="info_box_footer">
+                    Global Market Value
+                </div>
             </div>
         </div>
     </div>

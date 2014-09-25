@@ -39,7 +39,9 @@ class User(BModel):
         NB: might be worth asyncing this out to a job if the steamapi is
         down or slow!
         """
-        return red.get("nick:%s" % self.steamid) or self.cache_nickname(self.steamid)
+        if not hasattr(self, "nickname"):
+            self.nickname = (red.get("nick:%s" % self.steamid) or self.cache_nickname(self.steamid)).decode('utf-8')
+        return self.nickname
 
     @classmethod
     def cache_nickname(cls, steamid):

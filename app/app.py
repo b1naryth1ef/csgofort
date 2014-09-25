@@ -9,17 +9,12 @@ class CustomFlask(Flask):
     def send_static_file(self, filename):
         return Flask.send_static_file(self, filename)
 
-LOCAL = (socket.gethostname() != "kato")
-
-if LOCAL:
-    csgofort = Flask("csgofort")
-else:
-    csgofort = CustomFlask("csgofort")
-
+csgofort = CustomFlask("csgofort")
 csgofort.secret_key = "1337"
 openid = OpenID(csgofort)
 
 # Setup domain based on host
+LOCAL = (socket.gethostname() != "kato")
 if LOCAL:
     csgofort.config["SERVER_NAME"] = "dev.csgofort.com:6015"
 else:
