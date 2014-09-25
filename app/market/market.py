@@ -4,6 +4,7 @@ from manalytics import *
 from collections import Counter
 
 from dateutil.rrule import *
+from dateutil.relativedelta import relativedelta
 
 market = Blueprint("market", __name__, subdomain="market")
 
@@ -13,16 +14,24 @@ def market_route_index():
 
 @market.route("/info")
 def market_route_info():
+    """
+    Returns information about the global dataset
+    """
+    latest = get_latest_mipps()
+
     return jsonify({
         "total_items": MarketItem.select().count(),
+        "total_listings": sum(map(lambda i: i.volume if i.volume > 0 else 0, list(latest))),
         "latest": list(MarketItem.select(MarketItem.id).order_by(MarketItem.discovered.desc()).limit(1))[0].id,
-        "value": {
-            "total": get_market_value_total()
-        }
+        "value": get_market_value_total(),
+        "success": True
     })
 
 @market.route("/items")
 def market_route_items():
+    """
+    A paginated endpoint for listing all items on the market
+    """
     page = int(request.values.get("page", 1))
     per_page = int(request.values.get("per_page", 10))
     per_page = per_page if per_page <= 100 else 100
@@ -37,6 +46,10 @@ def market_route_items():
 
 @market.route("/item/<id>")
 def market_route_item(id):
+    """
+    Returns information for a single item given a steam-market name or
+    internal ID
+    """
     try:
         if id.isdigit():
             mi = MarketItem.get(MarketItem.id == id)
@@ -53,8 +66,12 @@ def market_route_item(id):
         "item": mi.toDict()
     })
 
-@market.route("/price/<id>")
+@market.route("/item/<id>/price")
 def market_route_price(id):
+    """
+    Returns pricing information for a single item, given the items internal
+    ID
+    """
     try:
         mi = MarketItem.get(MarketItem.id == id)
     except MarketItem.DoesNotExist:
@@ -68,8 +85,35 @@ def market_route_price(id):
         "price": mi.get_latest_mipp().toDict()
     })
 
+@market.route("/item/<id>/history")
+def market_route_history(id):
+    """
+    Returns a set of historical pricing data given the items internal ID
+    """
+    try:
+        mi = MarketItem.get(MarketItem.id == id)
+    except MarketItem.DoesNotExist:
+        return jsonify({
+            "success": False,
+            "error": "Invalid Item ID!"
+        })
+
+    q = MarketItemPricePoint.select().where(
+        MarketItemPricePoint.item == mi).order_by(
+            MarketItemPricePoint.time.desc())
+    q = list(q)
+
+    return jsonify({
+        "prices": map(lambda i: i.toDict(), q),
+        "trend": identify_trend(q),
+        "success": True,
+    })
+
 @market.route("/removed")
 def market_route_removed():
+    """
+    Returns a list of items that have been removed from the market
+    """
     page = int(request.values.get("page", 1))
     per_page = int(request.values.get("per_page", 10))
     per_page = per_page if per_page <= 100 else 100
@@ -87,6 +131,9 @@ def market_route_removed():
 
 @market.route("/aggregate")
 def market_route_aggregate():
+    """
+    Returns aggergation data based on wear, skin, item, and stattrack.
+    """
     wear = request.values.get("wear")
     skin = request.values.get("skin")
     item = request.values.get("item")
@@ -139,61 +186,7 @@ def market_route_aggregate():
         "success": True
     })
 
-def identify_trend(q, trend=.7):
-    up, down, none = 0, 0, 0
-
-    last = None
-    for mipp in q:
-        if not last:
-            last = mipp
-            continue
-
-        if last.median == mipp.median:
-            none += 1
-
-        if last.median < mipp.median:
-            up += 1
-
-        if last.median > mipp.median:
-            down += 1
-
-        last = mipp
-
-    trend_c = int(len(q) * trend)
-
-    print trend_c, up, down, none
-
-    if up >= trend_c:
-        return "UP"
-
-    if down >= trend_c:
-        return "DOWN"
-
-    return "NONE"
-
-
-@market.route("/history/<id>")
-def market_route_history(id):
-    try:
-        mi = MarketItem.get(MarketItem.id == id)
-    except MarketItem.DoesNotExist:
-        return jsonify({
-            "success": False,
-            "error": "Invalid Item ID!"
-        })
-
-    q = MarketItemPricePoint.select().where(
-        MarketItemPricePoint.item == mi).order_by(
-            MarketItemPricePoint.time.desc())
-    q = list(q)
-
-    return jsonify({
-        "prices": map(lambda i: i.toDict(), q),
-        "trend": identify_trend(q),
-        "success": True,
-    })
-
-# TODO: cache this one!
+# TODO: cache this one! aggregate this!
 @market.route("/pricechanges")
 def market_route_pricechanges():
     # Last 30 minutes
@@ -234,8 +227,11 @@ def market_route_pricechanges():
         "drops": drops
     })
 
-@market.route("/value/total")
+@market.route("/graph/totalvalue")
 def market_route_value_total():
+    """
+    Returns a graph of the total market value given a resolution
+    """
     res = request.values.get("res", "week")
     if res not in ("week", "month", "year"):
         return jsonify({
@@ -243,8 +239,17 @@ def market_route_value_total():
             "success": False
         })
 
+    if res == "week":
+        ruleset = rrule(DAILY, count=7, dtstart=datetime.datetime.utcnow() - datetime.timedelta(days=6))
+
+    if res == "month":
+        ruleset = rrule(DAILY, count=30, dtstart=datetime.datetime.utcnow() - datetime.timedelta(days=29))
+
+    if res == "year":
+        ruleset = rrule(MONTHLY, count=12, dtstart=datetime.datetime.utcnow() - relativedelta(months=11))
+
     data = {}
-    for dt in rrule(DAILY, count=7, dtstart=datetime.datetime.utcnow() - datetime.timedelta(days=6)):
+    for dt in ruleset:
         start = dt - datetime.timedelta(days=1)
         data[dt.strftime("%Y-%m-%d")] = get_market_value_total(start, dt)
 
@@ -252,9 +257,3 @@ def market_route_value_total():
         "data": data,
         "success": True
     })
-
-@market.route("/value/average")
-def market_route_value_average():
-    # TODO
-    return jsonify({})
-

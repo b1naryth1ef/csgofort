@@ -1,11 +1,24 @@
 function run() {
-    $.ajax("/value/total", {
+    $.ajax("/graph/totalvalue", {
         success: function(data) {
             if (data.success) {
-                draw_dashboard_graphs(data.data)
+                draw_dashboard_graphs(data.data);
             } else {
-                console.log("Failed to load market value graph")
+                console.log("Failed to load market value graph");
             }
+        }
+    })
+
+    $.ajax("/info", {
+        success: function(data) {
+            if (!data.success) {
+                return console.log("Failed to load market info");
+            }
+
+            $("#stat-unique").text(data.total_items);
+            $("#stat-listed").text(data.total_listings);
+            $("#stat-value").text(data.value);
+            $("#stats").show();
         }
     })
 }

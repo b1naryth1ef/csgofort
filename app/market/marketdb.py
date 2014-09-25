@@ -25,6 +25,11 @@ class MarketItem(BModel):
     last_crawl = DateTimeField()
 
     def store_price(self):
+        """
+        Attempts to query and store the steam market price/volume/etc of
+        this item. Depending on if this is a bulk item or not, we need to
+        call different api methods.
+        """
         if self.nameid:
             low = 0
             volume, med = market_api.get_bulkitem_price(self.nameid)
@@ -41,6 +46,9 @@ class MarketItem(BModel):
         mipp.save()
 
     def get_latest_mipp(self):
+        """
+        Returns the latest MIPP for this item
+        """
         res = list(MarketItemPricePoint.select().where(
             MarketItemPricePoint.item == self
         ).order_by(MarketItemPricePoint.time.desc()).limit(1))
@@ -63,6 +71,7 @@ class MarketItem(BModel):
             "updated": self.last_crawl.isoformat(),
             "points": MarketItemPricePoint.select(MarketItemPricePoint.id).where(
                 MarketItemPricePoint.item == self).count(),
+            "value": self.get_latest_mipp().value()
         }
 
 class MarketItemPricePoint(BModel):
@@ -73,6 +82,9 @@ class MarketItemPricePoint(BModel):
     median = FloatField()
 
     time = DateTimeField(default=datetime.datetime.utcnow)
+
+    def value(self):
+        return self.volume * self.median
 
     def toDict(self):
         return {
