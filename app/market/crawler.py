@@ -39,7 +39,8 @@ def index_all_prices():
         item.store_price()
     print "Re-pricing finished in %s seconds!" % (time.time() - start)
 
-while True:
-    # index_all_items()
-    index_all_prices()
-    time.sleep(600)
+def run():
+    while True:
+        index_all_items()
+        index_all_prices()
+        time.sleep(600)
