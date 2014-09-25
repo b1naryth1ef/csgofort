@@ -64,7 +64,7 @@ def marketdex_route_item(id):
         if id.isdigit():
             mi = MarketItem.get(MarketItem.id == id)
         else:
-            mi = MarketItem.get(Marketitem.name == id)
+            mi = MarketItem.get(MarketItem.name == id)
     except MarketItem.DoesNotExist:
         return jsonify({
             "success": False,
