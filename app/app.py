@@ -2,8 +2,14 @@ import socket
 
 from flask import Flask
 from flask.ext.openid import OpenID
+from flask.ext.cors import cross_origin
 
-csgofort = Flask("csgofort")
+class CustomFlask(Flask):
+    @cross_origin()
+    def send_static_file(self, filename):
+        return Flask.send_static_file(self, filename)
+
+csgofort = CustomFlask("csgofort")
 csgofort.secret_key = "1337"
 
 openid = OpenID(csgofort)
