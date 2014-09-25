@@ -14,6 +14,6 @@ def get_market_value_total(start=None, end=None):
         q = q + "WHERE t1.time >= ? AND t1.time <= ?"
         q = MarketItemPricePoint.raw(q, start, end)
     else:
-        q = MarketItemPricePoint(q)
+        q = MarketItemPricePoint.raw(q)
 
     return int(sum(map(lambda i: i.median * i.volume, list(q))))
