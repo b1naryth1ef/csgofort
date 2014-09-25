@@ -27,8 +27,8 @@ function run_market_index() {
                 return console.log("Failed to load market info");
             }
 
-            $("#stat-unique").text(data.total_items);
-            $("#stat-listed").text(data.total_listings);
+            $("#stat-unique").text(data.total_items.toLocaleString());
+            $("#stat-listed").text(data.total_listings.toLocaleString());
             $("#stat-value").text(data.value.toLocaleString());
             $("#stats").fadeIn();
         }

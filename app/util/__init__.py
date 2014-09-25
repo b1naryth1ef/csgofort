@@ -6,6 +6,9 @@ def flashy(m, f="danger", u="/"):
     return redirect(u)
 
 def build_url(realm, path):
+    if realm == "public":
+        realm = None
+
     realm = ("%s." % realm) if realm else ""
     return "http://%s%s/%s" % (realm, csgofort.config["SERVER_NAME"], path)
 
