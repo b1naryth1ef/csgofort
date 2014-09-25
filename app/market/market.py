@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify, render_template
 from marketdb import *
+from manalytics import *
 from collections import Counter
 
 from dateutil.rrule import *
@@ -15,6 +16,10 @@ def market_route_info():
     return jsonify({
         "total_items": MarketItem.select().count(),
         "latest": list(MarketItem.select(MarketItem.id).order_by(MarketItem.discovered.desc()).limit(1))[0].id,
+        "value": {
+            "total": get_market_value_total(),
+            "average": get_market_value_avg()
+        }
     })
 
 @market.route("/items")
@@ -230,8 +235,8 @@ def market_route_pricechanges():
         "drops": drops
     })
 
-@market.route("/value")
-def market_route_value():
+@market.route("/value/total")
+def market_route_value_total():
     res = request.values.get("res", "week")
     if res not in ("week", "month", "year"):
         return jsonify({
@@ -242,19 +247,15 @@ def market_route_value():
     data = {}
     for dt in rrule(DAILY, count=7, dtstart=datetime.datetime.utcnow() - datetime.timedelta(days=7)):
         start = dt - datetime.timedelta(days=1)
-        q = map(lambda i: i.avg, MarketItemPricePoint.select(fn.Avg(MarketItemPricePoint.median).alias("avg")
-            ).group_by(MarketItemPricePoint.item).where(
-                (MarketItemPricePoint.time >= start) &
-                (MarketItemPricePoint.time <= dt)
-            ))
-
-        dts = dt.strftime("%Y-%d-%m")
-        if len(q):
-            data[dts] = sum(q) / len(q)
-        else:
-            data[dts] = 0
+        data[dt.strftime("%Y-%d-%m")] = get_market_value_total(start, dt)
 
     return jsonify({
         "data": data,
         "success": True
     })
+
+@market.route("/value/average")
+def market_route_value_average():
+    # TODO
+    return jsonify({})
+
