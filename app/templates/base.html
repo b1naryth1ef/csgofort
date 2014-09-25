@@ -28,6 +28,7 @@
                         <li {% if request.blueprint == "trading" %} class="active" {% endif %}><a href="{{ build_url('trade', '') }}">Trade</a></li>
                         <li {% if request.blueprint == "betting" %} class="active" {% endif %}><a href="{{ build_url('bet', '') }}">Bet</a></li>
                     </ul>
+                    {% if g.user %}
                     <div class="header_user_actions dropdown">
                         <div data-toggle="dropdown" class="dropdown-toggle user_dropdown">
                             <div class="user_avatar">
@@ -39,6 +40,7 @@
                             <li><a href="{{ build_url('auth', 'logout') }}">Log Out</a></li>
                         </ul>
                     </div>
+                    {% endif %}
                     <div class="search_section hidden-sm hidden-xs">
                         <input type="text" class="form-control input-sm">
                         <button class="btn btn-link btn-sm" type="button"><span class="icon_search"></span></button>
