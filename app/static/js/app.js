@@ -15,7 +15,7 @@ app.setup_top_menu = function() {
     })
 
     $(".topclick").click(function() {
-        window.location.href = "http://" + $(this).attr("rel") + ".{{ DOMAIN }}"
+        window.location.href = "http://" + $(this).attr("rel") + CONFIG.DOMAIN
     })
 }
 

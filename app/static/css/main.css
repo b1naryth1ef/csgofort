@@ -3727,4 +3727,6 @@ body.login_page .login_container>form {
 .toplink {
     padding-right: 0px;
     padding-left: 0px;
+    cursor: pointer;
+    cursor: hand;
 }

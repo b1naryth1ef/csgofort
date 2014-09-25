@@ -15,6 +15,13 @@
 
         <link href="http://{{ DOMAIN }}/static/css/main.css" rel="stylesheet" media="screen" id="mainCss">
         <script src="http://{{ DOMAIN }}/static/js/moment-with-langs.min.js"></script>
+
+        <script>
+            var CONFIG = {
+                DOMAIN: "{{ DOMAIN }}",
+                REALM: "{{ REALM }}"
+            }
+        </script>
     </head>
     <body class="fx_width">
         <div id="page_wrapper">
@@ -22,32 +29,30 @@
                 <div class="container-fluid">
                     <div class="row" id="topcont">
                         <div class="col-lg-3 col-sm-6 toplink">
-                            <a href="">
-                            <div class="info_box_var_1 box_bg_a topclick" rel="trading">
+                            <div class="info_box_var_1 box_bg_a topclick" rel="">
+                                <div class="info_box_footer">
+                                    <h1>Fort Home</h1>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-sm-6 toplink">
+                            <div class="info_box_var_1 box_bg_b topclick" rel="trading.">
                                 <div class="info_box_footer">
                                     <h1>Trading</h1>
                                 </div>
                             </div>
-                            </a>
                         </div>
                         <div class="col-lg-3 col-sm-6 toplink">
-                            <div class="info_box_var_1 box_bg_b topclick" rel="betting">
+                            <div class="info_box_var_1 box_bg_c topclick" rel="betting.">
                                 <div class="info_box_footer">
                                     <h1>Betting</h1>
                                 </div>
                             </div>
                         </div>
                         <div class="col-lg-3 col-sm-6 toplink">
-                            <div class="info_box_var_1 box_bg_c topclick" rel="market">
+                            <div class="info_box_var_1 box_bg_d topclick" rel="market.">
                                 <div class="info_box_footer">
                                     <h1>Market</h1>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-lg-3 col-sm-6 toplink">
-                            <div class="info_box_var_1 box_bg_d topclick" rel="wiki">
-                                <div class="info_box_footer">
-                                    <h1>Wiki</h1>
                                 </div>
                             </div>
                         </div>
