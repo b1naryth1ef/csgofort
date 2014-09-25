@@ -64,4 +64,3 @@ def run():
     while True:
         index_all_items()
         index_all_prices()
-        time.sleep(600)
