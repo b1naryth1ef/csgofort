@@ -29,7 +29,7 @@ function run_market_index() {
 
             $("#stat-unique").text(data.total_items);
             $("#stat-listed").text(data.total_listings);
-            $("#stat-value").text(data.value);
+            $("#stat-value").text(data.value.toLocaleString());
             $("#stats").fadeIn();
         }
     })
