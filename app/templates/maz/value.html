@@ -1,0 +1,52 @@
+{% extends "maz/base.html" %}
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div id="community-alert" class="alert alert-danger" style="display: none">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+            <strong>Uh Oh!</strong> The Steam Community is experiencing some issues right now! Only a cached version of your player inventory will be availbile, and some other data may be expired or innaccurate. Please keep in mind that we have no control over the Steam Community, and must wait for Valve to address all stability issues.
+        </div>
+    </div>
+    <div class="col-md-12">
+        <div id="inventory-alert" class="alert alert-danger" style="display: none">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+            <strong>Uh Oh!</strong> We can't grab your inventory! Looks like either your inventory is private, or the steam community is having some problems.
+        </div>
+    </div>
+</div>
+
+<div class="page-rest">
+    <div class="row">
+        <div class="col-md-3">
+            <div class="block">
+                <div class="block-content" style="text-align: center">
+                    <h1>Total Inventory Worth: $<span id="worth">0</span></h1>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-9">
+            <div class="block">
+                <div class="block-content np">
+                    <table class="table" id="inv-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Value</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inv-body">
+                                    
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+    <script src="http://{{ DOMAIN }}/static/js/maz.js"></script>
+{% endblock %}

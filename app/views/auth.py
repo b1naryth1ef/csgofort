@@ -5,12 +5,13 @@ out of *all* services, and getting user information (such as profile-overview,
 
 """
 
-from flask import Blueprint, request, session, g, send_file
-from database import User, red
+from flask import Blueprint, request, session, g, send_file, jsonify
+from database import User, red, MarketItem
 from app import openid, csgofort
 from util import flashy, build_url, steam
+from flask.ext.cors import cross_origin
 
-import requests
+import requests, json
 from cStringIO import StringIO
 
 auth = Blueprint("auth", __name__, subdomain="auth")
@@ -88,3 +89,72 @@ def auth_route_avatar(id):
 
     buffered.seek(0)
     return send_file(buffered, mimetype="image/jpeg")
+
+def get_safe_inventory(user):
+    try:
+        result = steam.SteamMarketAPI(730).get_inventory(user.steamid)
+
+        if not result["success"]:
+            return jsonify({
+                "success": False,
+                "error": "Error getting inventory!"
+            })
+
+        item_data = []
+        for key, value in result["rgDescriptions"].items():
+            try:
+                item = MarketItem.select(MarketItem.id).where(MarketItem.name == value["market_hash_name"]).get().id
+            except:
+                item = -1
+
+            i = {
+                "s": key,
+                "i": item,
+                "t": value['tradable'],
+                "m": value['marketable'],
+            }
+
+            if item == -1:
+                i["name"] = value["market_hash_name"]
+
+            if 'fraudwarnings' in value:
+                i["fraud"] = value["fraudwarnings"]
+            item_data.append(i)
+
+        # Cached for 1 hour
+        red.setex("inv:%s" % user.id, json.dumps(item_data), 60 * 60)
+    except:
+        if not red.exists("inv:%s" % user.id):
+            return jsonify({
+                "success": False,
+                "error": "Steam API is down, and no cached inventory is availbile!"
+            })
+
+        return jsonify({
+            "success": True,
+            "cached": True,
+            "age": (60 * 60) - red.ttl("inv:%s" % user.id),
+            "inv": json.loads(red.get("inv:%s" % user.id))
+        })
+
+    return jsonify({
+        "success": True,
+        "cached": False,
+        "inv": item_data
+    })
+
+@auth.route("/inventory/<int:id>", methods=["GET", "OPTIONS"])
+@auth.route("/inventory", methods=["GET", "OPTIONS"])
+@cross_origin(send_wildcard=True)
+def auth_route_inventory(id=None):
+    if not id and not g.user:
+        return "", 400
+    elif not id:
+        id = g.user.id
+
+    try:
+        u = User.select(User.steamid).where(User.id == id).get()
+    except User.DoesNotExist:
+        return "", 404
+
+    return get_safe_inventory(u)

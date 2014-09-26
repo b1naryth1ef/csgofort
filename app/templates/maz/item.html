@@ -9,13 +9,6 @@
     </div>
 </div>
 
-<!-- 
-<div class="page-toolbar">           
-    <div class="page-toolbar-block">
-        <div class="page-toolbar-title">{{ item.name }}</div>
-    </div>    
-</div> -->
-
 <div class="page-rest">
     <div class="row">
         <div class="col-md-3">
@@ -26,22 +19,22 @@
                 </div>
             </div>
             {% if family|length %}
-            <div class="block">
-                <div class="block-content">
-                    <h2>Other Wears</h2>
-                </div>
-                <div class="block-content list">
-                    {% for x in family %}
-                    <a href="/item/{{ x.id }}">
-                    <div class="list-item" style="height: 30px;">
-                        <div class="list-item-content">
-                            <h1 style="font-size: 22px">{{ x.wear|title }} @ {{ x.mipp.median }}</h1>
-                        </div>                                        
+                <div class="block">
+                    <div class="block-content">
+                        <h2>Other Wears</h2>
                     </div>
-                    </a>
-                    {% endfor %}
-                </div>                                
-            </div>
+                    <div class="block-content list">
+                        {% for x in family %}
+                        <a href="/item/{{ x.id }}">
+                        <div class="list-item" style="height: 30px;">
+                            <div class="list-item-content">
+                                <h1 style="font-size: 22px">{{ x.wear|title }} @ {{ x.mipp.median }}</h1>
+                            </div>                                        
+                        </div>
+                        </a>
+                        {% endfor %}
+                    </div>                                
+                </div>
             {% endif %}
         </div>
         <div class="col-md-9">

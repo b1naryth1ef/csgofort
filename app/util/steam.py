@@ -7,6 +7,7 @@ LIST_ITEMS_QUERY = u"http://steamcommunity.com/market/search/render/?query={quer
 ITEM_PRICE_QUERY = u"http://steamcommunity.com/market/priceoverview/?country=US&currency=1&appid={appid}&market_hash_name={name}"
 ITEM_PAGE_QUERY = u"http://steamcommunity.com/market/listings/{appid}/{name}"
 BULK_ITEM_PRICE_QUERY = u"http://steamcommunity.com/market/itemordershistogram?country=US&language=english&currency=1&item_nameid={nameid}"
+INVENTORY_QUERY = u"{url}/inventory/json/{appid}/2"
 
 steam_id_re = re.compile('steamcommunity.com/openid/id/(.*?)$')
 
@@ -132,6 +133,13 @@ class SteamMarketAPI(object):
     def __init__(self, appid, retries=5):
         self.appid = appid
         self.retries = retries
+
+    def get_inventory(self, id):
+        data = SteamAPI.new().getUserInfo(id)["profileurl"]
+        url = INVENTORY_QUERY.format(url=data, appid=self.appid)
+
+        r = requests.get(url)
+        return r.json()
 
     def parse_item_name(self, name):
         # Strip out unicode

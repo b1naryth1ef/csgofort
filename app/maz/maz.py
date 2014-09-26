@@ -1,8 +1,9 @@
-from flask import Blueprint, request, jsonify, render_template, send_file
+from flask import Blueprint, request, jsonify, render_template, send_file, g, redirect
 from mazdb import *
 from manalytics import *
 from collections import Counter
 from cStringIO import StringIO
+from util import build_url
 
 import json, random, functools, requests
 
@@ -37,6 +38,12 @@ def before_maz_request():
 @maz.route("/")
 def maz_route_index():
     return render_template("maz/index.html")
+
+@maz.route("/value")
+def maz_route_value():
+    if not g.user:
+        return redirect(build_url("auth", "login"))
+    return render_template("maz/value.html")
 
 @maz.route("/item/<id>")
 def maz_route_item(id):
@@ -144,7 +151,8 @@ def maz_route_api_item(id):
 
     return jsonify({
         "success": True,
-        "item": mi.toDict()
+        "item": mi.toDict(),
+        "price": mi.get_latest_mipp().toDict()
     })
 
 @maz.route("/api/item/<id>/price")

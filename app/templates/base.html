@@ -8,12 +8,13 @@
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         
         <link href="http://{{ DOMAIN }}/static/css/styles.css" rel="stylesheet" type="text/css" />        
-        <!--[if lt IE 10]><link rel="stylesheet" type="text/css" href="http://{{ DOMAIN }}/static/css/ie.css"/><![endif]-->       
+        <!--[if lt IE 10]><link rel="stylesheet" type="text/css" href="http://{{ DOMAIN }}/static/css/ie.css"/><![endif]-->
 
         <script>
             var CONFIG = {
                 DOMAIN: "{{ DOMAIN }}",
-                REALM: "{{ REALM }}"
+                REALM: "{{ REALM }}",
+                USER: {% if g.user %}{{ g.user.id }}{% else %}-1{% endif %}
             }
         </script> 
     </head>

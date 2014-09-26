@@ -6,16 +6,75 @@ var search_result_template = _.template('<a href="/item/<%= obj.id %>"  class="l
     '<div class="list-item-content"><img height="64px" src="/image/<%= obj.id %>" class="img-circle pull-left"><h1><%= obj.data.name %></h3>'+
     '</div></a>');
 
+var inventory_row_template = _.template('<tr value="<%= value %>"><td><a href="/item/<%= id %>"><%= name %></a></td><td>$<%= value %></td></tr>');
+
 function run(route) {
     maz.setup_search();
 
     if (route === "" || route === "/") {
-        maz.run_market_index()
+        maz.run_market_index();
     } else if (route === "/api") {
-        maz.run_api_docs()
+        maz.run_api_docs();
     } else if (route.lastIndexOf("/item", 0) === 0) {
-        maz.run_item()
+        maz.run_item();
+    } else if (route === "/value") {
+        maz.run_value();
     }
+}
+
+function sortTable(table, order) {
+    var asc   = order === 'asc',
+        tbody = table.find('tbody');
+
+    tbody.find('tr').sort(function(a, b) {
+        if (asc) {
+            return $('td:last', a).text().localeCompare($('td:last', b).text());
+        } else {
+            return $('td:last', b).text().localeCompare($('td:last', a).text());
+        }
+    }).appendTo(tbody);
+}
+
+maz.run_value = function() {
+    var value = 0;
+    var finished = 0;
+
+    $.ajax("http://auth." + CONFIG.DOMAIN + "/inventory/" + CONFIG.USER, {
+        success: function (data) {
+            if (!data.success) {
+                $("#inventory-alert").fadeIn();
+                return;
+            }
+
+            _.each(data.inv, function (v, k) {
+                $.ajax("/api/item/" + v.i, {
+                    complete: function() {
+                        finished++;
+                        if (finished >= data.inv.length) {
+                            sortTable($("#inv-table"), 'desc');
+                        }
+                    },
+                    success: function(idd) {
+                        try {
+                            var data = inventory_row_template({
+                                name: idd.item.name,
+                                value: idd.price.price.med,
+                                id: idd.item.id
+                            })
+
+                            $("#inv-body").append(data)
+
+                            if (idd.price.price.med > 0) {
+                                value = value + idd.price.price.med;
+                            }
+
+                            $("#worth").text(Math.floor(value));
+                        } catch (err) {}
+                    }
+                })
+            })
+        }
+    })
 }
 
 maz.run_api_docs = function() {
