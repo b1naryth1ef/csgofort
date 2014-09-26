@@ -40,7 +40,9 @@ class User(BModel):
         down or slow!
         """
         if not hasattr(self, "nickname"):
-            self.nickname = (red.get("nick:%s" % self.steamid) or self.cache_nickname(self.steamid)).decode('utf-8')
+            self.nickname = red.get("nick:%s" % self.steamid) or self.cache_nickname(self.steamid)
+            if not isinstance(self.nickname, unicode):
+                self.nickname = self.nickname.decode('utf-8')
         return self.nickname
 
     @classmethod
