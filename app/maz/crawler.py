@@ -4,8 +4,8 @@ market, and dumps it into our database. It's meant to constantly run and
 paces itself (while remaining error-safe) to avoid getting blocked by steam
 """
 
-from market import SteamMarketAPI
-from marketdb import *
+from util.steam import SteamMarketAPI
+from mazdb import *
 from datetime import datetime
 import time
 

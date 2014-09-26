@@ -12,5 +12,5 @@ if __name__ == "__main__":
         csgofort.run(debug=True, port=6015, host="0.0.0.0")
 
     if sys.argv[1] == "crawler":
-        from market.crawler import run
+        from maz.crawler import run
         run()

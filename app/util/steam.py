@@ -230,7 +230,7 @@ class SteamMarketAPI(object):
 
         data = PyQuery(r["sell_order_summary"])("span")
         b_volume = int(data.text().split(" ", 1)[0])
-        b_price = r["lowest_sell_order"]
+        b_price = r["lowest_sell_order"] * .01
 
         return b_volume, b_price
 

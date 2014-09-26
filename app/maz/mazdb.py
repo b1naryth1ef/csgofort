@@ -61,6 +61,7 @@ class MarketItem(BModel):
         return {
             "id": self.id,
             "name": self.name,
+            "nameid": self.nameid,
             "info": {
                 "wear": self.wear,
                 "skin": self.skin,
