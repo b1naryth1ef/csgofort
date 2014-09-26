@@ -21,6 +21,7 @@ auth = Blueprint("auth", __name__, subdomain="auth")
 def auth_route_login():
     if g.user is not None:
         return flashy(u"You are already logged in!", u=build_url("", ""))
+
     return openid.try_login('http://steamcommunity.com/openid')
 
 @auth.route("/logout")
@@ -49,7 +50,8 @@ def create_or_login(resp):
 
     # Set the sessionid and welcome the user back
     session['id'] = g.user.id
-    return flashy(u"Welcome back %s!" % g.user.get_nickname(), "success", u=build_url("", ""))
+
+    return flashy(u"Welcome back %s!" % g.user.get_nickname(), "success", u=openid.get_next_url())
 
 @csgofort.before_request
 def before_request():

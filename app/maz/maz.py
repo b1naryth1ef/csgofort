@@ -42,7 +42,7 @@ def maz_route_index():
 @maz.route("/value")
 def maz_route_value():
     if not g.user:
-        return redirect(build_url("auth", "login"))
+        return redirect(build_url("auth", "login") + "?next=" + build_url("maz", "value"))
     return render_template("maz/value.html")
 
 @maz.route("/item/<id>")
