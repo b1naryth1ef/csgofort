@@ -204,7 +204,6 @@ class SteamMarketAPI(object):
                 if r:
                     break
             except Exception:
-                print "Error listing items... retrying..."
                 time.sleep(3)
         else:
             print "Failed after %s retries" % self.retries
@@ -223,6 +222,29 @@ class SteamMarketAPI(object):
             return int(r.content.split("Market_LoadOrderSpread(", 1)[-1].split(");", 1)[0].strip())
         else:
             return None
+
+    def get_item_image(self, item_name):
+        url = ITEM_PAGE_QUERY.format(name=item_name, appid=self.appid)
+
+        for _ in range(self.retries):
+            try:    
+                r = requests.get(url)
+                r.raise_for_status()
+                break
+            except Exception:
+                time.sleep(3)
+        else:
+            print "Failed getting image %s after %s retries" % (item_name, self.retries)
+            return None
+
+        if "There are no listings for this item." in r.content:
+            return None
+
+        pq = PyQuery(r.content)
+        try:
+            return pq(".market_listing_largeimage")[0][0].get("src")
+        except:
+            print item_name
 
     def get_bulkitem_price(self, nameid):
         url = BULK_ITEM_PRICE_QUERY.format(nameid=nameid)

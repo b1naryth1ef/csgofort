@@ -11,9 +11,20 @@ class BModel(Model):
     class Meta:
         database = db
 
+MARKET_ITEM_INDEXES = (
+    # (("name", ), True),
+    # (("wear", ), False),
+    # (("skin", ), False),
+    # (("item", ), False),
+)
+
 class MarketItem(BModel):
+    class Meta:
+        indexes = MARKET_ITEM_INDEXES
+
     name = CharField()
     nameid = IntegerField(null=True)
+    image = TextField(null=True)
 
     # Parsed name attributes
     wear = CharField(null=True)
@@ -62,6 +73,7 @@ class MarketItem(BModel):
             "id": self.id,
             "name": self.name,
             "nameid": self.nameid,
+            "image": self.image,
             "info": {
                 "wear": self.wear,
                 "skin": self.skin,
@@ -76,7 +88,15 @@ class MarketItem(BModel):
             "value": self.get_latest_mipp().value()
         }
 
+
+MARKET_ITEM_PRICE_POINT_INDEXES = (
+    # (("item", ), False),
+)
+
 class MarketItemPricePoint(BModel):
+    class Meta:
+        indexes = MARKET_ITEM_PRICE_POINT_INDEXES
+
     item = ForeignKeyField(MarketItem)
 
     volume = IntegerField()
