@@ -84,6 +84,16 @@ class MarketItem(BModel):
             "value": self.get_latest_mipp().value()
         }
 
+    def get_family_items(self):
+        return MarketItem.select().where(
+            (MarketItem.id != self.id) &
+            (
+                (MarketItem.skin == self.skin) &
+                (MarketItem.item == self.item) &
+                (MarketItem.stat == self.stat)
+            )
+        )
+
 
 MARKET_ITEM_PRICE_POINT_INDEXES = (
     # (("item", ), False),

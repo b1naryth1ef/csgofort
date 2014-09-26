@@ -13,11 +13,21 @@ function run(route) {
         maz.run_market_index()
     } else if (route === "/api") {
         maz.run_api_docs()
+    } else if (route.lastIndexOf("/item", 0) === 0) {
+        maz.run_item()
     }
 }
 
 maz.run_api_docs = function() {
     
+}
+
+maz.run_item = function () {
+    $.ajax("/api/item/"+ITEM_ID+"/graph/value", {
+        success: function(data) {
+            draw_item_graph(data.data);
+        }
+    })
 }
 
 maz.run_market_index = function() {
@@ -46,7 +56,8 @@ maz.run_market_index = function() {
 }
 
 maz.setup_search = function() {
-    $("#top-search").keypress(function (ev) {
+    $("#top-search").keydown(function (ev) {
+        console.log(ev);
         if (this.search_xhr) {
             this.search_xhr.abort();
             this.search_xhr = null;
@@ -121,4 +132,30 @@ function draw_dashboard_graphs(d1) {
     window.addEventListener('resize', rdc_resize);        
 
     rdc_resize();
+}
+
+function draw_item_graph(data) {
+    var rlc = new Rickshaw.Graph( {
+            element: document.getElementById("charts-lines"),
+            renderer: 'line',
+            min: 50,
+            series: [{color: "#2f9fe0",data: data_to_rickshaw(data), name: 'Value'}]
+    });
+
+    rlc.render();    
+
+    var axes = new Rickshaw.Graph.Axis.Time({graph: rlc});
+    var hoverDetail = new Rickshaw.Graph.HoverDetail({graph: rlc});
+    axes.render();
+
+    var rlc_resize = function() {                
+                rlc.configure({
+                        width: $("#charts-lines").width(),
+                        height: $("#charts-lines").height()
+                });
+                rlc.render();
+        }
+
+    window.addEventListener('resize', rlc_resize); 
+    rlc_resize();
 }

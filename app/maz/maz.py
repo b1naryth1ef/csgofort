@@ -38,6 +38,23 @@ def before_maz_request():
 def maz_route_index():
     return render_template("maz/index.html")
 
+@maz.route("/item/<id>")
+def maz_route_item(id):
+    try:
+        mi = MarketItem.select().where(MarketItem.id == id).get()
+        mi.mipp = mi.get_latest_mipp()
+    except MarketItem.DoesNotExist:
+        return "", 404
+
+    family = []
+    for entry in mi.get_family_items():
+        entry.mipp = entry.get_latest_mipp()
+        family.append(entry)
+
+    family = list(reversed(sorted(family, key=lambda i: i.mipp.median)))
+
+    return render_template("maz/item.html", item=mi, family=family)
+
 @maz.route("/image/<id>")
 def maz_route_item_image(id):
     try:
@@ -109,7 +126,7 @@ def maz_route_items():
     })
 
 @maz.route("/api/item/<id>")
-def maz_route_item(id):
+def maz_route_api_item(id):
     """
     Returns information for a single item given a steam-market name or
     internal ID
@@ -310,7 +327,7 @@ def dategraph(f):
         if res == "year":
             ruleset = rrule(MONTHLY, count=12, dtstart=datetime.datetime.utcnow() - relativedelta(months=11))
 
-        return f(ruleset)
+        return f(ruleset, *args, **kwargs)
     return deco
 
 
@@ -343,6 +360,27 @@ def maz_route_listings(rule):
         "data": data,
         "success": True,
     })
+
+@maz.route("/api/item/<id>/graph/value")
+@dategraph
+def maz_route_item_graph_value(rule, id):
+    try:
+        mi = MarketItem.get(MarketItem.id == id)
+    except MarketItem.DoesNotExist:
+        return jsonify({
+            "success": False,
+            "error": "Invalid Item ID!"
+        })
+
+    data = {}
+    for dt in rule:
+        data[dt.strftime("%Y-%m-%d")] = random.randint(100000, 999999)
+
+    return jsonify({
+        "data": data,
+        "success": True,
+    })
+
 
 SEARCH_ATTRIBS = ["name", "skin", "wear", "item"]
 
