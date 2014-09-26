@@ -1,0 +1,44 @@
+{% extends "maz/base.html" %}
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="col-wrapper">
+            <p class="lead">
+                Welcome to the Maz API Documentation! This contains everything you need to get started reading data from our public API endpoints. Keep in mind, this documentation was written for those with some prior knowledge of how to interact and use programatic web services.
+            </p>
+        </div>
+    </div>
+    <div class="col-md-12">
+        <h1>Structure</h1>
+        <h2>Basics</h2>
+        <p>The Maz API was intentionally structured to be helpful to outsider users. As such, most of the common tasks we expect people to need are easy through the exposed methods. If you think we've missed something, we're always happy to hear your input so feel free to contact us! The API resembles a REST-ish application, with our primary data structures being "Market Items" and "Market Item Price Points". The entire API is read-only, and thus all endpoints will only accept GET requests. All data returned is in standard JSON format, with datetimes in the standard ISO format.</p>
+        <h2>Authentication/Limits</h2>
+        <p>The API does not require you to authenticate or use API keys to access the endpoints, however we do impose some (rather generous) limits on users, based on IP. The basic structure is 1000 requests every 5 minutes, per IP. If you need more, you will have to contact us to get your IP whitelisted. API endpoints will return a 429 (Too Many Requests) upon hitting the limit. Keep in mind, we reserve the right to change the behavior of these limits at any time without contacting you.</p>
+        <h2>Crediting</h2>
+        <p>If you use the Maz API in <b>any</b> commercial or monetized application, you <b>must</b> give clear credit towards our API, and link directly to this API page. We also request any users that are not monetizing or profiting from their application link towards our API, however it is not required. Keep in mind we reserve the right to instantly terminate access rights to commercial users who do not give proper credit towards the API</p>
+
+        <h1>Routes</h1>
+        {% for api in docs %}
+            <h3>{{ api["method"] }} http://maz.csgofort.com/api/{{ api["route"] }}</h3>
+            <p>
+
+{% if "params" in api %}
+<h4>Paramaters</h4>
+<pre>{{ api["params"]|jsonify|safe }}</pre>
+{% endif %}
+
+{% if "example" in api %}
+<h4>Response</h4>
+<pre>{{ api["example"]|jsonify|safe }}</pre>
+{% endif %}
+
+            {{ api["doc"] }}
+            </p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+    <script src="http://{{ DOMAIN }}/static/js/maz.js"></script>
+{% endblock %}

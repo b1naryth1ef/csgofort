@@ -1,6 +1,0 @@
-{% extends "base.html" %}
-{% block header_links %}
-<li {% if request.path == "/" %} class="active" {% endif %}><a href="{{ build_url('market', '') }}">Home</a></li>
-<li {% if request.path == "/stats" %} class="active" {% endif %}><a href="{{ build_url('market', 'stats') }}">Stats</a></li>
-<li {% if request.path == "/api" %} class="active" {% endif %}><a href="{{ build_url('market', 'api') }}">API</a></li>
-{% endblock %}

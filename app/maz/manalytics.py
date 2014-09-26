@@ -1,4 +1,4 @@
-from marketdb import *
+from mazdb import *
 
 
 # This query extracts the latest mipp for every known item while being O(1)

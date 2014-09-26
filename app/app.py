@@ -23,11 +23,11 @@ else:
 def register_views():
     from views.public import public
     from views.auth import auth
-    from market.market import market
+    from maz.maz import maz
     from vacdex.vacdex import vacdex
 
     csgofort.register_blueprint(public)
     csgofort.register_blueprint(auth)
-    csgofort.register_blueprint(market)
+    csgofort.register_blueprint(maz)
     csgofort.register_blueprint(vacdex)
 
