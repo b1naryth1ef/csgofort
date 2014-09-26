@@ -6,7 +6,7 @@ var search_result_template = _.template('<a href="/item/<%= obj.id %>"  class="l
     '<div class="list-item-content"><img height="64px" src="/image/<%= obj.id %>" class="img-circle pull-left"><h1><%= obj.data.name %></h3>'+
     '</div></a>');
 
-var inventory_row_template = _.template('<tr value="<%= value %>"><td><a href="/item/<%= id %>"><%= name %></a></td><td>$<%= value %></td></tr>');
+var inventory_row_template = _.template('<tr value="<%= value * 100 %>"><td><a href="/item/<%= id %>"><%= name %></a></td><td>$<%= value %></td></tr>');
 
 function run(route) {
     maz.setup_search();
@@ -28,9 +28,9 @@ function sortTable(table, order) {
 
     tbody.find('tr').sort(function(a, b) {
         if (asc) {
-            return $('td:last', a).text().localeCompare($('td:last', b).text());
+            return parseInt($(a).attr("value")) - parseInt($(b).attr("value"));
         } else {
-            return $('td:last', b).text().localeCompare($('td:last', a).text());
+            return parseInt($(b).attr("value")) - parseInt($(a).attr("value"));
         }
     }).appendTo(tbody);
 }
@@ -50,6 +50,7 @@ maz.run_value = function() {
                 $.ajax("/api/item/" + v.i, {
                     complete: function() {
                         finished++;
+
                         if (finished >= data.inv.length) {
                             sortTable($("#inv-table"), 'desc');
                         }
