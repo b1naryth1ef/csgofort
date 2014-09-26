@@ -1,9 +1,10 @@
-from flask import Blueprint, request, jsonify, render_template
+from flask import Blueprint, request, jsonify, render_template, send_file
 from mazdb import *
 from manalytics import *
 from collections import Counter
+from cStringIO import StringIO
 
-import json, random, functools
+import json, random, functools, requests
 
 from dateutil.rrule import *
 from dateutil.relativedelta import relativedelta
@@ -36,6 +37,30 @@ def before_maz_request():
 @maz.route("/")
 def maz_route_index():
     return render_template("maz/index.html")
+
+@maz.route("/image/<id>")
+def maz_route_item_image(id):
+    try:
+        u = MarketItem.select(MarketItem.id, MarketItem.image).where(MarketItem.id == id).get()
+    except MarketItem.DoesNotExist:
+        return "", 404
+
+    key = "itemimg:%s" % u.id
+    if red.exists(key):
+        buffered = StringIO(red.get(key))
+    else:
+        try:
+            r = requests.get(u.image)
+            r.raise_for_status()
+        except:
+            return "", 500
+
+        # Cached for 15 minutes
+        buffered = StringIO(r.content)
+        red.setex(key, r.content, (60 * 15))
+
+    buffered.seek(0)
+    return send_file(buffered, mimetype="image/jpeg")
 
 @maz.route("/api")
 def maz_route_api():
@@ -318,3 +343,52 @@ def maz_route_listings(rule):
         "data": data,
         "success": True,
     })
+
+SEARCH_ATTRIBS = ["name", "skin", "wear", "item"]
+
+@maz.route("/api/search")
+def maz_route_search():
+    query = {
+        attrib: request.values.get(attrib) + "*" for attrib in SEARCH_ATTRIBS if attrib in request.values
+    }
+
+    if not query:
+        return jsonify({
+            "success": False,
+            "error": "You must specifiy a search query!"
+        })
+
+    result = es.search(
+        index='marketitems',
+        doc_type='marketitem',
+        body={
+            'query': {
+                'filtered': {
+                    'query': {
+                        'match': query
+                    },
+                }
+            },
+            "size": 25
+        }
+    )
+
+    if result['hits']['total']:
+        results = map(lambda i: {
+            "id": i["_id"],
+            "data": i["_source"],
+            "score": i["_score"]
+        }, result['hits']['hits'])
+        return jsonify({
+            "results": results,
+            "size": len(results),
+            "success": True
+        })
+    else:
+        return jsonify({
+            "results": [],
+            "size": 0,
+            "success": False
+        })
+
+    return jsonify(result)

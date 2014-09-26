@@ -3,4 +3,10 @@
 <li {% if request.path == "/" %} class="active" {% endif %}><a href="{{ build_url('maz', '') }}">Home</a></li>
 <li {% if request.path == "/stats" %} class="active" {% endif %}><a href="{{ build_url('maz', 'stats') }}">Stats</a></li>
 <li {% if request.path == "/api" %} class="active" {% endif %}><a href="{{ build_url('maz', 'api') }}">API</a></li>
+<li class="search" id="top-search">
+    <input id="top-search-box" type="text" class="form-control" placeholder="Search...">
+    <div class="popup closed" id="top-search-drop">
+        <div id="search-results" class="list no-controls"></div>
+    </div>
+</li>
 {% endblock %}

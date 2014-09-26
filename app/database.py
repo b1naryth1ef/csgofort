@@ -1,15 +1,9 @@
 #!/usr/bin/env python
-import sys, os
-from peewee import *
-from playhouse.postgres_ext import *
-import redis
-
-db = PostgresqlExtDatabase('fort', user="b1n", password="b1n", threadlocals=True, port=5433)
-red = redis.Redis()
+import sys
+from externals import *
 
 from maz.mazdb import MarketItem, MarketItemPricePoint, MIPPDaily
 from vacdex.vacdb import *
-
 from util import build_url
 from util.steam import SteamAPI
 
@@ -72,6 +66,52 @@ def migrate(module):
     module.run()
     module.post()
 
+def setup_es():
+    try:
+        es.indices.delete(index="marketitems")
+    except: pass
+    es.indices.create(
+        index="marketitems",
+        body={
+            "settings": {
+                "number_of_shards": 1, 
+                "analysis": {
+                    "filter": {
+                        "autocomplete_filter": { 
+                            "type":     "edge_ngram",
+                            "min_gram": 3,
+                            "max_gram": 25
+                        }
+                    },
+                    "analyzer": {
+                        "autocomplete": {
+                            "type":      "custom",
+                            "tokenizer": "standard",
+                            "filter": [
+                                "lowercase",
+                                "autocomplete_filter" 
+                            ]
+                        }
+                    }
+                }
+            }
+        }
+    )
+    es.indices.put_mapping(
+        index="marketitems",
+        doc_type="marketitem",
+        body={
+            "marketitem": {
+                "properties": {
+                    "name": {
+                        "type":     "string",
+                        "analyzer": "autocomplete"
+                    }
+                }
+            }
+        }
+    )
+
 if __name__ == "__main__":
     if len(sys.argv) <= 1:
         print "Usage: ./database.py [build/reset/migrate]"
@@ -80,6 +120,8 @@ if __name__ == "__main__":
     if sys.argv[1] == "build":
         print "Building new tables..."
         map(lambda i: i.create_table(True), TABLES)
+
+        setup_es()
 
     if sys.argv[1] == "reset":
         print "Resetting DB..."

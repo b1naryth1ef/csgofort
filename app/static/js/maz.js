@@ -1,17 +1,26 @@
+maz = {
+    search_xhr: null
+}
+
+var search_result_template = _.template('<a href="/item/<%= obj.id %>"  class="list-item" style="height: 60px; overflow: hidden;">'+
+    '<div class="list-item-content"><img height="64px" src="/image/<%= obj.id %>" class="img-circle pull-left"><h1><%= obj.data.name %></h3>'+
+    '</div></a>');
+
 function run(route) {
-    console.log(1)
+    maz.setup_search();
+
     if (route === "" || route === "/") {
-        run_market_index()
+        maz.run_market_index()
     } else if (route === "/api") {
-        run_api_docs()
+        maz.run_api_docs()
     }
 }
 
-function run_api_docs() {
+maz.run_api_docs = function() {
     
 }
 
-function run_market_index() {
+maz.run_market_index = function() {
     $.ajax("/api/graph/totalvalue", {
         success: function(d1) {
             draw_dashboard_graphs(d1.data);
@@ -34,6 +43,44 @@ function run_market_index() {
             $("#stats").fadeIn();
         }
     })
+}
+
+maz.setup_search = function() {
+    $("#top-search").keypress(function (ev) {
+        if (this.search_xhr) {
+            this.search_xhr.abort();
+            this.search_xhr = null;
+        }
+
+        var val = $("#top-search-box").val() + String.fromCharCode(ev.which);
+        if (!val) {
+            $("#top-search-drop").addClass("closed")
+            $("#top-search-drop").removeClass("open")
+            return;
+        }
+
+        this.search_xhr = $.ajax("/api/search", {
+            data: {
+                name: val
+            },
+            success: function (data) {
+                $("#search-results").empty()
+
+                var count = 0;
+                _.each(data.results, function (v, k) {
+                    if (count > 10) return;
+                    if (v.score < 2) return;
+                    count++
+                    $("#search-results").append(search_result_template({
+                        obj: v
+                    }))
+                })
+                
+                $("#top-search-drop").removeClass("closed")
+                $("#top-search-drop").addClass("open")
+            }
+        })
+    });
 }
 
 function data_to_rickshaw(data) {

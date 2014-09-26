@@ -7,6 +7,7 @@ paces itself (while remaining error-safe) to avoid getting blocked by steam
 from util.steam import SteamMarketAPI
 from mazdb import *
 from datetime import datetime, timedelta
+import time, requests
 
 api = SteamMarketAPI(730)
 
@@ -72,11 +73,11 @@ def check_community_status():
             r = requests.get("http://steamcommunity.com/market/")
             r.raise_for_status()
             red.incr("maz:community_status", -1)
-            break
         except:
             time.sleep(5)
     else:
-        red.incr("maz:community_status", 1)
+        if red.get("maz:community_status") < 5:
+            red.incr("maz:community_status", 1)
     print "Done checking Steam Community Status."
 
 
@@ -114,3 +115,18 @@ def build_daily_mipps():
                 built += 1
 
     print "Built %s daily aggregate MIPP's" % built
+
+def index_market_search():
+    print "Indexing %s Market Items in search" % MarketItem.select().count()
+
+    for item in MarketItem.select().naive().iterator():
+        doc = {
+            "name": item.name,
+            "wear": item.wear,
+            "skin": item.skin,
+            "item": item.item,
+        }
+
+        es.index(index="marketitems", doc_type='marketitem', id=item.id, body=doc)
+
+    es.indices.refresh(index="marketitems")
