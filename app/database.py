@@ -7,7 +7,7 @@ import redis
 db = PostgresqlExtDatabase('fort', user="b1n", password="b1n", threadlocals=True, port=5433)
 red = redis.Redis()
 
-from maz.mazdb import MarketItem, MarketItemPricePoint
+from maz.mazdb import MarketItem, MarketItemPricePoint, MIPPDaily
 from vacdex.vacdb import *
 
 from util import build_url
@@ -61,6 +61,7 @@ class User(BModel):
 TABLES = [
     MarketItem,
     MarketItemPricePoint,
+    MIPPDaily,
     User
 ]
 

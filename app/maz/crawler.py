@@ -6,7 +6,7 @@ paces itself (while remaining error-safe) to avoid getting blocked by steam
 
 from util.steam import SteamMarketAPI
 from mazdb import *
-from datetime import datetime
+from datetime import datetime, timedelta
 
 api = SteamMarketAPI(730)
 
@@ -64,3 +64,53 @@ def index_all_images():
         if item.image:
             item.save()
     print "Finished re-indexing all item images!"
+
+def check_community_status():
+    print "Checking Steam Community status..."
+    for _ in range(5):
+        try:
+            r = requests.get("http://steamcommunity.com/market/")
+            r.raise_for_status()
+            red.incr("maz:community_status", -1)
+            break
+        except:
+            time.sleep(5)
+    else:
+        red.incr("maz:community_status", 1)
+    print "Done checking Steam Community Status."
+
+
+def build_single_daily_mipp(item, yesterday, today):
+    q = MarketItemPricePoint.select().where(
+        (MarketItemPricePoint.item == item) &
+        (MarketItemPricePoint.time >= yesterday) &
+        (MarketItemPricePoint.time <= today)
+    )
+
+    if not q.count():
+        print "No MIPP's for daily aggregation (%s)!" % item.id
+        return False
+    q = list(q)
+
+    m = MIPPDaily()
+    m.item = item
+    m.volume = sum(map(lambda i: i.volume, q)) / len(q)
+    m.lowest = sum(map(lambda i: i.lowest, q)) / len(q)
+    m.median = sum(map(lambda i: i.median, q)) / len(q)
+    m.samples = map(lambda i: i.id, q)
+    m.time = yesterday
+    m.save()
+    return True
+
+def build_daily_mipps():
+    today = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+    yesterday = today - timedelta(days=1)
+
+    built = 0
+    for item in MarketItem.select().naive().iterator():
+        q  = MIPPDaily.select().where((MIPPDaily.item == item) & (MIPPDaily.time == yesterday))
+        if not q.count():
+            if build_single_daily_mipp(item, yesterday, today):
+                built += 1
+
+    print "Built %s daily aggregate MIPP's" % built

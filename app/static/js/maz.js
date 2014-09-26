@@ -1,4 +1,5 @@
 function run(route) {
+    console.log(1)
     if (route === "" || route === "/") {
         run_market_index()
     } else if (route === "/api") {
@@ -12,12 +13,8 @@ function run_api_docs() {
 
 function run_market_index() {
     $.ajax("/api/graph/totalvalue", {
-        success: function(data) {
-            if (data.success) {
-                draw_dashboard_graphs(data.data);
-            } else {
-                console.log("Failed to load market value graph");
-            }
+        success: function(d1) {
+            draw_dashboard_graphs(d1.data);
         }
     })
 
@@ -25,6 +22,10 @@ function run_market_index() {
         success: function(data) {
             if (!data.success) {
                 return console.log("Failed to load market info");
+            }
+
+            if (data.community > 0) {
+                $("#community-alert").fadeIn();
             }
 
             $("#stat-unique").text(data.total_items.toLocaleString());
@@ -35,64 +36,42 @@ function run_market_index() {
     })
 }
 
-function draw_dashboard_graphs(data) {
-    key = ["x"].concat(_.keys(data))
-    val = ["value"].concat(_.values(data))
+function data_to_rickshaw(data) {
+    var dat = [], inc = 0;
+    _.each(data, function (v, k) {
+        inc++;
+        dat.push({
+            x: inc,
+            y: v
+        })
+    })
+    return dat;
+}
 
-    c3.generate({
-        bindto: '#market_value',
-        data: {
-            x: 'x',
-            columns: [
-                key,
-                val
+function draw_dashboard_graphs(d1) {
+    var rdc = new Rickshaw.Graph( {
+            element: document.getElementById("dashboard-chart"),
+            renderer: 'area',
+            width: $("#dashboard-chart").width(),
+            height: 250,
+            series: [
+                {color: "#2f9fe0", data: data_to_rickshaw(d1), name: 'Estimated Market Value'},
             ],
-            types: {
-                'value': 'line'
-            }
-        },
-        axis: {
-            x: {
-                type: 'timeseries',
-                tick: {
-                    culling: false,
-                    fit: true,
-                    format: "%A %B %d"
-                }
-            },
-            y : {
-                tick: {
-                    format: d3.format("$,")
-                }
-            }
-        },
-        point: {
-            r: '4',
-            focus: {
-                expand: {
-                    r: '5'
-                }
-            }
-        },
-        bar: {
-            width: {
-                ratio: 0.4 // this makes bar width 50% of length between ticks
-            }
-        },
-        grid: {
-            x: {
-                show: true
-            },
-            y: {
-                show: true
-            }
-        },
-        color: {
-            pattern: ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf']
-        }
-    });
+    } );
 
-        $(window).on("debouncedresize", function() {
-            c3_7_days_chart.resize();
-        });
+    rdc.render();
+
+    var rdc_resize = function() {                
+            rdc.configure({
+                    width: $("#dashboard-chart").width(),
+                    height: $("#dashboard-chart").height()
+            });
+            rdc.render();
+    }
+
+    var hoverDetail = new Rickshaw.Graph.HoverDetail({graph: rdc});
+
+    window.addEventListener('resize', rdc_resize);        
+
+    rdc_resize();
 }

@@ -119,3 +119,19 @@ class MarketItemPricePoint(BModel):
             "time": self.time.isoformat()
         }
 
+
+class MIPPDaily(BModel):
+    """
+    MIPPDailys are aggergated versions of MIPPs which allow for a more
+    consistent and constant data source. They represent an average of all
+    observed MIPPs for a single day period (24h exactly). A MIPPDaily will
+    NOT exist for items that have no observed MIPP's in a day.
+    """
+    item = ForeignKeyField(MarketItem)
+
+    volume = IntegerField()
+    lowest = FloatField()
+    median = FloatField()
+
+    samples = ArrayField(IntegerField)
+    time = DateTimeField()

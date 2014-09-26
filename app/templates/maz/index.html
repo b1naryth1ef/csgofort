@@ -1,54 +1,66 @@
 {% extends "maz/base.html" %}
 {% block content %}
 <div class="row">
-    <div id="stats" style="display:none">
-        <div class="col-lg-4 col-sm-6">
-            <div class="info_box_var_1 box_bg_a">
-                <div class="info_box_body">
-                    <span class="info_box_icon el-icon-tags"></span>
-                    <span id="stat-unique">0</span>
-                </div>
-                <div class="info_box_footer">
-                    Total Unique Items
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-4 col-sm-6">
-            <div class="info_box_var_1 box_bg_b">
-                <div class="info_box_body">
-                    <span class="info_box_icon icon_cart_alt"></span>
-                    <span id="stat-listed">0</span>
-                </div>
-                <div class="info_box_footer">
-                    Total Listed Items
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-4 col-sm-6">
-            <div class="info_box_var_1 box_bg_c">
-                <div class="info_box_body">
-                    <span class="info_box_icon icon_wallet"></span>
-                    $<span id="stat-value">0</span>
-                </div>
-                <div class="info_box_footer">
-                    Global Estimated Market Value
-                </div>
-            </div>
+    <div class="col-md-12">
+        <div id="community-alert" class="alert alert-danger" style="display: none">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+            <strong>Uh Oh!</strong> The Steam Community is experiencing some issues right now! Only a cached version of your player inventory will be availbile, and some other data may be expired or innaccurate. Please keep in mind that we have no control over the Steam Community, and must wait for Valve to address all stability issues.
         </div>
     </div>
 </div>
-<div class="row">
-    <div class="col-md-12">
-        <div class="col-wrapper">
-            <p class="lead">
-                Welcome to Maz! Here you can dive into a deep set of crawled market data from the Steam Community Market. Maz provides you with an extensive tool set for querying and analysing all of our historical and analytical data. Along with a public interface, the Maz also has a backend API that can be plugged into to get even more data and information, without having to write your own custom Steam Market crawlers.
-            </p>
-        </div>
-        <div class="col-wrapper">
-            <div class="heading_a">
-                <span class="heading_text">Overall Steam Market Value (7-days)</span>
+
+
+<div class="page-toolbar">                        
+    <div class="page-toolbar-block">
+        <div class="page-toolbar-subtitle">Estimated Steam Community Market Value (dollars)</div>
+    </div> 
+</div>
+<div class="block-wide">                                             
+    <div id="dashboard-chart" style="height: 250px; width: 100%; float: left; background-color: #e5e5e5"></div>
+    <div class="chart-legend">
+        <div id="dashboard-legend"></div>
+    </div>
+</div>
+
+<div class="page-rest">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="widget-pie">
+                <div class="widget-pie-info">
+                    <div class="widget-pie-info-num"><span id="stat-unique">0</span></div>
+                    <div class="widget-pie-info-text">Total Unique Items</div>
+                </div>
             </div>
-            <div id="market_value"></div>
+        </div>
+        <div class="col-md-4">
+            <div class="widget-pie">
+                <div class="widget-pie-info">
+                    <div class="widget-pie-info-num"><span id="stat-listed">0</span></div>
+                    <div class="widget-pie-info-text">Total Listed Items</div>
+                </div>
+            </div>                            
+        </div>
+        <div class="col-md-4">
+            <div class="widget-pie">
+                <div class="widget-pie-info">
+                    <div class="widget-pie-info-num">$<span id="stat-value">0</span></div>
+                    <div class="widget-pie-info-text">Estimated Market Value</div>
+                </div>
+            </div>                            
+        </div>                        
+    </div>
+
+
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="block">
+                <div class="block-content">
+                    <h3>
+                        Maz is the Fort's dashboard to an extensive database of crawled data from the Steam Community Market. Using Maz, you can easily track the value and volume of common items within the market, or run complex aggregation queries to gain understanding of trends and changes within the market. Maz also provides an extensive backend <a href="/api">API</a>, which is free for anyone to use and access.
+                    </h3>
+                </div>
+            </div>
         </div>
     </div>
 </div>

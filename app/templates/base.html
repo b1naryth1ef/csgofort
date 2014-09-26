@@ -1,125 +1,83 @@
 <!DOCTYPE html>
-<html>
-    <head>
-        <meta charset="UTF-8">
-        <title>CSGO Fort</title>
+<html lang="en">
+    <head>        
+        <title>CSGO Fort - {{ REALM|title }}</title>    
 
-        <meta name="viewport" content="initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
-        <link rel="shortcut icon" type="image/x-icon" href="favicon.ico">
-        <link href="http://{{ DOMAIN }}/static/bootstrap/css/bootstrap.min.css" rel="stylesheet" media="screen">
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />        
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
         
-        <link href="http://{{ DOMAIN }}/static/icons/elegant/style.css" rel="stylesheet" media="screen">
-        <link href="http://{{ DOMAIN }}/static/icons/elusive/css/elusive-webfont.css" rel="stylesheet" media="screen">
-        <link rel="stylesheet" href="http://{{ DOMAIN }}/static/icons/flags/flags.css">
-        <link href='http://fonts.googleapis.com/css?family=Open+Sans&amp;subset=latin,latin-ext' rel='stylesheet' type='text/css'>
-
-        <link href="http://{{ DOMAIN }}/static/css/main.css" rel="stylesheet" media="screen" id="mainCss">
-        <script src="http://{{ DOMAIN }}/static/js/moment-with-langs.min.js"></script>
+        <link href="http://{{ DOMAIN }}/static/css/styles.css" rel="stylesheet" type="text/css" />        
+        <!--[if lt IE 10]><link rel="stylesheet" type="text/css" href="http://{{ DOMAIN }}/static/css/ie.css"/><![endif]-->       
 
         <script>
             var CONFIG = {
                 DOMAIN: "{{ DOMAIN }}",
                 REALM: "{{ REALM }}"
             }
-        </script>
+        </script> 
     </head>
-    <body class="fx_width">
-        <div id="page_wrapper">
-            <div id="topmenu" style="display: none; position: fixed; top: 0px; height: 76px; width: 100%; z-index: 100">
-                <div class="container-fluid">
-                    <div class="row" id="topcont">
-                        <div class="col-lg-3 col-sm-6 toplink">
-                            <div class="info_box_var_1 box_bg_a topclick" rel="">
-                                <div class="info_box_footer">
-                                    <h1>Fort Home</h1>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-lg-3 col-sm-6 toplink">
-                            <div class="info_box_var_1 box_bg_b topclick" rel="trading.">
-                                <div class="info_box_footer">
-                                    <h1>Trading</h1>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-lg-3 col-sm-6 toplink">
-                            <div class="info_box_var_1 box_bg_c topclick" rel="betting.">
-                                <div class="info_box_footer">
-                                    <h1>Betting</h1>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-lg-3 col-sm-6 toplink">
-                            <div class="info_box_var_1 box_bg_d topclick" rel="maz.">
-                                <div class="info_box_footer">
-                                    <h1>Maz</h1>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+    <body>
+        
+        <div class="page-container">
+            <div class="top-menu">
+
             </div>
 
-            <header id="main_header">
-                <div class="container-fluid">
-                    <div class="brand_section">
-                        <a style="color: white;" id="logo"><h3 style="padding-top: 10px; margin-top: 0px">Fort {{ REALM|title }}</h3></a>
-                    </div>
-                    <ul class="header_notifications clearfix">
-                        {% block header_links %}
-                        {% endblock %}
-                    </ul>
-                    {% if g.user %}
-                    <div class="header_user_actions dropdown">
-                        <div data-toggle="dropdown" class="dropdown-toggle user_dropdown">
-                            <div class="user_avatar">
-                                <img src="{{ g.user.get_avatar() }}" alt="" title="{{ g.user.get_nickname() }}" width="38" height="38">
-                            </div>
-                            <span class="caret"></span>
-                        </div>
-                        <ul class="dropdown-menu dropdown-menu-right">
-                            <li><a href="{{ build_url('auth', 'logout') }}?realm={{ REALM }}">Log Out</a></li>
-                        </ul>
-                    </div>
-                    {% endif %}
-                    <div class="search_section hidden-sm hidden-xs">
-                        <input type="text" class="form-control input-sm">
-                        <button class="btn btn-link btn-sm" type="button"><span class="icon_search"></span></button>
-                    </div>
-                </div>
-            </header>
+            <div class="page-head">
+                <ul class="page-head-elements">
+                    <li id="top-menu-toggle"><h1 style="color: white; padding-top: 10px; padding-right: 5px; padding-left: 5px;">{{ REALM|title }}</h1></li>
+                    {% block header_links %}
+                    {% endblock %}
+                </ul>
 
-            <!-- main content -->
-            <div id="main_wrapper">
-                <div class="container-fluid">
-                    {% with messages = get_flashed_messages(with_categories=true) %}
-                    {% if messages %}
-                        {% for category, message in messages %}
-                          <div class="alert alert-{{ category }}">
-                            <button class="close" data-dismiss="alert">×</button>
-                            {{ message|safe }}
-                          </div>
-                        {% endfor %}
-                    {% endif %}
-                    {% endwith %}
+                <ul class="page-head-elements pull-right">
+<!--                     <li>
+                        <div class="informer informer-pulsate">5</div>
+                        <a href="index.html#" class="dropdown"><span class="fa fa-comments"></span></a>                        
+                    </li>
+                     -->
+                    <li><a class="page-sidebar-toggle"><span class="fa fa-tasks"></span></a></li>
+                </ul>
+                
+            </div>
+            <div class="page-content">
+                <div class="container">
                     {% block content %}
                     {% endblock %}
+
                 </div>
+                
             </div>
+            <div class="page-sidebar"></div>
         </div>
 
-        <script src="http://{{ DOMAIN }}/static/js/jquery.min.js"></script>
-        <script src="http://{{ DOMAIN }}/static/js/jqueryCookie.min.js"></script>
-        <script src="http://{{ DOMAIN }}/static/bootstrap/js/bootstrap.min.js"></script>
-        <script src="http://{{ DOMAIN }}/static/js/retina.min.js"></script>
-        <script src="http://{{ DOMAIN }}/static/js/yukon_all.js"></script>
-        <script src="http://{{ DOMAIN }}/static/lib/d3/d3.min.js"></script>
-        <script src="http://{{ DOMAIN }}/static/lib/c3/c3.min.js"></script>
-        <script src="http://{{ DOMAIN }}/static/lib/jvectormap/jquery-jvectormap-1.2.2.min.js"></script>
-        <script src="http://{{ DOMAIN }}/static/lib/jvectormap/maps/jquery-jvectormap-world-mill-en.js"></script>
-        <script src="http://{{ DOMAIN }}/static/js/countUp.min.js"></script>
-        <script src="http://{{ DOMAIN }}/static/lib/switchery/dist/switchery.min.js"></script>
-        <script src="http://{{ DOMAIN }}/static/lib/easy-pie-chart/dist/jquery.easypiechart.min.js"></script>
+        <script type="text/javascript" src="http://{{ DOMAIN }}/static/js/plugins/jquery/jquery.min.js"></script>
+        <script type="text/javascript" src="http://{{ DOMAIN }}/static/js/plugins/jquery/jquery-ui.min.js"></script>
+        <script type="text/javascript" src="http://{{ DOMAIN }}/static/js/plugins/bootstrap/bootstrap.min.js"></script>
+        <script type="text/javascript" src="http://{{ DOMAIN }}/static/js/plugins/mcustomscrollbar/jquery.mCustomScrollbar.min.js"></script>        
+        
+        <script type="text/javascript" src="http://{{ DOMAIN }}/static/js/plugins/sparkline/jquery.sparkline.min.js"></script>        
+        <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false&libraries=places"></script>
+        <script type="text/javascript" src="http://{{ DOMAIN }}/static/js/plugins/fancybox/jquery.fancybox.pack.js"></script>                
+
+        <script type="text/javascript" src="http://{{ DOMAIN }}/static/js/plugins/rickshaw/d3.v3.js"></script>
+        <script type="text/javascript" src="http://{{ DOMAIN }}/static/js/plugins/rickshaw/rickshaw.min.js"></script>
+        
+        <script type='text/javascript' src='http://{{ DOMAIN }}/static/js/plugins/knob/jquery.knob.js'></script>
+        
+        <script type="text/javascript" src="http://{{ DOMAIN }}/static/js/plugins/daterangepicker/moment.min.js"></script>
+        <script type="text/javascript" src="http://{{ DOMAIN }}/static/js/plugins/daterangepicker/daterangepicker.js"></script> 
+        
+        <script type='text/javascript' src='http://{{ DOMAIN }}/static/js/plugins/jvectormap/jquery-jvectormap-1.2.2.min.js'></script>
+        <script type='text/javascript' src='http://{{ DOMAIN }}/static/js/plugins/jvectormap/jquery-jvectormap-europe-mill-en.js'></script>
+        
+        <script type="text/javascript" src="http://{{ DOMAIN }}/static/js/plugins.js"></script>        
+        <script type="text/javascript" src="http://{{ DOMAIN }}/static/js/demo.js"></script>
+        <script type="text/javascript" src="http://{{ DOMAIN }}/static/js/maps.js"></script>        
+        <script type="text/javascript" src="http://{{ DOMAIN }}/static/js/charts.js"></script>
+        <script type="text/javascript" src="http://{{ DOMAIN }}/static/js/actions.js"></script>
+
         <script src="http://underscorejs.org/underscore-min.js"></script>
         <script src="http://{{ DOMAIN }}/static/js/app.js"></script>
 
@@ -128,8 +86,8 @@
 
         <script>
             $(function() {
-                app.setup_top_menu()
-                app.run("{{ request.path }}")
+                app.setup_top_menu();
+                app.run("{{ request.path }}");
             })
         </script>
     </body>

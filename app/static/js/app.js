@@ -2,16 +2,17 @@
 var app = {}
 
 app.setup_top_menu = function() {
-    $("#logo").click(function() {
-        if ($("#topmenu").is(":visible")) {
-            $("#topmenu").fadeOut(180);
-            $("#main_header").css("top", 0);
-            $("#main_wrapper").css("margin-top", 0);
-        } else {
-            $("#topmenu").fadeIn(180);
-            $("#main_header").css("top", ($("#topcont").height() - 5));
-            $("#main_wrapper").css("margin-top", $("#topcont").height() + $("#main_header").height())
-        }
+    $("#top-menu-toggle").click(function() {
+        $("#left-side-navi").fadeIn();
+        // if ($("#top-menu").is(":visible")) {
+        //     $("#top-menu").fadeOut(180);
+        //     $(".page-head").css("top", 0);
+        //     $(".page-head").css("margin-top", 0);
+        // } else {
+        //     $("#top-menu").fadeIn(180);
+        //     $(".page-head").css("top", ($("#top-menu").height() - 5));
+        //     // $(".page-head").css("margin-top", $("#top-menu").height() + $("#main_header").height())
+        // }
     })
 
     $(".topclick").click(function() {

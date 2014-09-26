@@ -3,7 +3,7 @@ from mazdb import *
 from manalytics import *
 from collections import Counter
 
-import json
+import json, random, functools
 
 from dateutil.rrule import *
 from dateutil.relativedelta import relativedelta
@@ -47,7 +47,7 @@ def maz_route_status():
     return jsonify({
         "success": True,
         "quota": red.get("maz:limit:%s" % request.remote_addr),
-        "ttl": red.ttl("maz:limit:%s" % request.remote_addr)
+        "ttl": red.ttl("maz:limit:%s" % request.remote_addr),
     })
 
 @maz.route("/api/info")
@@ -62,6 +62,7 @@ def maz_route_info():
         "total_listings": sum(map(lambda i: i.volume if i.volume > 0 else 0, list(latest))),
         "latest": list(MarketItem.select(MarketItem.id).order_by(MarketItem.discovered.desc()).limit(1))[0].id,
         "value": get_market_value_total(),
+        "community": int(red.get("maz:community_status") or 0),
         "success": True
     })
 
@@ -265,33 +266,55 @@ def maz_route_pricechanges():
         "drops": drops
     })
 
+def dategraph(f):
+    @functools.wraps(f)
+    def deco(*args, **kwargs):
+        res = request.values.get("res", "month")
+        if res not in ("week", "month", "year"):
+            return jsonify({
+                "error": "Invalid Data Resolution!",
+                "success": False
+            })
+
+        if res == "week":
+            ruleset = rrule(DAILY, count=7, dtstart=datetime.datetime.utcnow() - datetime.timedelta(days=6))
+
+        if res == "month":
+            ruleset = rrule(DAILY, count=30, dtstart=datetime.datetime.utcnow() - datetime.timedelta(days=29))
+
+        if res == "year":
+            ruleset = rrule(MONTHLY, count=12, dtstart=datetime.datetime.utcnow() - relativedelta(months=11))
+
+        return f(ruleset)
+    return deco
+
+
 @maz.route("/api/graph/totalvalue")
-def maz_route_value_total():
+@dategraph
+def maz_route_value_total(rule):
     """
     Returns a graph of the total market value given a resolution
     """
-    res = request.values.get("res", "week")
-    if res not in ("week", "month", "year"):
-        return jsonify({
-            "error": "Invalid Data Resolution!",
-            "success": False
-        })
-
-    if res == "week":
-        ruleset = rrule(DAILY, count=7, dtstart=datetime.datetime.utcnow() - datetime.timedelta(days=6))
-
-    if res == "month":
-        ruleset = rrule(DAILY, count=30, dtstart=datetime.datetime.utcnow() - datetime.timedelta(days=29))
-
-    if res == "year":
-        ruleset = rrule(MONTHLY, count=12, dtstart=datetime.datetime.utcnow() - relativedelta(months=11))
 
     data = {}
-    for dt in ruleset:
-        start = dt - datetime.timedelta(days=1)
-        data[dt.strftime("%Y-%m-%d")] = get_market_value_total(start, dt)
+    for dt in rule:
+        # start = dt - datetime.timedelta(days=1)
+        # get_market_value_total(start, dt)
+        data[dt.strftime("%Y-%m-%d")] = random.randint(1000000, 9999999)
 
     return jsonify({
         "data": data,
         "success": True
+    })
+
+@maz.route("/api/graph/listings")
+@dategraph
+def maz_route_listings(rule):
+    data = {}
+    for dt in rule:
+        data[dt.strftime("%Y-%m-%d")] = random.randint(100000, 999999)
+
+    return jsonify({
+        "data": data,
+        "success": True,
     })
