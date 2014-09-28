@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, render_template, send_file, g, redirect
+from flask import Blueprint, request, jsonify, render_template, send_file, g, redirect, Response
 from mazdb import *
 from manalytics import *
 from collections import Counter
@@ -466,14 +466,13 @@ def maz_route_tracking_enable():
         i.user = g.user
 
         try:
-            i.get_latest()
+            i.inventory = i.get_latest()
         except:
             return jsonify({
                 "success": False,
                 "error": "Inventory is private!"
             })
         i.save()
-        print i.id
 
     return jsonify({"success": True})
 
@@ -491,8 +490,8 @@ def maz_route_tracking_disable():
     i.save()
     return jsonify({"success": True})
 
-@maz.route("/api/tracking/<id>/history/<field>")
-def maz_route_tracking_history(id, field):
+@maz.route("/api/tracking/<id>/graph/<field>")
+def maz_route_tracking_graph(id, field):
     try:
         i = Inventory.get(Inventory.user == id)
     except Inventory.DoesNotExist:
@@ -511,3 +510,38 @@ def maz_route_tracking_history(id, field):
         "data": data,
         "success": True,
     })
+
+@maz.route("/api/tracking/<id>/history")
+def maz_route_tracking_history(id):
+    try:
+        i = Inventory.get(Inventory.user == id)
+    except Inventory.DoesNotExist:
+        return jsonify({
+            "success": False,
+            "data": []
+        })
+
+    q = InventoryPricePoint.select().where(
+        InventoryPricePoint.inv == i
+    ).order_by(InventoryPricePoint.time.desc()).limit(672)
+
+    data = []
+    for entry in q:
+        data.append(entry.toDict())
+
+    return jsonify({
+        "success": True,
+        "data": data
+    })
+
+@maz.route("/api/asset/<int:id>")
+def maz_route_asset(id):
+    # if red.exists("asset:%s" % id):
+    #     r = Response(red.get("asset:%s" % id))
+    #     r.mimetype = "application/json"
+    #     return r
+
+    data = market_api.get_asset_class_info(id)["result"][str(id)]
+    # 2 hours cache
+    red.setex("asset:%s" % id, json.dumps(data), 60 * 120)
+    return jsonify(data)

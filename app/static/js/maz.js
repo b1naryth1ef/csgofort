@@ -8,6 +8,8 @@ var search_result_template = _.template('<a href="/item/<%= obj.id %>"  class="l
 
 var inventory_row_template = _.template('<tr value="<%= value * 100 %>"><td><a href="/item/<%= id %>"><%= name %></a></td><td>$<%= value %></td></tr>');
 
+var changelog_row_template = _.template('<li class="list-group-item"><span class="<%= icon %>"></span> <%= msg %></li>')
+
 function run(route) {
     maz.setup_search();
 
@@ -74,9 +76,38 @@ maz.run_inventory = function () {
                     })
                 })
 
-                $.ajax("/api/tracking/"+CONFIG.USER+"/history/value", {
+                $.ajax("/api/tracking/"+CONFIG.USER+"/graph/value", {
                     success: function (data) {
                         draw_inventory_graphs(data.data)
+                    }
+                })
+
+                $.ajax("/api/tracking/"+CONFIG.USER+"/history", {
+                    success: function (data) {
+                        _.each(data.data, function (v, k) {
+                            _.each(v.added, function(v1, k1) {
+                                $.ajax("/api/asset/" + v1.split("_")[0], {
+                                    success: function (added_data) {
+                                        $("#changelog").append(changelog_row_template({
+                                            msg: "Added " + added_data.market_hash_name,
+                                            icon: "glyphicon glyphicon-plus-sign"
+                                        }))
+                                    }
+                                })
+                            })
+
+                            _.each(v.removed, function(v1, k1) {
+                                $.ajax("/api/asset/" + v1.split("_")[0], {
+                                    success: function (added_data) {
+                                        $("#changelog").append(changelog_row_template({
+                                            msg: "Removed " + added_data.market_hash_name,
+                                            icon: "glyphicon glyphicon-minus-sign"
+                                        }))
+                                    }
+                                })
+                            })
+
+                        })
                     }
                 })
             }

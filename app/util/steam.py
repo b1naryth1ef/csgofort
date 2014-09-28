@@ -9,6 +9,8 @@ ITEM_PAGE_QUERY = u"http://steamcommunity.com/market/listings/{appid}/{name}"
 BULK_ITEM_PRICE_QUERY = u"http://steamcommunity.com/market/itemordershistogram?country=US&language=english&currency=1&item_nameid={nameid}"
 INVENTORY_QUERY = u"{url}/inventory/json/{appid}/2"
 
+API_FMT = "http://api.steampowered.com/{iface}/{cmd}/v001/" #?key=&appid=730&class_count=1&classid0=587951628"
+
 steam_id_re = re.compile('steamcommunity.com/openid/id/(.*?)$')
 
 def if_len(a, b):
@@ -133,6 +135,16 @@ class SteamMarketAPI(object):
     def __init__(self, appid, retries=5):
         self.appid = appid
         self.retries = retries
+
+    def get_asset_class_info(self, assetid):
+        url = API_FMT.format(iface="ISteamEconomy", cmd="GetAssetClassInfo")
+
+        return requests.get(url, params={
+            "key": STEAM_KEY,
+            "appid": self.appid,
+            "class_count": 1,
+            "classid0": assetid
+        }).json()
 
     def get_parsed_inventory(self, steamid):
         from maz.mazdb import MarketItem

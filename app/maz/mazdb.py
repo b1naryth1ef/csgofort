@@ -198,3 +198,15 @@ class InventoryPricePoint(BModel):
     removed = ArrayField(CharField, default=[])
 
     time = DateTimeField(default=datetime.datetime.utcnow)
+
+    def toDict(self):
+        return {
+            "id": self.id,
+            "inv": self.inv.id,
+            "status": self.status,
+            "value": self.value,
+            "size": self.size,
+            "added": self.added,
+            "removed": self.removed,
+            "time": self.time
+        }
