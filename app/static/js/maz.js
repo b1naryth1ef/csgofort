@@ -74,7 +74,7 @@ maz.run_inventory = function () {
                     })
                 })
 
-                $.ajax("/api/tracking/history", {
+                $.ajax("/api/tracking/"+CONFIG.USER+"/history/value", {
                     success: function (data) {
                         draw_inventory_graphs(data.data)
                     }

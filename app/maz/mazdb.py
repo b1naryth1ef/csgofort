@@ -191,6 +191,7 @@ class InventoryPricePoint(BModel):
 
     # total inventory value
     value = FloatField(default=0)
+    size = IntegerField(default=0)
 
     # Added/Removed items (by market ID)
     added = ArrayField(CharField, default=[])

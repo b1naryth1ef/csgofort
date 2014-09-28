@@ -96,11 +96,6 @@
         {% block scripts %}
         {% endblock %}
 
-        <script>
-            $(function() {
-                app.setup_top_menu();
-                app.run("{{ request.path }}");
-            })
-        </script>
+        <script>$(function(){app.run("{{ request.path }}")})</script>
     </body>
 </html>

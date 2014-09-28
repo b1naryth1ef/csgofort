@@ -165,6 +165,7 @@ def track_inventories():
         # Do a favor and update the actual inv!
         inv.inventory = new_inv
 
+        ipp.size = len(new_inv)
         ipp.added = inv_ids_new
         ipp.value = inv.calculate_value()
         ipp.save()

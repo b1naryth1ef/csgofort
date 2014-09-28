@@ -4,6 +4,11 @@ from playhouse.migrate import *
 
 migrator = PostgresqlMigrator(db)
 
+def add_inventory_size_field():
+    migrate(
+        migrator.add_column('inventorypricepoint', 'size', InventoryPricePoint.size)
+    )
+
 def add_item_image_field():
     migrate(
         migrator.add_column('marketitem', 'image', MarketItem.image),
@@ -31,4 +36,4 @@ def pre(): pass
 def post(): pass
 
 def run():
-    add_item_image_field()
+    add_inventory_size_field()

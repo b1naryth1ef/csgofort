@@ -491,12 +491,21 @@ def maz_route_tracking_disable():
     i.save()
     return jsonify({"success": True})
 
-@maz.route("/api/tracking/history")
-@dategraph
-def maz_route_tracking_history(rule):
+@maz.route("/api/tracking/<id>/history/<field>")
+def maz_route_tracking_history(id, field):
+    try:
+        i = Inventory.get(Inventory.user == id)
+    except Inventory.DoesNotExist:
+        return jsonify({
+            "success": False,
+            "data": {}
+        })
+
+    q = InventoryPricePoint.select().where(InventoryPricePoint.inv == i).limit(32).order_by(InventoryPricePoint.time.desc())
+
     data = {}
-    for dt in rule:
-        data[int(dt.strftime('%s'))] = random.randint(100000, 999999)
+    for entry in q:
+        data[int(entry.time.strftime('%s'))] = getattr(entry, field, 0)
 
     return jsonify({
         "data": data,
