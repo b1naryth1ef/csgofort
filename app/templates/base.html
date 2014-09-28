@@ -33,12 +33,23 @@
                 </ul>
 
                 <ul class="page-head-elements pull-right">
-<!--                     <li>
-                        <div class="informer informer-pulsate">5</div>
-                        <a href="index.html#" class="dropdown"><span class="fa fa-comments"></span></a>                        
+                    <li class="dropdown">
+                      <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                            {% if g.user %}
+                                <img height="32px" src="http://auth.{{ DOMAIN }}/avatar/{{ g.user.id }}" class="img-circle pull-left">
+                            {% else %}
+                                <span class="glyphicon glyphicon-user"></span>                    
+                            {% endif %}
+                      </a>
+                      <ul class="dropdown-menu" style="margin-top: 15px; margin-right: 10px">
+                        {% if g.user %}
+                            <li><a href="{{ build_url("auth", "logout") }}">Logout</a></li>
+                        {% else %}
+                            <li><a href="{{ build_url("auth", "login") }}?next={{ build_url(REALM, "") }}">Login</a></li>
+                        {% endif %}
+                        
+                      </ul>
                     </li>
-                     -->
-                    <li><a class="page-sidebar-toggle"><span class="fa fa-tasks"></span></a></li>
                 </ul>
                 
             </div>
