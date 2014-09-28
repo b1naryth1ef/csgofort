@@ -204,11 +204,10 @@ maz.setup_search = function() {
 }
 
 function data_to_rickshaw(data) {
-    var dat = [], inc = 0;
+    var dat = [];
     _.each(data, function (v, k) {
-        inc++;
         dat.push({
-            x: inc,
+            x: parseInt(k),
             y: v
         })
     })

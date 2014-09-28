@@ -83,9 +83,9 @@ def maz_route_item_image(id):
         except:
             return "", 500
 
-        # Cached for 15 minutes
+        # Cached for 12 hours
         buffered = StringIO(r.content)
-        red.setex(key, r.content, (60 * 15))
+        red.setex(key, r.content, (60 * 60 * 12))
 
     buffered.seek(0)
     return send_file(buffered, mimetype="image/jpeg")
@@ -342,7 +342,7 @@ def maz_route_value_total(rule):
     for dt in list(rule)[:-1]:
         # start = dt - datetime.timedelta(days=1)
         # get_market_value_total(start, dt)
-        data[dt.strftime("%Y-%m-%d")] = get_market_value_total_day(dt)
+        data[int(dt.strftime('%s'))] = get_market_value_total_day(dt)
 
     return jsonify({
         "data": data,
@@ -354,7 +354,7 @@ def maz_route_value_total(rule):
 def maz_route_listings(rule):
     data = {}
     for dt in rule:
-        data[dt.strftime("%Y-%m-%d")] = random.randint(100000, 999999)
+        data[int(dt.strftime('%s'))] = random.randint(100000, 999999)
 
     return jsonify({
         "data": data,
@@ -378,7 +378,7 @@ def maz_route_item_graph_value(rule, id, attrib):
             val = getattr(mi.get_daily_mipp(dt), attrib, 0)
         except:
             val = 0
-        data[dt.strftime("%Y-%m-%d")] = val
+        data[int(dt.strftime('%s'))] = val
 
     return jsonify({
         "data": data,
@@ -496,7 +496,7 @@ def maz_route_tracking_disable():
 def maz_route_tracking_history(rule):
     data = {}
     for dt in rule:
-        data[dt.strftime("%Y-%m-%d")] = random.randint(100000, 999999)
+        data[int(dt.strftime('%s'))] = random.randint(100000, 999999)
 
     return jsonify({
         "data": data,
