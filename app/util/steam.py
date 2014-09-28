@@ -134,6 +134,34 @@ class SteamMarketAPI(object):
         self.appid = appid
         self.retries = retries
 
+    def get_parsed_inventory(self, steamid):
+        from maz.mazdb import MarketItem
+
+        result = self.get_inventory(steamid)
+
+        item_data = []
+        for key, value in result["rgDescriptions"].items():
+            try:
+                item = MarketItem.select(MarketItem.id).where(MarketItem.name == value["market_hash_name"]).get().id
+            except:
+                item = -1
+
+            i = {
+                "s": key,
+                "i": item,
+                "t": value['tradable'],
+                "m": value['marketable'],
+            }
+
+            if item == -1:
+                i["name"] = value["market_hash_name"]
+
+            if 'fraudwarnings' in value:
+                i["fraud"] = value["fraudwarnings"]
+            item_data.append(i)
+
+        return item_data
+
     def get_inventory(self, id):
         data = SteamAPI.new().getUserInfo(id)["profileurl"]
         url = INVENTORY_QUERY.format(url=data, appid=self.appid)

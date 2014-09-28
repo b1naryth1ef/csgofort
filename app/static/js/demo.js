@@ -8,10 +8,10 @@
 
 $(document).ready(function(){
     
-    $.get("assets/ajax-sidebar.html", function(data){
-        $(".page-sidebar").html(data);
-        $(".page-sidebar").mCustomScrollbar({autoHideScrollbar: true, scrollInertia: 20, advanced: {autoScrollOnFocus: false}})
-    });
+    // $.get("assets/ajax-sidebar.html", function(data){
+    //     $(".page-sidebar").html(data);
+    //     $(".page-sidebar").mCustomScrollbar({autoHideScrollbar: true, scrollInertia: 20, advanced: {autoScrollOnFocus: false}})
+    // });
     
     gDemos = {        
         init: function(){

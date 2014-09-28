@@ -1,5 +1,22 @@
 
+var JST = {
+    alert: _.template('<div class="col-md-12"><div class="alert alert-<%= type %>">' +
+        '<button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>' +
+        '<strong>Uh Oh!</strong> <%= msg %></div></div>')
+}
+
 var app = {}
+
+app.alert = function(msg, type) {
+    console.log(":^)")
+    if (type === undefined) {
+        type = "danger";
+    }
+    $("#alerts").append(JST.alert({
+        "msg": msg,
+        "type": type
+    }))
+}
 
 app.setup_top_menu = function() {
     $("#top-menu-toggle").click(function() {

@@ -1,5 +1,6 @@
 import datetime
-from externals import *
+from database import *
+from fortdb import User
 from util.steam import SteamMarketAPI
 
 market_api = SteamMarketAPI(730)
@@ -53,6 +54,13 @@ class MarketItem(BModel):
         mipp.median = med
         mipp.save()
 
+    def get_daily_mipp(self, day=None):
+        if not day:
+            day = (datetime.utcnow() - timedelta(days=1))
+        day = day.replace(hour=0, minute=0, second=0, microsecond=0)
+
+        return MIPPDaily.select().where((MIPPDaily.item == self) & (MIPPDaily.time == day)).get()
+
     def get_latest_mipp(self):
         """
         Returns the latest MIPP for this item
@@ -65,6 +73,7 @@ class MarketItem(BModel):
             return res[0]
 
     def toDict(self):
+        latest = self.get_latest_mipp()
         return {
             "id": self.id,
             "name": self.name,
@@ -81,7 +90,11 @@ class MarketItem(BModel):
             "updated": self.last_crawl.isoformat(),
             "points": MarketItemPricePoint.select(MarketItemPricePoint.id).where(
                 MarketItemPricePoint.item == self).count(),
-            "value": self.get_latest_mipp().value()
+            "price": {
+                "volume": latest.volume,
+                "low": latest.lowest,
+                "med": latest.median
+            }
         }
 
     def get_family_items(self):
@@ -141,3 +154,46 @@ class MIPPDaily(BModel):
 
     samples = ArrayField(IntegerField)
     time = DateTimeField()
+
+class Inventory(BModel):
+    user = ForeignKeyField(User)
+
+    active = BooleanField(default=True)
+
+    inventory = JSONField(default=[])
+
+    updated = DateTimeField(null=True)
+    added = DateTimeField(default=datetime.datetime.utcnow)
+
+    def calculate_value(self):
+        total_value = 0
+
+        for item in self.inventory:
+            try:
+                total_value += MarketItem.get(MarketItem.id == item['i']).get_latest_mipp().median
+            except MarketItem.DoesNotExist: pass
+
+        return total_value
+
+    def get_latest(self):
+        return market_api.get_parsed_inventory(self.user.steamid)
+
+    def toDict(self):
+        return {}
+
+class InventoryPricePoint(BModel):
+    class Status:
+        SUCCESS = 1
+        ERROR = 2
+
+    inv = ForeignKeyField(Inventory)
+    status = IntegerField(default=Status.SUCCESS)
+
+    # total inventory value
+    value = FloatField(default=0)
+
+    # Added/Removed items (by market ID)
+    added = ArrayField(CharField, default=[])
+    removed = ArrayField(CharField, default=[])
+
+    time = DateTimeField(default=datetime.datetime.utcnow)

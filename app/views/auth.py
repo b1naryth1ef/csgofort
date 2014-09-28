@@ -6,7 +6,11 @@ out of *all* services, and getting user information (such as profile-overview,
 """
 
 from flask import Blueprint, request, session, g, send_file, jsonify
-from database import User, red, MarketItem
+
+# DB
+from database import red
+from fortdb import User
+
 from app import openid, csgofort
 from util import flashy, build_url, steam
 from flask.ext.cors import cross_origin
@@ -94,34 +98,7 @@ def auth_route_avatar(id):
 
 def get_safe_inventory(user):
     try:
-        result = steam.SteamMarketAPI(730).get_inventory(user.steamid)
-
-        if not result["success"]:
-            return jsonify({
-                "success": False,
-                "error": "Error getting inventory!"
-            })
-
-        item_data = []
-        for key, value in result["rgDescriptions"].items():
-            try:
-                item = MarketItem.select(MarketItem.id).where(MarketItem.name == value["market_hash_name"]).get().id
-            except:
-                item = -1
-
-            i = {
-                "s": key,
-                "i": item,
-                "t": value['tradable'],
-                "m": value['marketable'],
-            }
-
-            if item == -1:
-                i["name"] = value["market_hash_name"]
-
-            if 'fraudwarnings' in value:
-                i["fraud"] = value["fraudwarnings"]
-            item_data.append(i)
+        item_data = steam.SteamMarketAPI(730).get_parsed_inventory(user.steamid)
 
         # Cached for 1 hour
         red.setex("inv:%s" % user.id, json.dumps(item_data), 60 * 60)

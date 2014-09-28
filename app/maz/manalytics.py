@@ -1,4 +1,5 @@
 from mazdb import *
+from datetime import datetime, timedelta
 
 
 # This query extracts the latest mipp for every known item while being O(1)
@@ -12,15 +13,32 @@ SELECT t1.* FROM marketitempricepoint AS t1
     %s
 """
 
-def get_market_value_total(start=None, end=None):
+def get_market_value_total_now():
+    """
+    TODO doc
+    """
+    latest = get_latest_mipps()
+    return int(sum(map(lambda i: 
+        (i.median * i.volume) if i.volume > 0 else 0, list(latest))))
+
+def get_market_value_total_day(day=None):
     """
     Returns the total market value given a timeframe. It will only use the
     most-recent MIPP inside that time-period, but will return a valuation
     based on average price and volume at that time.
+    TODO doc
     """
-    latest_mipps = get_latest_mipps(start, end)
+    latest = get_latest_mipp_dailys(day)
     return int(sum(map(lambda i: 
-        (i.median * i.volume) if i.volume > 0 else 0, list(latest_mipps))))
+        (i.median * i.volume) if i.volume > 0 else 0, list(latest))))
+
+def get_latest_mipp_dailys(day=None):
+    if not day:
+        day = (datetime.utcnow() - timedelta(days=1))
+
+    day = day.replace(hour=0, minute=0, second=0, microsecond=0)
+
+    return MIPPDaily.select().where((MIPPDaily.time == day))
 
 def get_latest_mipps(start=None, end=None):
     q = MARKET_VALUE_QUERY

@@ -1,0 +1,52 @@
+{% extends "maz/base.html" %}
+{% block content %}
+{# Various alerts that the JS triggers, prolly could be templates in _ at some point #}
+<div class="row"><div class="col-md-12" id="alerts"></div></div>
+
+<div class="page-rest">
+    <div class="row">
+        <div class="col-md-3">
+            <div class="block">
+                <div class="block-content" style="text-align: center;">
+                    <h1>Inventory</h1>
+                    <h3>Total Inventory Worth: $<span id="worth">0</span></h3>
+
+                    <div id="tracking-disabled" class="hideme">
+                        <h3>By enabling inventory tracking, we'll keep track of your inventory over time, allowing you to easily gain insight to useful metrics such as size, value, and more.</h3>
+                        <button id="tracking-enable-btn" type="button" class="btn btn-success">Enable Tracking</button>
+                    </div>
+                    <div id="tracking-enabled" class="hideme">
+                        <button id="tracking-disable-btn" type="button" class="btn btn-danger">Disable Tracking</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-9">
+            <div class="block">
+                <div id="inventory-chart" style="height: 250px; width: 100%; float: left; background-color: #e5e5e5"></div>
+            </div>
+            <div class="block">
+                <div class="block-content np">
+                    <table class="table" id="inv-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Value</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inv-body">
+                                    
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+    <script src="http://{{ DOMAIN }}/static/js/maz.js"></script>
+{% endblock %}

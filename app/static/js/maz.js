@@ -19,6 +19,8 @@ function run(route) {
         maz.run_item();
     } else if (route === "/value") {
         maz.run_value();
+    } else if (route === "/inventory") {
+        maz.run_inventory();
     }
 }
 
@@ -35,6 +37,53 @@ function sortTable(table, order) {
     }).appendTo(tbody);
 }
 
+maz.run_inventory = function () {
+    maz.run_value();
+    $.ajax("/api/tracking", {
+        success: function (data) {
+            if (!data.enabled) {
+                $("#tracking-disabled").fadeIn();
+
+                $("#tracking-enable-btn").click(function (ev) {
+                    $(this).addClass("disabled");
+                    $.ajax("/api/tracking/enable", {
+                        success: function (d1) {
+                            if (!d1.success) {
+                                app.alert("We couldn't enable inventory tracking for your account! Please insure your inventory is public, and try again shortly!");
+                            } else {
+                                app.alert("Inventory Tracking Enabled!", "success");
+                                $(this).removeClass("disabled");
+                                $("#tracking-enabled").fadeIn();
+                                $("#tracking-disabled").hide();
+                            }
+                        }
+                    })
+                });
+            } else {
+                $("#tracking-enabled").fadeIn();
+
+                $("#tracking-disable-btn").click(function (ev) {
+                    $(this).addClass("disabled");
+                    $.ajax("/api/tracking/disable", {
+                        success: function(d1) {
+                            app.alert("Inventory Tracking Disabled!", "success");
+                            $(this).removeClass("disabled");
+                            $("#tracking-disabled").fadeIn();
+                            $("#tracking-enabled").hide();
+                        }
+                    })
+                })
+
+                $.ajax("/api/tracking/history", {
+                    success: function (data) {
+                        draw_inventory_graphs(data.data)
+                    }
+                })
+            }
+        }
+    })
+}
+
 maz.run_value = function() {
     var value = 0;
     var finished = 0;
@@ -42,7 +91,7 @@ maz.run_value = function() {
     $.ajax("http://auth." + CONFIG.DOMAIN + "/inventory/" + CONFIG.USER, {
         success: function (data) {
             if (!data.success) {
-                $("#inventory-alert").fadeIn();
+                app.alert("We can't grab your inventory! Looks like either your inventory is private, or the steam community is having some problems.");
                 return;
             }
 
@@ -59,14 +108,14 @@ maz.run_value = function() {
                         try {
                             var data = inventory_row_template({
                                 name: idd.item.name,
-                                value: idd.price.price.med,
+                                value: idd.item.price.med,
                                 id: idd.item.id
                             })
 
                             $("#inv-body").append(data)
 
-                            if (idd.price.price.med > 0) {
-                                value = value + idd.price.price.med;
+                            if (idd.item.price.med > 0) {
+                                value = value + idd.item.price.med;
                             }
 
                             $("#worth").text(Math.floor(value));
@@ -83,7 +132,7 @@ maz.run_api_docs = function() {
 }
 
 maz.run_item = function () {
-    $.ajax("/api/item/"+ITEM_ID+"/graph/value", {
+    $.ajax("/api/item/"+ITEM_ID+"/graph/median", {
         success: function(data) {
             draw_item_graph(data.data);
         }
@@ -104,11 +153,11 @@ maz.run_market_index = function() {
             }
 
             if (data.community > 0) {
-                $("#community-alert").fadeIn();
+                app.alert("The Steam Community is experiencing some issues right now! This may effect the stability, accuracy and reliability of CS:GO Fort and it's services.");
             }
 
-            $("#stat-unique").text(data.total_items.toLocaleString());
-            $("#stat-listed").text(data.total_listings.toLocaleString());
+            $("#stat-unique").text(data.totals.items.toLocaleString());
+            $("#stat-listed").text(data.totals.listings.toLocaleString());
             $("#stat-value").text(data.value.toLocaleString());
             $("#stats").fadeIn();
         }
@@ -166,6 +215,34 @@ function data_to_rickshaw(data) {
     return dat;
 }
 
+function draw_inventory_graphs(d1) {
+    var rdc = new Rickshaw.Graph( {
+            element: document.getElementById("inventory-chart"),
+            renderer: 'area',
+            width: $("#inventory-chart").width(),
+            height: 250,
+            series: [
+                {color: "#2f9fe0", data: data_to_rickshaw(d1), name: 'Estimated Inventory Value'},
+            ],
+    } );
+
+    rdc.render();
+
+    var rdc_resize = function() {                
+            rdc.configure({
+                    width: $("#inventory-chart").width(),
+                    height: $("#inventory-chart").height()
+            });
+            rdc.render();
+    }
+
+    var hoverDetail = new Rickshaw.Graph.HoverDetail({graph: rdc});
+
+    window.addEventListener('resize', rdc_resize);        
+
+    rdc_resize();
+}
+
 function draw_dashboard_graphs(d1) {
     var rdc = new Rickshaw.Graph( {
             element: document.getElementById("dashboard-chart"),
@@ -198,7 +275,12 @@ function draw_item_graph(data) {
     var rlc = new Rickshaw.Graph( {
             element: document.getElementById("charts-lines"),
             renderer: 'line',
-            min: 50,
+            interpolation: 'linear',
+            min: 0,
+            height: 250,
+            padding: {
+                top: .08,
+            },
             series: [{color: "#2f9fe0",data: data_to_rickshaw(data), name: 'Value'}]
     });
 

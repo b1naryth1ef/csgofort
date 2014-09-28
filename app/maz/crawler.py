@@ -7,6 +7,7 @@ paces itself (while remaining error-safe) to avoid getting blocked by steam
 from util.steam import SteamMarketAPI
 from mazdb import *
 from datetime import datetime, timedelta
+from dateutil.relativedelta import relativedelta
 import time, requests
 
 api = SteamMarketAPI(730)
@@ -130,3 +131,46 @@ def index_market_search():
         es.index(index="marketitems", doc_type='marketitem', id=item.id, body=doc)
 
     es.indices.refresh(index="marketitems")
+
+def track_inventories():
+    LAST_HOUR = datetime.utcnow() - relativedelta(hours=1)
+
+    q = (
+        (Inventory.active == True) &
+        ((Inventory.updated < LAST_HOUR) | (Inventory.updated == None))
+    )
+
+    updated = 0
+    for inv in Inventory().select().where(q).iterator():
+        ipp = InventoryPricePoint()
+        ipp.inv = inv
+
+        try:
+            new_inv = inv.get_latest()
+        except:
+            ipp.status = InventoryPricePoint.Status.ERROR
+            ipp.save()
+            print "Failed to update inventory %s" % inv.id
+            continue
+
+        inv_ids_old = map(lambda i: i["s"], inv.inventory)
+        inv_ids_new = map(lambda i: i["s"], new_inv)
+
+        for iid in inv_ids_old:
+            if iid not in inv_ids_new:
+                ipp.removed.append(iid)
+            else:
+                inv_ids_new.remove(iid)
+
+        # Do a favor and update the actual inv!
+        inv.inventory = new_inv
+
+        ipp.added = inv_ids_new
+        ipp.value = inv.calculate_value()
+        ipp.save()
+
+        inv.updated = datetime.utcnow()
+        inv.save()
+        updated += 1
+
+    print "Updated %s inventories" % updated

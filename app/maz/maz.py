@@ -7,6 +7,7 @@ from util import build_url
 
 import json, random, functools, requests
 
+import datetime
 from dateutil.rrule import *
 from dateutil.relativedelta import relativedelta
 
@@ -19,6 +20,9 @@ RATE_LIMIT_UPPER = 5000
 
 @maz.before_request
 def before_maz_request():
+    """
+    This function handles API rate limiting.
+    """
     KEY = "maz:limit:%s" % request.remote_addr
 
     # API rate limiting
@@ -39,11 +43,11 @@ def before_maz_request():
 def maz_route_index():
     return render_template("maz/index.html")
 
-@maz.route("/value")
-def maz_route_value():
+@maz.route("/inventory")
+def maz_route_inventory():
     if not g.user:
-        return redirect(build_url("auth", "login") + "?next=" + build_url("maz", "value"))
-    return render_template("maz/value.html")
+        return redirect(build_url("auth", "login") + "?next=" + build_url("maz", "inventory"))
+    return render_template("maz/inventory.html")
 
 @maz.route("/item/<id>")
 def maz_route_item(id):
@@ -105,15 +109,23 @@ def maz_route_info():
     Returns information about the global dataset
     """
     latest = get_latest_mipps()
-
-    return jsonify({
-        "total_items": MarketItem.select().count(),
-        "total_listings": sum(map(lambda i: i.volume if i.volume > 0 else 0, list(latest))),
-        "latest": list(MarketItem.select(MarketItem.id).order_by(MarketItem.discovered.desc()).limit(1))[0].id,
-        "value": get_market_value_total(),
-        "community": int(red.get("maz:community_status") or 0),
+    
+    payload = {
+        "totals": {
+            "items": MarketItem.select().count(),
+            "mipp": MarketItemPricePoint.select().count(),
+            "mippdaily": MIPPDaily.select().count(),
+            "listings": sum(map(lambda i: i.volume if i.volume > 0 else 0, list(latest))),
+        },
+        "value": get_market_value_total_now(),
+        "status": {
+            "api": 0,
+            "community": int(red.get("maz:community_status") or 0),
+        },
         "success": True
-    })
+    }
+
+    return jsonify(payload)
 
 @maz.route("/api/items")
 def maz_route_items():
@@ -152,26 +164,6 @@ def maz_route_api_item(id):
     return jsonify({
         "success": True,
         "item": mi.toDict(),
-        "price": mi.get_latest_mipp().toDict()
-    })
-
-@maz.route("/api/item/<id>/price")
-def maz_route_price(id):
-    """
-    Returns pricing information for a single item, given the items internal
-    ID
-    """
-    try:
-        mi = MarketItem.get(MarketItem.id == id)
-    except MarketItem.DoesNotExist:
-        return jsonify({
-            "success": False,
-            "error": "Invalid Item ID!"
-        })
-
-    return jsonify({
-        "success": True,
-        "price": mi.get_latest_mipp().toDict()
     })
 
 @maz.route("/api/item/<id>/history")
@@ -347,10 +339,10 @@ def maz_route_value_total(rule):
     """
 
     data = {}
-    for dt in rule:
+    for dt in list(rule)[:-1]:
         # start = dt - datetime.timedelta(days=1)
         # get_market_value_total(start, dt)
-        data[dt.strftime("%Y-%m-%d")] = random.randint(1000000, 9999999)
+        data[dt.strftime("%Y-%m-%d")] = get_market_value_total_day(dt)
 
     return jsonify({
         "data": data,
@@ -369,9 +361,9 @@ def maz_route_listings(rule):
         "success": True,
     })
 
-@maz.route("/api/item/<id>/graph/value")
+@maz.route("/api/item/<id>/graph/<attrib>")
 @dategraph
-def maz_route_item_graph_value(rule, id):
+def maz_route_item_graph_value(rule, id, attrib):
     try:
         mi = MarketItem.get(MarketItem.id == id)
     except MarketItem.DoesNotExist:
@@ -381,8 +373,12 @@ def maz_route_item_graph_value(rule, id):
         })
 
     data = {}
-    for dt in rule:
-        data[dt.strftime("%Y-%m-%d")] = random.randint(100000, 999999)
+    for dt in list(rule)[:-1]:
+        try:
+            val = getattr(mi.get_daily_mipp(dt), attrib, 0)
+        except:
+            val = 0
+        data[dt.strftime("%Y-%m-%d")] = val
 
     return jsonify({
         "data": data,
@@ -438,3 +434,71 @@ def maz_route_search():
         })
 
     return jsonify(result)
+
+@maz.route("/api/tracking")
+def maz_route_tracking():
+    if not g.user:
+        return "", 401
+
+    try:
+        inv = Inventory.get(Inventory.user == g.user)
+    except Inventory.DoesNotExist:
+        return jsonify({
+                "success": True,
+                "enabled": False
+            })
+
+    return jsonify({
+        "success": True,
+        "enabled": inv.active,
+        "inventory": inv.toDict()
+    })
+
+@maz.route("/api/tracking/enable")
+def maz_route_tracking_enable():
+    if not g.user:
+        return "", 401
+
+    try:
+        Inventory.get(Inventory.user == g.user)
+    except Inventory.DoesNotExist:
+        i = Inventory()
+        i.user = g.user
+
+        try:
+            i.get_latest()
+        except:
+            return jsonify({
+                "success": False,
+                "error": "Inventory is private!"
+            })
+        i.save()
+        print i.id
+
+    return jsonify({"success": True})
+
+@maz.route("/api/tracking/disable")
+def maz_route_tracking_disable():
+    if not g.user:
+        return "", 401
+
+    try:
+        i = Inventory.get(Inventory.user == g.user)
+    except Inventory.DoesNotExist:
+        return jsonify({"success": True})
+
+    i.active = False
+    i.save()
+    return jsonify({"success": True})
+
+@maz.route("/api/tracking/history")
+@dategraph
+def maz_route_tracking_history(rule):
+    data = {}
+    for dt in rule:
+        data[dt.strftime("%Y-%m-%d")] = random.randint(100000, 999999)
+
+    return jsonify({
+        "data": data,
+        "success": True,
+    })

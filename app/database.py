@@ -1,63 +1,34 @@
 #!/usr/bin/env python
 import sys
-from externals import *
 
-from maz.mazdb import MarketItem, MarketItemPricePoint, MIPPDaily
-from vacdex.vacdb import *
-from util import build_url
-from util.steam import SteamAPI
+from elasticsearch import Elasticsearch
+from peewee import *
+from playhouse.postgres_ext import *
+import redis
 
-steam = SteamAPI.new()
+db = PostgresqlExtDatabase('fort', user="b1n", password="b1n", threadlocals=True, port=5433)
+red = redis.Redis()
+es = Elasticsearch()
 
 class BModel(Model):
     class Meta:
         database = db
 
-class User(BModel):
-    steamid = CharField()
-    email = CharField(null=True)
+def tables():
+    from maz.mazdb import (MarketItem, MarketItemPricePoint, MIPPDaily,
+        Inventory, InventoryPricePoint
+    )
+    # from vacdex.vacdb import *
+    from fortdb import User
 
-    active = BooleanField(default=True)
-
-    def get_avatar(self):
-        """
-        Returns a URL to the users avatar. (Comes from the auth server)
-        """
-        return build_url("auth", "avatar/%s" % self.id)
-
-    def get_nickname(self):
-        """
-        Returns the nickname. This will read from the cache if it exists,
-        or will set the cache if it does not.
-
-        NB: might be worth asyncing this out to a job if the steamapi is
-        down or slow!
-        """
-        if not hasattr(self, "nickname"):
-            self.nickname = red.get("nick:%s" % self.steamid) or self.cache_nickname(self.steamid)
-            if not isinstance(self.nickname, unicode):
-                self.nickname = self.nickname.decode('utf-8')
-        return self.nickname
-
-    @classmethod
-    def cache_nickname(cls, steamid):
-        """
-        Caches a users steam nickname in redis. Nicknames are kept for 2
-        hours (120 minutes), and then expired. This function will also
-        return the latest steamid after caching, to allow for getandset
-        functionality
-        """
-        data = steam.getUserInfo(steamid)
-        red.setex("nick:%s" % steamid, data["personaname"], 60 * 120)
-        return data['personaname']
-
-
-TABLES = [
-    MarketItem,
-    MarketItemPricePoint,
-    MIPPDaily,
-    User
-]
+    return [
+        MarketItem,
+        MarketItemPricePoint,
+        MIPPDaily,
+        Inventory,
+        InventoryPricePoint,
+        User
+    ]
 
 def migrate(module):
     print "Running migration for %s" % module.__name__
@@ -95,7 +66,8 @@ def setup_es():
                     }
                 }
             }
-        }
+        },
+        ignore=400
     )
     es.indices.put_mapping(
         index="marketitems",
@@ -119,15 +91,26 @@ if __name__ == "__main__":
 
     if sys.argv[1] == "build":
         print "Building new tables..."
-        map(lambda i: i.create_table(True), TABLES)
+        map(lambda i: i.create_table(True), tables())
 
         setup_es()
 
     if sys.argv[1] == "reset":
         print "Resetting DB..."
-        for table in TABLES:
+        for table in tables():
             table.drop_table(True, cascade=True)
             table.create_table(True)
+
+    if sys.argv[1] == "re":
+
+        for table in tables():
+            if table.__name__.lower() == sys.argv[2].lower():
+                print "Recreating table %s" % sys.argv[2]
+                table.drop_table(True, cascade=True)
+                table.create_table(True)
+                break
+        else:
+            print "No table %s" % sys.argv[2]
 
     if sys.argv[1] == "migrate":
         m = "migrations.%s" % sys.argv[2]
