@@ -29,20 +29,6 @@ function run(route) {
     }
 }
 
-// Sorts a table by the value
-function sortTable(table, order) {
-    var asc   = order === 'asc',
-        tbody = table.find('tbody');
-
-    tbody.find('tr').sort(function(a, b) {
-        if (asc) {
-            return parseInt($(a).attr("value")) - parseInt($(b).attr("value"));
-        } else {
-            return parseInt($(b).attr("value")) - parseInt($(a).attr("value"));
-        }
-    }).appendTo(tbody);
-}
-
 // Runs the inventory view
 maz.run_inventory = function () {
     $("#tracking-base").delegate("#tracking-enable-btn", "click", function (ev) {
@@ -166,7 +152,7 @@ maz.load_value_info = function() {
                     })
 
                     $("#worth").text(Math.floor(value));
-                    sortTable($("#inv-table"), 'desc');
+                    app.sortTable($("#inv-table"), 'desc');
                 }
             })
         }

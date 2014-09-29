@@ -5,10 +5,15 @@ from util import build_url
 steam = SteamAPI.new()
 
 class User(BModel):
+    class Level:
+        BASIC = 0
+        ADMIN = 100
+
     steamid = CharField()
     email = CharField(null=True)
 
     active = BooleanField(default=True)
+    level = IntegerField(default=0)
 
     def get_avatar(self):
         """

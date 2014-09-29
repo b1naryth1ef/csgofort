@@ -24,3 +24,18 @@ app.run = function(route) {
     app.setup();
     run(route);
 }
+
+// Sorts a table by the value
+app.sortTable = function(table, order) {
+    var asc   = order === 'asc',
+        tbody = table.find('tbody');
+
+    tbody.find('tr').sort(function(a, b) {
+        if (asc) {
+            return parseInt($(a).attr("value")) - parseInt($(b).attr("value"));
+        } else {
+            return parseInt($(b).attr("value")) - parseInt($(a).attr("value"));
+        }
+    }).appendTo(tbody);
+}
+

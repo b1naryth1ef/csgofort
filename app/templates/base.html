@@ -43,7 +43,11 @@
                       </a>
                       <ul class="dropdown-menu" style="margin-top: 15px; margin-right: 10px">
                         {% if g.user %}
+                            {% if g.user.level >= 100 %}
+                                <li><a href="{{ build_url("admin", "") }}">Admin</a></li>
+                            {% endif %}
                             <li><a href="{{ build_url("auth", "logout") }}">Logout</a></li>
+                            
                         {% else %}
                             <li><a href="{{ build_url("auth", "login") }}?next={{ build_url(REALM, "") }}">Login</a></li>
                         {% endif %}

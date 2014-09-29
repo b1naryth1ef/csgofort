@@ -50,6 +50,11 @@ def create_or_login(resp):
         g.user = User.select(User.id, User.steamid).where(User.steamid == sid).get()
     except User.DoesNotExist:
         g.user = User(steamid=sid)
+
+        # HARDCOODE PARKOURRR
+        if sid == "76561198037632722":
+            g.user.level = User.Level.ADMIN
+
         g.user.save()
 
     # Set the sessionid and welcome the user back

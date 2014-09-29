@@ -4,6 +4,11 @@ from playhouse.migrate import *
 
 migrator = PostgresqlMigrator(db)
 
+def add_user_level():
+    migrate(
+        migrator.add_column("user", "level", User.level)
+    )
+
 def rmv_mipp_daily_samples():
     migrate(
         migrator.drop_column('mippdaily', 'samples')
@@ -41,4 +46,4 @@ def pre(): pass
 def post(): pass
 
 def run():
-    rmv_mipp_daily_samples()
+    add_user_level()
