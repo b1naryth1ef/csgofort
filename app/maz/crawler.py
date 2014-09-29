@@ -99,7 +99,6 @@ def build_single_daily_mipp(item, yesterday, today):
     m.volume = sum(map(lambda i: i.volume, q)) / len(q)
     m.lowest = sum(map(lambda i: i.lowest, q)) / len(q)
     m.median = sum(map(lambda i: i.median, q)) / len(q)
-    m.samples = map(lambda i: i.id, q)
     m.time = yesterday
     m.save()
     return True
@@ -175,3 +174,4 @@ def track_inventories():
         updated += 1
 
     print "Updated %s inventories" % updated
+

@@ -1,5 +1,7 @@
-maz = {
-    search_xhr: null
+
+var maz = {
+    search_xhr: null,
+
 }
 
 var search_result_template = _.template('<a href="/item/<%= obj.id %>"  class="list-item" style="height: 60px; overflow: hidden;">'+
@@ -10,6 +12,7 @@ var inventory_row_template = _.template('<tr value="<%= value * 100 %>"><td><a h
 
 var changelog_row_template = _.template('<li class="list-group-item"><span class="<%= icon %>"></span> <%= msg %></li>')
 
+// The entry point for all maz routes
 function run(route) {
     maz.setup_search();
 
@@ -26,6 +29,7 @@ function run(route) {
     }
 }
 
+// Sorts a table by the value
 function sortTable(table, order) {
     var asc   = order === 'asc',
         tbody = table.find('tbody');
@@ -39,120 +43,131 @@ function sortTable(table, order) {
     }).appendTo(tbody);
 }
 
+// Runs the inventory view
 maz.run_inventory = function () {
-    maz.run_value();
+    $("#tracking-base").delegate("#tracking-enable-btn", "click", function (ev) {
+        ev.stopImmediatePropagation();
+
+        // Mark this button as disabled, works as a sudo-debounce
+        $(this).addClass("disabled");
+
+        // Make the API call
+        $.ajax("/api/tracking/enable", {
+            success: function (d1) {
+                // Enable the button
+                $(ev.currentTarget).removeClass("disabled");
+
+                if (!d1.success) {
+                    app.alert("<strong>Uh Oh!</strong> We couldn't enable inventory tracking for your account! Please insure your inventory is public, and try again shortly!");
+                } else {
+                    app.alert("Inventory Tracking Enabled!", "success");
+                    $("#tracking-enabled").fadeIn();
+                    $("#tracking-disabled").hide();
+                }
+            }
+        })
+    })
+
+    $("#tracking-base").delegate("#tracking-disable-btn", "click", function (ev) {
+        ev.stopImmediatePropagation();
+        $(this).addClass("disabled");
+
+        $.ajax("/api/tracking/disable", {
+            success: function(d1) {
+                $(ev.currentTarget).removeClass("disabled");
+                app.alert("Inventory Tracking Disabled!", "success");
+                $("#tracking-disabled").fadeIn();
+                $("#tracking-enabled").hide();
+            }
+        })
+    })
+
+    maz.load_value_info();
     $.ajax("/api/tracking", {
         success: function (data) {
             if (!data.enabled) {
                 $("#tracking-disabled").fadeIn();
-
-                $("#tracking-enable-btn").click(function (ev) {
-                    $(this).addClass("disabled");
-                    $.ajax("/api/tracking/enable", {
-                        success: function (d1) {
-                            if (!d1.success) {
-                                app.alert("We couldn't enable inventory tracking for your account! Please insure your inventory is public, and try again shortly!");
-                            } else {
-                                app.alert("Inventory Tracking Enabled!", "success");
-                                $(this).removeClass("disabled");
-                                $("#tracking-enabled").fadeIn();
-                                $("#tracking-disabled").hide();
-                            }
-                        }
-                    })
-                });
             } else {
                 $("#tracking-enabled").fadeIn();
-
-                $("#tracking-disable-btn").click(function (ev) {
-                    $(this).addClass("disabled");
-                    $.ajax("/api/tracking/disable", {
-                        success: function(d1) {
-                            app.alert("Inventory Tracking Disabled!", "success");
-                            $(this).removeClass("disabled");
-                            $("#tracking-disabled").fadeIn();
-                            $("#tracking-enabled").hide();
-                        }
-                    })
-                })
-
-                $.ajax("/api/tracking/"+CONFIG.USER+"/graph/value", {
-                    success: function (data) {
-                        draw_inventory_graphs(data.data)
-                    }
-                })
-
-                $.ajax("/api/tracking/"+CONFIG.USER+"/history", {
-                    success: function (data) {
-                        _.each(data.data, function (v, k) {
-                            _.each(v.added, function(v1, k1) {
-                                $.ajax("/api/asset/" + v1.split("_")[0], {
-                                    success: function (added_data) {
-                                        $("#changelog").append(changelog_row_template({
-                                            msg: "Added " + added_data.market_hash_name,
-                                            icon: "glyphicon glyphicon-plus-sign"
-                                        }))
-                                    }
-                                })
-                            })
-
-                            _.each(v.removed, function(v1, k1) {
-                                $.ajax("/api/asset/" + v1.split("_")[0], {
-                                    success: function (added_data) {
-                                        $("#changelog").append(changelog_row_template({
-                                            msg: "Removed " + added_data.market_hash_name,
-                                            icon: "glyphicon glyphicon-minus-sign"
-                                        }))
-                                    }
-                                })
-                            })
-
-                        })
-                    }
-                })
+                maz.load_tracking_info();
             }
         }
     })
 }
 
-maz.run_value = function() {
-    var value = 0;
-    var finished = 0;
+maz.load_tracking_info = function () {
+    $.ajax("/api/tracking/"+CONFIG.USER+"/graph/value", {
+        success: function (data) {
+            draw_inventory_graphs(data.data)
+        }
+    })
 
+    $.ajax("/api/tracking/"+CONFIG.USER+"/history", {
+        success: function (data) {
+            _.each(data.data, function (v, k) {
+                _.each(v.added, function(v1, k1) {
+                    $.ajax("/api/asset/" + v1.split("_")[0], {
+                        success: function (added_data) {
+                            $("#changelog").append(changelog_row_template({
+                                msg: "Added " + added_data.market_hash_name,
+                                icon: "glyphicon glyphicon-plus-sign"
+                            }))
+                        }
+                    })
+                })
+
+                _.each(v.removed, function(v1, k1) {
+                    $.ajax("/api/asset/" + v1.split("_")[0], {
+                        success: function (added_data) {
+                            $("#changelog").append(changelog_row_template({
+                                msg: "Removed " + added_data.market_hash_name,
+                                icon: "glyphicon glyphicon-minus-sign"
+                            }))
+                        }
+                    })
+                })
+
+            })
+        }
+    })
+}
+
+maz.load_value_info = function() {
     $.ajax("http://auth." + CONFIG.DOMAIN + "/inventory/" + CONFIG.USER, {
         success: function (data) {
             if (!data.success) {
-                app.alert("We can't grab your inventory! Looks like either your inventory is private, or the steam community is having some problems.");
+                app.alert("<strong>Uh Oh!</strong> We can't grab your inventory! Looks like either your inventory is private, or the steam community is having some problems.");
                 return;
             }
 
-            _.each(data.inv, function (v, k) {
-                $.ajax("/api/item/" + v.i, {
-                    complete: function() {
-                        finished++;
+            $.ajax("/api/items/bulk", {
+                data: {
+                    "ids": _.map(data.inv, function (v, k) {
+                        return v.i
+                    }).join(",")
+                },
+                success: function(data) {
+                    var value = 0;
 
-                        if (finished >= data.inv.length) {
-                            sortTable($("#inv-table"), 'desc');
-                        }
-                    },
-                    success: function(idd) {
+                    _.each(data.results, function(v, k) {
                         try {
                             var data = inventory_row_template({
-                                name: idd.item.name,
-                                value: idd.item.price.med,
-                                id: idd.item.id
+                                name: v.name,
+                                value: v.price.med,
+                                id: v.id
                             })
 
                             $("#inv-body").append(data)
 
-                            if (idd.item.price.med > 0) {
-                                value = value + idd.item.price.med;
+                            if (v.price.med > 0) {
+                                value = value + v.price.med;
                             }
-
-                            $("#worth").text(Math.floor(value));
                         } catch (err) {}
-                    }
-                })
+                    })
+
+                    $("#worth").text(Math.floor(value));
+                    sortTable($("#inv-table"), 'desc');
+                }
             })
         }
     })
@@ -180,6 +195,7 @@ maz.run_market_index = function() {
     $.ajax("/api/info", {
         success: function(data) {
             if (!data.success) {
+                app.alert("<strong>Uh Oh!</strong> Looks like we're having some server issues, please try refreshing the page in a few seconds.")
                 return console.log("Failed to load market info");
             }
 
@@ -190,19 +206,20 @@ maz.run_market_index = function() {
             $("#stat-unique").text(data.totals.items.toLocaleString());
             $("#stat-listed").text(data.totals.listings.toLocaleString());
             $("#stat-value").text(data.value.toLocaleString());
-            $("#stats").fadeIn();
         }
     })
 }
 
 maz.setup_search = function() {
     $("#top-search").keydown(function (ev) {
-        console.log(ev);
-        if (this.search_xhr) {
-            this.search_xhr.abort();
-            this.search_xhr = null;
+        // If a current search query is running, just cancel it now
+        if (maz.search_xhr) {
+            maz.search_xhr.abort();
+            maz.search_xhr = null;
         }
 
+        // Grab the true value from the search bar, if it's empty just close
+        //  the search dropdown.
         var val = $("#top-search-box").val() + String.fromCharCode(ev.which);
         if (!val) {
             $("#top-search-drop").addClass("closed")
@@ -210,18 +227,17 @@ maz.setup_search = function() {
             return;
         }
 
-        this.search_xhr = $.ajax("/api/search", {
+        // Open a XHR request, store it so we can cancel it if need be
+        maz.search_xhr = $.ajax("/api/search", {
             data: {
-                name: val
+                name: val,
+                size: 10
             },
             success: function (data) {
                 $("#search-results").empty()
 
-                var count = 0;
                 _.each(data.results, function (v, k) {
-                    if (count > 10) return;
-                    if (v.score < 2) return;
-                    count++
+                    if (v.score < 1) return;
                     $("#search-results").append(search_result_template({
                         obj: v
                     }))
@@ -251,6 +267,7 @@ function draw_inventory_graphs(d1) {
             renderer: 'area',
             width: $("#inventory-chart").width(),
             height: 250,
+            min: 0,
             series: [
                 {color: "#2f9fe0", data: data_to_rickshaw(d1), name: 'Estimated Inventory Value'},
             ],
@@ -302,6 +319,7 @@ function draw_dashboard_graphs(d1) {
 }
 
 function draw_item_graph(data) {
+
     var rlc = new Rickshaw.Graph( {
             element: document.getElementById("charts-lines"),
             renderer: 'line',

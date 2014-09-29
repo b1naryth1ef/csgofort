@@ -2,7 +2,7 @@
 var JST = {
     alert: _.template('<div class="col-md-12"><div class="alert alert-<%= type %>">' +
         '<button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>' +
-        '<strong>Uh Oh!</strong> <%= msg %></div></div>')
+        '<%= msg %></div></div>')
 }
 
 var app = {}

@@ -4,6 +4,11 @@ from playhouse.migrate import *
 
 migrator = PostgresqlMigrator(db)
 
+def rmv_mipp_daily_samples():
+    migrate(
+        migrator.drop_column('mippdaily', 'samples')
+    )
+
 def add_inventory_size_field():
     migrate(
         migrator.add_column('inventorypricepoint', 'size', InventoryPricePoint.size)
@@ -36,4 +41,4 @@ def pre(): pass
 def post(): pass
 
 def run():
-    add_inventory_size_field()
+    rmv_mipp_daily_samples()

@@ -1,4 +1,4 @@
-from flask import flash, redirect, request
+from flask import flash, redirect, request, jsonify
 from app import csgofort
 
 import json
@@ -25,3 +25,24 @@ def util_ctx_proc():
 @csgofort.template_filter("jsonify")
 def jsonify_filter(x):
     return json.dumps(x, indent=4)
+
+class APIError(Exception):
+    def __init__(self, message, payload=None):
+        Exception.__init__(self)
+        self.message = message
+        self.payload = payload
+
+    def toDict(self):
+        resp = {
+            "success": False,
+            "error": self.message
+        }
+
+        if self.payload:
+            resp.update(self.payload)
+
+        return resp
+
+@csgofort.errorhandler(APIError)
+def handle_api_error(err):
+    return jsonify(err.toDict())

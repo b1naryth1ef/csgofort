@@ -3,7 +3,7 @@ from mazdb import *
 from manalytics import *
 from collections import Counter
 from cStringIO import StringIO
-from util import build_url
+from util import build_url, APIError
 
 import json, random, functools, requests
 
@@ -156,14 +156,34 @@ def maz_route_api_item(id):
         else:
             mi = MarketItem.get(MarketItem.name == id)
     except MarketItem.DoesNotExist:
-        return jsonify({
-            "success": False,
-            "error": "Invalid Item ID!"
-        })
+        raise APIError("Invalid Item ID")
 
     return jsonify({
         "success": True,
-        "item": mi.toDict(),
+        "item": mi.toDict(request.values.get("tiny", False)),
+    })
+
+@maz.route("/api/items/bulk")
+def maz_route_api_items_bulk():
+    ids = request.values.get("ids").split(",")
+
+    if len(ids) > 2048:
+        raise APIError("Too many items for bulk request (limit is 2048)")
+
+    results = {}
+
+    for id in ids:
+        try:
+            mi = MarketItem.get(MarketItem.id == id)
+        except MarketItem.DoesNotExist:
+            results[id] = {}
+            continue
+
+        results[id] = mi.toDict(request.values.get("tiny", False))
+
+    return jsonify({
+        "success": True,
+        "results": results
     })
 
 @maz.route("/api/item/<id>/history")
@@ -174,10 +194,7 @@ def maz_route_history(id):
     try:
         mi = MarketItem.get(MarketItem.id == id)
     except MarketItem.DoesNotExist:
-        return jsonify({
-            "success": False,
-            "error": "Invalid Item ID!"
-        })
+        raise APIError("Invalid Item ID")
 
     q = MarketItemPricePoint.select().where(
         MarketItemPricePoint.item == mi).order_by(
@@ -235,10 +252,7 @@ def maz_route_aggregate():
         parts.append((MarketItem.stat == bool(stat)))
 
     if not len(parts):
-        return jsonify({
-            "success": False,
-            "error": "No Query!"
-        })
+        raise APIError("No Query")
 
     results = list(MarketItem.select().where(reduce(lambda a, b: a & b, parts)))
     results_enc = map(lambda i: i.toDict(), results)
@@ -367,10 +381,7 @@ def maz_route_item_graph_value(rule, id, attrib):
     try:
         mi = MarketItem.get(MarketItem.id == id)
     except MarketItem.DoesNotExist:
-        return jsonify({
-            "success": False,
-            "error": "Invalid Item ID!"
-        })
+        raise APIError("Invalid Item ID")
 
     data = {}
     for dt in list(rule)[:-1]:
@@ -395,10 +406,11 @@ def maz_route_search():
     }
 
     if not query:
-        return jsonify({
-            "success": False,
-            "error": "You must specifiy a search query!"
-        })
+        raise APIError("Empty Query")
+
+    size = request.values.get("size", 25)
+    if size > 25:
+        size = 25
 
     result = es.search(
         index='marketitems',
@@ -411,7 +423,7 @@ def maz_route_search():
                     },
                 }
             },
-            "size": 25
+            "size": size
         }
     )
 
@@ -430,7 +442,7 @@ def maz_route_search():
         return jsonify({
             "results": [],
             "size": 0,
-            "success": False
+            "success": True
         })
 
     return jsonify(result)
@@ -536,10 +548,10 @@ def maz_route_tracking_history(id):
 
 @maz.route("/api/asset/<int:id>")
 def maz_route_asset(id):
-    # if red.exists("asset:%s" % id):
-    #     r = Response(red.get("asset:%s" % id))
-    #     r.mimetype = "application/json"
-    #     return r
+    if red.exists("asset:%s" % id):
+        r = Response(red.get("asset:%s" % id))
+        r.mimetype = "application/json"
+        return r
 
     data = market_api.get_asset_class_info(id)["result"][str(id)]
     # 2 hours cache

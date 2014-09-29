@@ -72,30 +72,36 @@ class MarketItem(BModel):
         if len(res):
             return res[0]
 
-    def toDict(self):
+    def toDict(self, tiny=False):
         latest = self.get_latest_mipp()
-        return {
+
+        data = {
             "id": self.id,
             "name": self.name,
-            "nameid": self.nameid,
             "image": self.image,
-            "info": {
-                "wear": self.wear,
-                "skin": self.skin,
-                "item": self.item,
-                "stat": self.stat,
-                "holo": self.holo
-            },
-            "discovered": self.discovered.isoformat(),
-            "updated": self.last_crawl.isoformat(),
-            "points": MarketItemPricePoint.select(MarketItemPricePoint.id).where(
-                MarketItemPricePoint.item == self).count(),
             "price": {
                 "volume": latest.volume,
                 "low": latest.lowest,
                 "med": latest.median
             }
         }
+
+        if tiny: return data
+
+        data["nameid"] = self.nameid
+        data["info"] = {
+                "wear": self.wear,
+                "skin": self.skin,
+                "item": self.item,
+                "stat": self.stat,
+                "holo": self.holo
+            }
+        data["discovered"] = self.discovered.isoformat(),
+        data["updated"] = self.last_crawl.isoformat(),
+        data["points"] = MarketItemPricePoint.select(MarketItemPricePoint.id).where(
+            MarketItemPricePoint.item == self).count(),
+
+        return data
 
     def get_family_items(self):
         return MarketItem.select().where(
@@ -152,7 +158,6 @@ class MIPPDaily(BModel):
     lowest = FloatField()
     median = FloatField()
 
-    samples = ArrayField(IntegerField)
     time = DateTimeField()
 
 class Inventory(BModel):
