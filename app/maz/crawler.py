@@ -153,8 +153,8 @@ def track_inventories():
             print "Failed to update inventory %s" % inv.id
             continue
 
-        inv_ids_old = map(lambda i: i["s"], inv.inventory)
-        inv_ids_new = map(lambda i: i["s"], new_inv)
+        inv_ids_old = map(lambda i: i["s"].split("_", 1)[0], inv.inventory)
+        inv_ids_new = map(lambda i: i["s"].split("_", 1)[0], new_inv)
 
         for iid in inv_ids_old:
             if iid not in inv_ids_new:
