@@ -15,6 +15,18 @@ class User(BModel):
     active = BooleanField(default=True)
     level = IntegerField(default=0)
 
+    def toDict(self, admin=False):
+        data = {
+            "id": self.id,
+            "steamid": self.steamid,
+            "nickname": self.get_nickname(),
+            "avatar": self.get_avatar(),
+            "level": self.level,
+            "active": self.active
+        }
+
+        return data
+
     def get_avatar(self):
         """
         Returns a URL to the users avatar. (Comes from the auth server)

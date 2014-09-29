@@ -34,10 +34,21 @@ def admin_before_request():
 def admin_index():
     return render_template("admin/index.html")
 
+@admin.route("/users")
+def admin_users():
+    return render_template("admin/users.html")
+
 @admin.route("/api/stats")
 def admin_api_stats():
     return jsonify({
         "users": User.select().count(),
+    })
+
+@admin.route("/api/users")
+def admin_api_users():
+    return jsonify({
+        "users": map(lambda i: i.toDict(admin=True),
+            User.select().paginate(int(request.values.get("page", 1)), 100))
     })
 
 @admin.route("/api/postgres/queries")

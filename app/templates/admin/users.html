@@ -1,0 +1,41 @@
+{% extends "admin/base.html" %}
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="block">
+            <div class="block-head">
+                <div class="block-title">Users</div>
+            </div>
+            <div class="block-content">
+                <table class="table" id="users-table">
+                     <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Steam ID</th>
+                            <th>Username</th>
+                            <th>Level</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="users-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="user-modal" style="display: none;">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-body">
+                
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button id="user-modal-save" type="button" class="btn btn-primary">Save changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
