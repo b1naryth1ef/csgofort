@@ -281,38 +281,24 @@ function draw_inventory_graphs(d1) {
 }
 
 function draw_dashboard_graphs(d1, d2) {
-    var graph_value = new Rickshaw.Graph( {
-            element: document.getElementById("dashboard-chart-value"),
+    var dash_graph = new Rickshaw.Graph( {
+            element: document.getElementById("dashboard-chart"),
             renderer: 'area',
-            width: $("#dashboard-chart-value").width(),
+            width: $("#dashboard-chart").width(),
             height: 250,
             series: [
-                {color: "#2f9fe0", data: data_to_rickshaw(d1), name: 'Estimated Market Value'},
+                {color: "#1FCC7B", data: data_to_rickshaw(d1), name: 'Estimated Market Value'},
+                {color: "#F6BB42", data: data_to_rickshaw(d2), name: 'Estimated Market Volume'}
             ],
     });
 
-    var graph_size = new Rickshaw.Graph({
-        element: document.getElementById("dashboard-chart-size"),
-        renderer: 'area',
-        width: $("#dashboard-chart-size").width(),
-        height: 250,
-        series: [
-            {color: "#2f9fe0", data: data_to_rickshaw(d2), name: 'Estimated Market Size'}
-        ]
-    })
-
     var graph_resizer = function() {
-        graph_value.configure({
-                width: $("#dashboard-chart-value").width(),
-                height: $("#dashboard-chart-value").height()
+        dash_graph.configure({
+                width: $("#dashboard-chart").width(),
+                height: $("#dashboard-chart").height()
         });
-        graph_size.configure({
-                width: $("#dashboard-chart-size").width(),
-                height: $("#dashboard-chart-size").height()
-        })
 
-        graph_size.render();
-        graph_value.render();
+        dash_graph.render();
     }
 
     var formatter = function(series, x, y) {
@@ -321,13 +307,8 @@ function draw_dashboard_graphs(d1, d2) {
             return content;
         }
 
-    var graph_value_hover = new Rickshaw.Graph.HoverDetail( {
-        graph: graph_value,
-        formatter: formatter
-    });
-
-    var graph_size_hover = new Rickshaw.Graph.HoverDetail( {
-        graph: graph_size,
+    var dash_graph_hover = new Rickshaw.Graph.HoverDetail( {
+        graph: dash_graph,
         formatter: formatter
     });
 
