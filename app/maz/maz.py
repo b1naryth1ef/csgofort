@@ -5,7 +5,7 @@ from collections import Counter
 from cStringIO import StringIO
 from util import build_url, APIError
 
-import json, random, functools, requests
+import json, random, functools, requests, time
 
 import datetime
 from dateutil.rrule import *
@@ -341,37 +341,22 @@ def dategraph(f):
         if res == "year":
             ruleset = rrule(MONTHLY, count=12, dtstart=datetime.datetime.utcnow() - relativedelta(months=11))
 
-        return f(ruleset, *args, **kwargs)
+        return f(list(ruleset)[:-1], *args, **kwargs)
     return deco
-
 
 @maz.route("/api/graph/totalvalue")
 @dategraph
 def maz_route_value_total(rule):
-    """
-    Returns a graph of the total market value given a resolution
-    """
-
-    data = {}
-    for dt in list(rule)[:-1]:
-        # start = dt - datetime.timedelta(days=1)
-        # get_market_value_total(start, dt)
-        data[int(dt.strftime('%s'))] = get_market_value_total_day(dt)
-
     return jsonify({
-        "data": data,
+        "data": get_daily_market_value_range(rule[0], rule[-1]),
         "success": True
     })
 
-@maz.route("/api/graph/listings")
+@maz.route("/api/graph/totalsize")
 @dategraph
 def maz_route_listings(rule):
-    data = {}
-    for dt in rule:
-        data[int(dt.strftime('%s'))] = random.randint(100000, 999999)
-
     return jsonify({
-        "data": data,
+        "data": get_daily_market_size_range(rule[0], rule[-1]),
         "success": True,
     })
 

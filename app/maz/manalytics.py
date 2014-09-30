@@ -13,24 +13,49 @@ SELECT t1.* FROM marketitempricepoint AS t1
     %s
 """
 
+normalize_date = lambda i: i.replace(hour=0, minute=0, second=0, microsecond=0)
+
 def get_market_value_total_now():
     """
-    TODO doc
+    This function returns the current estimated market value. This does
+    NOT use MIPPDaily's to try and be as up-to-date as possible.
+
+    TODO: motherfucking O(1) plz
     """
     latest = get_latest_mipps()
     return int(sum(map(lambda i: 
         (i.median * i.volume) if i.volume > 0 else 0, list(latest))))
 
-def get_market_value_total_day(day=None):
+def util_per_daily_mipp_range(start, end, selection):
     """
-    Returns the total market value given a timeframe. It will only use the
-    most-recent MIPP inside that time-period, but will return a valuation
-    based on average price and volume at that time.
-    TODO doc
+    Applys a selection to an aggergation over all daily mipps. Used for
+    dashboard graphs. O(1) selection/aggergation performance for any range
     """
-    latest = get_latest_mipp_dailys(day)
-    return int(sum(map(lambda i: 
-        (i.median * i.volume) if i.volume > 0 else 0, list(latest))))
+    return MIPPDaily.select(selection).where(
+        (MIPPDaily.time >= normalize_date(start)),
+        (MIPPDaily.time <= normalize_date(end)),
+        (MIPPDaily.volume > 0)
+    ).group_by(MIPPDaily.time)
+
+def get_daily_market_value_range(start, end):
+    """
+    This function returns a list of N market-value (aggergates) for N days
+    (MIPPDailys) within the date range start - end.
+    """
+    q = util_per_daily_mipp_range(start, end, (
+        fn.Sum(MIPPDaily.median * MIPPDaily.volume).alias("x"))
+    )
+    return map(lambda i: i.x, q)
+
+def get_daily_market_size_range(start, end):
+    """
+    This function returns a list of N market-sizes (aggergates) for N days
+    (MIPPDailys) within the date range start - end.
+    """
+    q = util_per_daily_mipp_range(start, end, (
+        fn.Sum(MIPPDaily.volume).alias("x"))
+    )
+    return map(lambda i: i.x, q)
 
 def get_latest_mipp_dailys(day=None):
     if not day:

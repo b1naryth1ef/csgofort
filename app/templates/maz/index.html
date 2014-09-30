@@ -1,15 +1,26 @@
 {% extends "maz/base.html" %}
 {% block content %}
-<div class="page-toolbar">                        
+<!-- <div class="page-toolbar">                        
     <div class="page-toolbar-block">
         <div class="page-toolbar-subtitle">Estimated Steam Community Market Value (dollars)</div>
     </div> 
-</div>
-<div class="block-wide">                                             
-    <div id="dashboard-chart" style="height: 250px; width: 100%; float: left; background-color: #e5e5e5"></div>
-    <div class="chart-legend">
-        <div id="dashboard-legend"></div>
+</div> -->
+<div class="block-wide">
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#tab-value" data-toggle="tab">Market Value</a></li>
+        <li class=""><a href="#tab-size" data-toggle="tab">Market Size</a></li>
+    </ul>
+    <div class="block-content tab-content" id="graphs" style="padding: 0px">
+        <div class="tab-pane active" id="tab-value">
+            <div id="dashboard-chart-value" style="height: 250px; width: 100%; float: left; background-color: #e5e5e5"></div>
+        </div>
+        <div class="tab-pane" id="tab-size">
+            <div id="dashboard-chart-size" style="height: 250px; width: 100%; float: left; background-color: #e5e5e5"></div>
+        </div>                   
     </div>
+</div>
+<div class="block-wide">
+
 </div>
 
 <div class="page-rest">

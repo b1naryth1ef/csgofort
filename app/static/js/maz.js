@@ -174,7 +174,11 @@ maz.run_item = function () {
 maz.run_market_index = function() {
     $.ajax("/api/graph/totalvalue", {
         success: function(d1) {
-            draw_dashboard_graphs(d1.data);
+            $.ajax("/api/graph/totalsize", {
+                success: function(d2) {
+                    draw_dashboard_graphs(d1.data, d2.data);
+                }
+            })
         }
     })
 
@@ -276,32 +280,60 @@ function draw_inventory_graphs(d1) {
     rdc_resize();
 }
 
-function draw_dashboard_graphs(d1) {
-    var rdc = new Rickshaw.Graph( {
-            element: document.getElementById("dashboard-chart"),
+function draw_dashboard_graphs(d1, d2) {
+    var graph_value = new Rickshaw.Graph( {
+            element: document.getElementById("dashboard-chart-value"),
             renderer: 'area',
-            width: $("#dashboard-chart").width(),
+            width: $("#dashboard-chart-value").width(),
             height: 250,
             series: [
                 {color: "#2f9fe0", data: data_to_rickshaw(d1), name: 'Estimated Market Value'},
             ],
-    } );
+    });
 
-    rdc.render();
+    var graph_size = new Rickshaw.Graph({
+        element: document.getElementById("dashboard-chart-size"),
+        renderer: 'area',
+        width: $("#dashboard-chart-size").width(),
+        height: 250,
+        series: [
+            {color: "#2f9fe0", data: data_to_rickshaw(d2), name: 'Estimated Market Size'}
+        ]
+    })
 
-    var rdc_resize = function() {                
-            rdc.configure({
-                    width: $("#dashboard-chart").width(),
-                    height: $("#dashboard-chart").height()
-            });
-            rdc.render();
+    var graph_resizer = function() {
+        graph_value.configure({
+                width: $("#dashboard-chart-value").width(),
+                height: $("#dashboard-chart-value").height()
+        });
+        graph_size.configure({
+                width: $("#dashboard-chart-size").width(),
+                height: $("#dashboard-chart-size").height()
+        })
+
+        graph_size.render();
+        graph_value.render();
     }
 
-    var hoverDetail = new Rickshaw.Graph.HoverDetail({graph: rdc});
+    var formatter = function(series, x, y) {
+            var date = '<span class="date">' + new Date(x * 1000).toUTCString() + '</span>';
+            var content = series.name + ": " + parseInt(y).toLocaleString() + '<br>' + date;
+            return content;
+        }
 
-    window.addEventListener('resize', rdc_resize);        
+    var graph_value_hover = new Rickshaw.Graph.HoverDetail( {
+        graph: graph_value,
+        formatter: formatter
+    });
 
-    rdc_resize();
+    var graph_size_hover = new Rickshaw.Graph.HoverDetail( {
+        graph: graph_size,
+        formatter: formatter
+    });
+
+    $(document).on("shown.bs.tab", graph_resizer);
+    window.addEventListener('resize', graph_resizer);     
+    graph_resizer();
 }
 
 function draw_item_graph(data) {
