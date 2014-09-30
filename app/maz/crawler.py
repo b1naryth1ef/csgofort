@@ -152,20 +152,17 @@ def track_inventories():
             print "Failed to update inventory %s" % inv.id
             continue
 
-        inv_ids_old = map(lambda i: i["s"].split("_", 1)[0], inv.inventory)
-        inv_ids_new = map(lambda i: i["s"].split("_", 1)[0], new_inv)
+        old_ids = set(map(lambda i: i["s"].split("_", 1)[0], inv.inventory))
+        new_ids = set(map(lambda i: i["s"].split("_", 1)[0], new_inv))
 
-        for iid in inv_ids_old:
-            if iid not in inv_ids_new:
-                ipp.removed.append(iid)
-            else:
-                inv_ids_new.remove(iid)
+        # Sets are great
+        ipp.removed = olds_ids - new_ids
+        ipp.added = new_ids - old_ids
 
         # Do a favor and update the actual inv!
         inv.inventory = new_inv
 
         ipp.size = len(new_inv)
-        ipp.added = inv_ids_new
         ipp.value = inv.calculate_value()
         ipp.save()
 

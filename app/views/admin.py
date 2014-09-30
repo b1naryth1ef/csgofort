@@ -48,7 +48,7 @@ def admin_api_stats():
 def admin_api_users():
     return jsonify({
         "users": map(lambda i: i.toDict(admin=True),
-            User.select().paginate(int(request.values.get("page", 1)), 100))
+            User.select().order_by(User.id).paginate(int(request.values.get("page", 1)), 100))
     })
 
 @admin.route("/api/postgres/queries")
