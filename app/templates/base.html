@@ -94,8 +94,13 @@
         <!--<script type="text/javascript" src="http://{{ DOMAIN }}/static/js/charts.js"></script>-->
         <script type="text/javascript" src="http://{{ DOMAIN }}/static/js/actions.js"></script>
 
-        <script src="//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.7.0/underscore-min.js"></script>
-        <script src="http://{{ DOMAIN }}/static/js/app.js"></script>
+
+        <script type="text/javascript" src="http://{{ DOMAIN }}/static/js/plugins/noty/jquery.noty.js"></script>
+        <script type="text/javascript" src="http://{{ DOMAIN }}/static/js/plugins/noty/themes/default.js"></script>
+        <script type='text/javascript' src='http://{{ DOMAIN }}/static/js/plugins/noty/layouts/topRight.js'></script>
+        
+        <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.7.0/underscore-min.js"></script>
+        <script type="text/javascript" src="http://{{ DOMAIN }}/static/js/app.js"></script>
 
         {% block scripts %}
         {% endblock %}

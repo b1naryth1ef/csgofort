@@ -51,6 +51,19 @@ def admin_api_users():
             User.select().order_by(User.id).paginate(int(request.values.get("page", 1)), 100))
     })
 
+@admin.route("/api/user/<id>/edit")
+def admin_user_edit(id):
+    try:
+        u = User.get(User.id == id)
+    except User.DoesNotExist:
+        return APIError("User does not exist")
+
+    for field in request.values:
+        setattr(u, field, request.values[field])
+
+    u.save()
+    return jsonify({"success": True, "changed": len(request.values)})
+
 @admin.route("/api/postgres/queries")
 def admin_api_postgres_queries():
     query_count = db.get_conn().cursor()

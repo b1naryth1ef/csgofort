@@ -26,6 +26,24 @@ admin.run_users = function() {
         $("#user-modal").modal("show");
     })
 
+    $("#user-level").change(function (ev) {
+        if (!admin.edit_user_id) { return; }
+
+        $.ajax("/api/user/"+admin.edit_user_id+"/edit", {
+            data: {
+                "level": $(this).val(),
+            },
+            success: function (data) {
+                console.log(data)
+                if (!data.success) {
+                    noty({text: 'Failed to change user level ('+data.error+')', type: 'error'});
+                } else {
+                    noty({text: 'Changed user level!', type: 'success'});
+                }
+            }
+        })
+    })
+
     $.ajax("/api/users", {
         data: {
             page: admin.users_page

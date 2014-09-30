@@ -393,7 +393,7 @@ def maz_route_search():
     if not query:
         raise APIError("Empty Query")
 
-    size = request.values.get("size", 25)
+    size = int(request.values.get("size", 25))
     if size > 25:
         size = 25
 

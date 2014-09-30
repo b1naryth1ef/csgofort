@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block header_links %}
 <li {% if request.path == "/" %} class="active" {% endif %}><a href="{{ build_url('admin', '') }}">Home</a></li>
+<li {% if request.path == "/" %} class="active" {% endif %}><a href="{{ build_url('admin', 'users') }}">Users</a></li>
 {% endblock %}
 {% block scripts %}
     <script src="http://{{ DOMAIN }}/static/js/admin.js"></script>
