@@ -31,7 +31,7 @@ def util_per_daily_mipp_range(start, end, selection):
     Applys a selection to an aggergation over all daily mipps. Used for
     dashboard graphs. O(1) selection/aggergation performance for any range
     """
-    return MIPPDaily.select(selection).where(
+    return MIPPDaily.select(*selection).where(
         (MIPPDaily.time >= normalize_date(start)),
         (MIPPDaily.time <= normalize_date(end)),
         (MIPPDaily.volume > 0)
@@ -43,9 +43,10 @@ def get_daily_market_value_range(start, end):
     (MIPPDailys) within the date range start - end.
     """
     q = util_per_daily_mipp_range(start, end, (
+        MIPPDaily.time,
         fn.Sum(MIPPDaily.median * MIPPDaily.volume).alias("x"))
     )
-    return map(lambda i: i.x, q)
+    return dict(map(lambda i: (i.time.strftime("%s"), i.x), list(q)))
 
 def get_daily_market_size_range(start, end):
     """
@@ -53,9 +54,10 @@ def get_daily_market_size_range(start, end):
     (MIPPDailys) within the date range start - end.
     """
     q = util_per_daily_mipp_range(start, end, (
+        MIPPDaily.time,
         fn.Sum(MIPPDaily.volume).alias("x"))
     )
-    return map(lambda i: i.x, q)
+    return dict(map(lambda i: (i.time.strftime("%s"), i.x), list(q)))
 
 def get_latest_mipp_dailys(day=None):
     if not day:
