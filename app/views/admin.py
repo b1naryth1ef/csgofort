@@ -38,6 +38,10 @@ def admin_index():
 def admin_users():
     return render_template("admin/users.html")
 
+@admin.route("/postgres")
+def admin_postgres():
+    return render_template("admin/postgres.html")
+
 @admin.route("/api/stats")
 def admin_api_stats():
     return jsonify({
@@ -63,6 +67,30 @@ def admin_user_edit(id):
 
     u.save()
     return jsonify({"success": True, "changed": len(request.values)})
+
+@admin.route("/api/postgres/raw")
+def admin_api_postgres_raw():
+    q = request.values.get("query")
+
+    # Use protection kids, even a broken condom is better than no condom!!!!!!!!!
+    if "DROP" in q:
+        raise APIError("Fuck you")
+
+    # Why does this exist...
+    query = db.get_conn().cursor()
+    query.execute("BEGIN")
+
+    try:
+        query.execute(q)
+        data = query.fetchall()
+    except Exception as e:
+        query.execute("ROLLBACK")
+        return jsonify({"result": "ERROR %s" % e})
+
+    query.execute("COMMIT")
+    return jsonify({
+        "result": data
+    })
 
 @admin.route("/api/postgres/queries")
 def admin_api_postgres_queries():

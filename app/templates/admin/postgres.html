@@ -1,0 +1,70 @@
+{% extends "admin/base.html" %}
+{% block content %}
+<div class="row">
+    <div class="col-md-6">
+        <div class="block">
+            <div class="block-head">
+                <div class="block-title">Postgres Query</div>
+            </div>
+            <div class="row">
+                <div>
+                    <div class="col-md-10">
+                        <textarea class="form-control" id="query-content"></textarea>
+                    </div>
+                    <div class="col-md-2">
+                        <button id="query-run" class="btn btn-success pull-right"><i class="fa fa-floppy-o"></i> Execute</button>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12" style="margin-top: 15px">
+                    <pre id="query-result">No Results</pre>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="block">
+            <div class="block-head">
+                <div class="block-title">Postgres Relation Size</div>
+            </div>
+            <div class="block-content">
+                <table class="table" id="pg-relation-table">
+                     <thead>
+                        <tr>
+                            <th>Relation Name</th>
+                            <th>Size</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pg-relation-body">
+                                
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="block">
+            <div class="block-head">
+                <div class="block-title">Postgres Table Size</div>
+            </div>
+            <div class="block-content">
+                <table class="table" id="pg-tsize-table">
+                     <thead>
+                        <tr>
+                            <th>Table Name</th>
+                            <th>Size</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pg-tsize-body">
+                                
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

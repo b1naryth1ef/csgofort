@@ -15,6 +15,8 @@ function run(route) {
         admin.run_index();
     } else if (route === "/users") {
         admin.run_users();
+    } else if (route === "/postgres") {
+        admin.run_postgres();
     }
 }
 
@@ -63,6 +65,11 @@ admin.run_index = function () {
         }
     })
 
+    admin.update_qps();
+    setInterval(admin.update_qps, 3000);
+}
+
+admin.run_postgres = function () {
     $.ajax("/api/postgres/status", {
         success: function (data) {
             _.each(data.relations, function (v, k) {
@@ -77,10 +84,16 @@ admin.run_index = function () {
         }
     })
 
-
-
-    admin.update_qps();
-    setInterval(admin.update_qps, 3000);
+    $("#query-run").click(function (ev) {
+        $.ajax("/api/postgres/raw", {
+            data: {
+                query: $("#query-content").val()
+            },
+            success: function (data) {
+                $("#query-result").text(data.result)
+            }
+        })
+    })
 }
 
 admin.update_qps = function () {
