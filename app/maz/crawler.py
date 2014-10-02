@@ -156,8 +156,8 @@ def track_inventories():
         new_ids = set(map(lambda i: i["s"].split("_", 1)[0], new_inv))
 
         # Sets are great
-        ipp.removed = olds_ids - new_ids
-        ipp.added = new_ids - old_ids
+        ipp.removed = list(olds_ids - new_ids)
+        ipp.added = list(new_ids - old_ids)
 
         # Do a favor and update the actual inv!
         inv.inventory = new_inv
