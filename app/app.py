@@ -13,6 +13,8 @@ csgofort = CustomFlask("csgofort")
 csgofort.secret_key = "1337"
 openid = OpenID(csgofort)
 
+csgofort.config['PROPAGATE_EXCEPTIONS'] = True
+
 # Setup domain based on host
 LOCAL = (socket.gethostname() != "kato")
 if LOCAL:
@@ -34,4 +36,3 @@ def register_views():
     csgofort.register_blueprint(admin)
     csgofort.register_blueprint(maz)
     csgofort.register_blueprint(vacdex)
-

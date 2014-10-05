@@ -109,7 +109,7 @@ def maz_route_info():
     Returns information about the global dataset
     """
     latest = get_latest_mipps()
-    
+
     payload = {
         "totals": {
             "items": MarketItem.select().count(),
