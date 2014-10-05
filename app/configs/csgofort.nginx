@@ -1,0 +1,9 @@
+server {
+    listen 80;
+    server_name *.csgofort.org *.csgofort.com csgofort.com csgofort.org;
+
+    location / {
+        include uwsgi_params;
+        uwsgi_pass /tmp/uwsgi.sock;
+    }
+}

@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, g
 from fortdb import User
 from database import db
 from util import *
+import socket
 
 admin = Blueprint("admin", __name__, subdomain="admin")
 
@@ -41,6 +42,17 @@ def admin_users():
 @admin.route("/postgres")
 def admin_postgres():
     return render_template("admin/postgres.html")
+
+@admin.route("/api/uwsgi/stats")
+def admin_api_uwsgi_stats():
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.connect(("127.0.0.1", 9191))
+    data = s.recv(2048 * 24)
+    s.close()
+
+    r = Response(data)
+    r.mimetype = "application/json"
+    return r
 
 @admin.route("/api/stats")
 def admin_api_stats():

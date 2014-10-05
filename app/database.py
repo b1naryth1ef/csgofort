@@ -4,9 +4,9 @@ import sys
 from elasticsearch import Elasticsearch
 from peewee import *
 from playhouse.postgres_ext import *
-import redis
+import redis, os
 
-db = PostgresqlExtDatabase('fort', user="b1n", password="b1n", threadlocals=True, port=5433)
+db = PostgresqlExtDatabase('fort', user="b1n", password="b1n", threadlocals=True, port=os.getenv("PGPORT", 5433))
 red = redis.Redis()
 es = Elasticsearch()
 
@@ -17,22 +17,23 @@ class BModel(Model):
 def tables():
     from maz.mazdb import (MarketItem, MarketItemPricePoint, MIPPDaily,
         Inventory, InventoryPricePoint
-    )
+    )   
+
     # from vacdex.vacdb import *
     from fortdb import User
 
     return [
+        User,
         MarketItem,
         MarketItemPricePoint,
         MIPPDaily,
         Inventory,
         InventoryPricePoint,
-        User
     ]
 
 def migrate(module):
     print "Running migration for %s" % module.__name__
-    
+
     module.pre()
     module.run()
     module.post()
@@ -45,10 +46,10 @@ def setup_es():
         index="marketitems",
         body={
             "settings": {
-                "number_of_shards": 1, 
+                "number_of_shards": 1,
                 "analysis": {
                     "filter": {
-                        "autocomplete_filter": { 
+                        "autocomplete_filter": {
                             "type":     "edge_ngram",
                             "min_gram": 3,
                             "max_gram": 25
@@ -60,7 +61,7 @@ def setup_es():
                             "tokenizer": "standard",
                             "filter": [
                                 "lowercase",
-                                "autocomplete_filter" 
+                                "autocomplete_filter"
                             ]
                         }
                     }
@@ -116,4 +117,3 @@ if __name__ == "__main__":
         m = "migrations.%s" % sys.argv[2]
         __import__(m)
         migrate(sys.modules[m])
-

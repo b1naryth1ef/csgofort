@@ -1,0 +1,1 @@
+/usr/local/bin/uwsgi -s 127.0.0.1:3035 --wsgi-file run.py --callable csgofort --processes 4 --threads 2 --stats 127.0.0.1:9191 --env UWSGI=1 --pidfile /var/run/uwsgifort.pid
