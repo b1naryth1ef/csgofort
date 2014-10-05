@@ -108,16 +108,18 @@ def maz_route_info():
     """
     Returns information about the global dataset
     """
-    latest = get_latest_mipps()
+    # latest = get_latest_mipps()
+
+    value, listings = get_market_totals_now()
 
     payload = {
         "totals": {
             "items": MarketItem.select().count(),
             "mipp": MarketItemPricePoint.select().count(),
             "mippdaily": MIPPDaily.select().count(),
-            "listings": sum(map(lambda i: i.volume if i.volume > 0 else 0, list(latest))),
+            "listings": listings,
+            "value": value
         },
-        "value": get_market_value_total_now(),
         "status": {
             "api": 0,
             "community": int(red.get("maz:community_status") or 0),

@@ -15,16 +15,16 @@ SELECT t1.* FROM marketitempricepoint AS t1
 
 normalize_date = lambda i: i.replace(hour=0, minute=0, second=0, microsecond=0)
 
-def get_market_value_total_now():
+def get_market_totals_now():
     """
     This function returns the current estimated market value. This does
     NOT use MIPPDaily's to try and be as up-to-date as possible.
 
     TODO: motherfucking O(1) plz
     """
-    latest = get_latest_mipps()
-    return int(sum(map(lambda i: 
-        (i.median * i.volume) if i.volume > 0 else 0, list(latest))))
+    value = int(sum(map(lambda i: (i.median * i.volume) if i.volume > 0 else 0, list(latest))))
+    volume = int(sum(map(lambda i: i.volume if i.volume > 0 else 0, list(latest))))
+    return value, volume
 
 def util_per_daily_mipp_range(start, end, selection):
     """
