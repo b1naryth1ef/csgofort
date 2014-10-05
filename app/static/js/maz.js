@@ -195,7 +195,7 @@ maz.run_market_index = function() {
 
             $("#stat-unique").text(data.totals.items.toLocaleString());
             $("#stat-listed").text(data.totals.listings.toLocaleString());
-            $("#stat-value").text(data.value.toLocaleString());
+            $("#stat-value").text(data.totals.value.toLocaleString());
         }
     })
 }
