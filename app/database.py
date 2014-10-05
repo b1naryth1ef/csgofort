@@ -7,7 +7,7 @@ from playhouse.postgres_ext import *
 import redis, os
 
 db = PostgresqlExtDatabase('fort', user="b1n", password="b1n", threadlocals=True, port=os.getenv("PGPORT", 5433))
-red = redis.Redis()
+red = redis.Redis(db=3)
 es = Elasticsearch()
 
 class BModel(Model):

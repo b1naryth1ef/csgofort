@@ -22,6 +22,10 @@ def restart():
     # Restart nginx
     run("kill -HUP $(cat /var/run/nginx.pid)")
 
+    # Flush log
+    if exists("/var/log/fort.log"):
+        run("rm /var/log/fort.log")
+
     # Restart uwsgi (if its running)
     if exists("/var/run/uwsgifort.pid"):
         run('kill -HUP $(cat /var/run/uwsgifort.pid)')
@@ -38,6 +42,12 @@ def versions():
         print "Remote and local are up-to-date!"
     else:
         print "%s vs %s" % (remote_hash, local_hash)
+
+def logs():
+    run("tail -F /var/log/fort.log")
+
+def clear_cache():
+    run("redis-cli -n 3 flushall")
 
 def deploy():
     update()
