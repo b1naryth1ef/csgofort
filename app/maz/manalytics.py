@@ -22,6 +22,7 @@ def get_market_totals_now():
 
     TODO: motherfucking O(1) plz
     """
+    latest = get_latest_mipps()
     value = int(sum(map(lambda i: (i.median * i.volume) if i.volume > 0 else 0, list(latest))))
     volume = int(sum(map(lambda i: i.volume if i.volume > 0 else 0, list(latest))))
     return value, volume
