@@ -1,17 +1,18 @@
 from flask import Blueprint, request, jsonify, render_template, send_file, g, redirect, Response
 from mazdb import *
 from manalytics import *
+
 from collections import Counter
 from cStringIO import StringIO
 from util import build_url, APIError
 
-import json, random, functools, requests, time
+import json, functools, requests, datetime, logging
 
-import datetime
 from dateutil.rrule import *
 from dateutil.relativedelta import relativedelta
 
 maz = Blueprint("maz", __name__, subdomain="maz")
+log = logging.getLogger(__name__)
 
 with open("maz/API.json", "r") as f:
     API_DOCS = json.load(f)
@@ -28,6 +29,7 @@ def before_maz_request():
     # API rate limiting
     if red.exists(KEY):
         if int(red.get(KEY)) > RATE_LIMIT_UPPER:
+            log.warning("Rate limiting client (%s)" % request.remote_addr)
             res = jsonify({
                 "success": False,
                 "error": "Rate limit hit!",
@@ -108,8 +110,6 @@ def maz_route_info():
     """
     Returns information about the global dataset
     """
-    # latest = get_latest_mipps()
-
     value, listings = get_market_totals_now()
 
     payload = {
@@ -138,7 +138,8 @@ def maz_route_items():
     per_page = int(request.values.get("per_page", 10))
     per_page = per_page if per_page <= 100 else 100
 
-    results = map(lambda i: i.toDict(), list(MarketItem.select().order_by(MarketItem.id).paginate(page, per_page)))
+    results = map(lambda i: i.toDict(),
+        list(MarketItem.select().order_by(MarketItem.id).paginate(page, per_page)))
 
     return jsonify({
         "results": results,
@@ -296,7 +297,7 @@ def maz_route_pricechanges():
             (MarketItemPricePoint.item == mi) &
             (MarketItemPricePoint.time >= default_time_window)
         ).order_by(MarketItemPricePoint.time.desc())
-        
+
         if q.count() != 2:
             continue
 
@@ -335,13 +336,16 @@ def dategraph(f):
             })
 
         if res == "week":
-            ruleset = rrule(DAILY, count=7, dtstart=datetime.datetime.utcnow() - datetime.timedelta(days=6))
+            ruleset = rrule(DAILY, count=7,
+                dtstart=datetime.datetime.utcnow() - datetime.timedelta(days=6))
 
         if res == "month":
-            ruleset = rrule(DAILY, count=30, dtstart=datetime.datetime.utcnow() - datetime.timedelta(days=29))
+            ruleset = rrule(DAILY, count=30,
+                dtstart=datetime.datetime.utcnow() - datetime.timedelta(days=29))
 
         if res == "year":
-            ruleset = rrule(MONTHLY, count=12, dtstart=datetime.datetime.utcnow() - relativedelta(months=11))
+            ruleset = rrule(MONTHLY, count=12,
+                dtstart=datetime.datetime.utcnow() - relativedelta(months=11))
 
         return f(list(ruleset)[:-1], *args, **kwargs)
     return deco
@@ -389,7 +393,8 @@ SEARCH_ATTRIBS = ["name", "skin", "wear", "item"]
 @maz.route("/api/search")
 def maz_route_search():
     query = {
-        attrib: request.values.get(attrib) + "*" for attrib in SEARCH_ATTRIBS if attrib in request.values
+        attrib: request.values.get(attrib) + "*"
+            for attrib in SEARCH_ATTRIBS if attrib in request.values
     }
 
     if not query:
@@ -499,7 +504,9 @@ def maz_route_tracking_graph(id, field):
             "data": {}
         })
 
-    q = InventoryPricePoint.select().where(InventoryPricePoint.inv == i).limit(32).order_by(InventoryPricePoint.time.desc())
+    q = InventoryPricePoint.select().where(
+        InventoryPricePoint.inv == i
+    ).limit(32).order_by(InventoryPricePoint.time.desc())
 
     data = {}
     for entry in q:

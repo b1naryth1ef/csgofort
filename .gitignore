@@ -2,3 +2,4 @@
 *.db
 rip/
 config.py
+*.tbz2

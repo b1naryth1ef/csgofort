@@ -1,5 +1,6 @@
 from fabric.contrib.files import upload_template, exists
 from fabric.api import *
+import random
 
 env.user = "root"
 env.hosts = ["csgofort.com"]
@@ -49,7 +50,32 @@ def logs():
 def clear_cache():
     run("redis-cli -n 3 flushall")
 
+def dumpdb():
+    id = random.randint(10000, 99999)
+
+    with cd("/home/postgres/"):
+        fname = "fort_dump_{}".format(id)
+        run('su postgres -c "pg_dump fort > {}"'.format(fname))
+        run("tar -jcvf {0}.tbz2 {0}".format(fname))
+
+        get("/home/postgres/{}.tbz2".format(fname), "{}.tbz2".format(fname))
+        run("rm {0} {0}.tbz2".format(fname))
+
+def loaddb(name, username=None):
+    local('tar -jxvf {}.tbz2'.format(name))
+    local('dropdb fort')
+    local('createdb fort')
+
+    cmd = 'psql -d fort < {}'.format(name)
+    if username:
+        local('sudo su {} -c "{}"'.format(username, cmd))
+    else:
+        local(cmd)
+
+    local('rm {}'.format(name))
+
 def deploy():
     update()
     install()
     restart()
+    clear_cache()

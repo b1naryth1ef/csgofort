@@ -9,10 +9,10 @@ class BModel(Model):
         database = db
 
 MARKET_ITEM_INDEXES = (
-    # (("name", ), True),
-    # (("wear", ), False),
-    # (("skin", ), False),
-    # (("item", ), False),
+    (("name", ), True),
+    (("wear", ), False),
+    (("skin", ), False),
+    (("item", ), False),
 )
 
 class MarketItem(BModel):
@@ -49,7 +49,7 @@ class MarketItem(BModel):
 
         mipp = MarketItemPricePoint()
         mipp.item = self
-        mipp.volume = volume
+        mipp.volume = volume if volume != -1 else 0
         mipp.lowest = low
         mipp.median = med
         mipp.save()
@@ -115,7 +115,9 @@ class MarketItem(BModel):
 
 
 MARKET_ITEM_PRICE_POINT_INDEXES = (
-    # (("item", ), False),
+    (("volume", ), False),
+    (("median", ), False),
+    (("time"), False),
 )
 
 class MarketItemPricePoint(BModel):
@@ -144,6 +146,11 @@ class MarketItemPricePoint(BModel):
             "time": self.time.isoformat()
         }
 
+MIPP_DAILY_INDEXES = (
+    (("volume", ), False),
+    (("median", ), False),
+    (("time", ), False)
+)
 
 class MIPPDaily(BModel):
     """
@@ -152,6 +159,9 @@ class MIPPDaily(BModel):
     observed MIPPs for a single day period (24h exactly). A MIPPDaily will
     NOT exist for items that have no observed MIPP's in a day.
     """
+    class Meta:
+        indexes = MIPP_DAILY_INDEXES
+
     item = ForeignKeyField(MarketItem)
 
     volume = IntegerField()

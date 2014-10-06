@@ -43,7 +43,7 @@ def index_all_items():
                 mi.item, mi.skin, mi.wear, mi.stat, mi.holo = api.parse_item_name(mi.name)
                 mi.nameid = api.get_item_nameid(mi.name)
                 mi.image = api.get_item_image(mi.name)
-            
+
             mi.last_crawl = datetime.utcnow()
             mi.save()
 
@@ -90,7 +90,7 @@ def build_single_daily_mipp(item, yesterday, today):
     )
 
     if not q.count():
-        print "No MIPP's for daily aggregation (%s)!" % item.id
+        # print "No MIPP's for daily aggregation (%s)!" % item.id
         return False
     q = list(q)
 
@@ -156,7 +156,7 @@ def track_inventories():
         new_ids = set(map(lambda i: i["s"].split("_", 1)[0], new_inv))
 
         # Sets are great
-        ipp.removed = list(olds_ids - new_ids)
+        ipp.removed = list(old_ids - new_ids)
         ipp.added = list(new_ids - old_ids)
 
         # Do a favor and update the actual inv!
@@ -164,11 +164,10 @@ def track_inventories():
 
         ipp.size = len(new_inv)
         ipp.value = inv.calculate_value()
-        ipp.save()
-
         inv.updated = datetime.utcnow()
+
+        ipp.save()
         inv.save()
         updated += 1
 
     print "Updated %s inventories" % updated
-

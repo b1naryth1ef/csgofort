@@ -1,7 +1,6 @@
 from mazdb import *
 from datetime import datetime, timedelta
 
-
 # This query extracts the latest mipp for every known item while being O(1)
 #  instead of being O(n) and hitting the database for every item. This is
 #  basically an aggregate that uses the join conditions to order the results
@@ -13,19 +12,25 @@ SELECT t1.* FROM marketitempricepoint AS t1
     %s
 """
 
+MARKET_TOTALS_QUERY = """
+SELECT SUM(volume) as volume, SUM(volume * median) as value FROM marketitempricepoint AS t1
+  JOIN (SELECT item_id, MAX(time) as time FROM marketitempricepoint GROUP BY item_id) AS t2
+    ON t1.item_id = t2.item_id AND t1.time = t2.time
+"""
+
 normalize_date = lambda i: i.replace(hour=0, minute=0, second=0, microsecond=0)
 
 def get_market_totals_now():
     """
-    This function returns the current estimated market value. This does
-    NOT use MIPPDaily's to try and be as up-to-date as possible.
-
-    TODO: motherfucking O(1) plz
+    This function returns the total number of listings, and the total market
+    value of those listings at the current moment in time (based on the
+        latest crawling data). This is a fairly heavy query, and was made
+    to run on already built indexes (and thus be fairly efficient regardless
+        of its complexity.)
     """
-    latest = get_latest_mipps()
-    value = int(sum(map(lambda i: (i.median * i.volume) if i.volume > 0 else 0, list(latest))))
-    volume = int(sum(map(lambda i: i.volume if i.volume > 0 else 0, list(latest))))
-    return value, volume
+
+    q = list(MarketItemPricePoint.raw(MARKET_TOTALS_QUERY))
+    return int(q[0].value), q[0].volume
 
 def util_per_daily_mipp_range(start, end, selection):
     """
