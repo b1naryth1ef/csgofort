@@ -9,6 +9,7 @@ var template_users_row = _.template(
     '<tr data-id="<%= id %>"><td><%= id %></td><td><%= steamid %></td><td><%= nickname %></td><td><%= level %></td>' +
     '<td><button class="btn btn-default"><i class="fa fa-pencil"></i></button></td></tr>'
 )
+var template_pg_index = _.template('<tr value="<%= i[2] %>"><td><%= i[0] %></td><td><%= i[1] %></td><td><%= i[2] %></td><td><%= i[3] %></td><td><%= i[4] %></td><td><%= i[5] %></td></tr>')
 
 function run(route) {
     if (route === "" || route === "/") {
@@ -81,6 +82,11 @@ admin.run_postgres = function () {
                 $("#pg-tsize-body").append(template_pg_relation(v))
             })
             app.sortTable($("#pg-tsize-table"), 'desc');
+
+            _.each(data.indexes, function (v, k) {
+                $("#pg-index-body").append(template_pg_index({i: v}))
+            })
+            app.sortTable($("#pg-index-table"), "desc");
         }
     })
 

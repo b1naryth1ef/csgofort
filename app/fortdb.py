@@ -58,4 +58,3 @@ class User(BModel):
         data = steam.getUserInfo(steamid)
         red.setex("nick:%s" % steamid, data["personaname"], 60 * 120)
         return data['personaname']
-

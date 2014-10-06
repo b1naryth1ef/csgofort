@@ -10,7 +10,7 @@ var search_result_template = _.template('<a href="/item/<%= obj.id %>"  class="l
 
 var inventory_row_template = _.template('<tr value="<%= value * 100 %>"><td><a href="/item/<%= id %>"><%= name %></a></td><td>$<%= value %></td></tr>');
 
-var changelog_row_template = _.template('<li class="list-group-item"><span class="<%= icon %>"></span> <%= msg %></li>')
+var changelog_row_template = _.template('<li class="list-group-item"><span class="<%= cls %>"><span class="<%= icon %>"></span> <%= msg %></span></li>')
 
 // The entry point for all maz routes
 function run(route) {
@@ -96,7 +96,8 @@ maz.load_tracking_info = function () {
                         success: function (added_data) {
                             $("#changelog").append(changelog_row_template({
                                 msg: "Added " + added_data.market_hash_name,
-                                icon: "glyphicon glyphicon-plus-sign"
+                                icon: "glyphicon glyphicon-plus-sign",
+                                cls: "success"
                             }))
                         }
                     })
@@ -107,7 +108,8 @@ maz.load_tracking_info = function () {
                         success: function (added_data) {
                             $("#changelog").append(changelog_row_template({
                                 msg: "Removed " + added_data.market_hash_name,
-                                icon: "glyphicon glyphicon-minus-sign"
+                                icon: "glyphicon glyphicon-minus-sign",
+                                cls: "danger"
                             }))
                         }
                     })
@@ -164,23 +166,21 @@ maz.run_api_docs = function() {
 }
 
 maz.run_item = function () {
-    $.ajax("/api/item/"+ITEM_ID+"/graph/median", {
-        success: function(data) {
-            draw_item_graph(data.data);
-        }
-    })
+    var median_xhr = $.ajax("/api/item/"+ITEM_ID+"/graph/median");
+    var volume_xhr = $.ajax("/api/item/"+ITEM_ID+"/graph/volume");
+
+    $.when(median_xhr, volume_xhr).done(function(median_d, volume_d) {
+        draw_item_graph(median_d[0].data, volume_d[0].data);
+    });
 }
 
 maz.run_market_index = function() {
-    $.ajax("/api/graph/totalvalue", {
-        success: function(d1) {
-            $.ajax("/api/graph/totalsize", {
-                success: function(d2) {
-                    draw_dashboard_graphs(d1.data, d2.data);
-                }
-            })
-        }
-    })
+    var value_xhr = $.ajax("/api/graph/totalvalue");
+    var size_xhr = $.ajax("/api/graph/totalsize");
+
+    $.when(value_xhr, size_xhr).done(function (value_d, size_d) {
+        draw_dashboard_graphs(value_d[0].data, size_d[0].data)
+    });
 
     $.ajax("/api/info", {
         success: function(data) {
@@ -312,15 +312,25 @@ function draw_dashboard_graphs(d1, d2) {
         formatter: formatter
     });
 
-    $(document).on("shown.bs.tab", graph_resizer);
     window.addEventListener('resize', graph_resizer);     
     graph_resizer();
 }
 
-function draw_item_graph(data) {
+function draw_item_graph(d1, d2) {
+    var graph_value = new Rickshaw.Graph( {
+            element: document.getElementById("item-graph-value"),
+            renderer: 'line',
+            interpolation: 'linear',
+            min: 0,
+            height: 250,
+            padding: {top: .08},
+            series: [
+                {color: "#1FCC7B", data: data_to_rickshaw(d1), name: 'Value'}
+            ]
+    });
 
-    var rlc = new Rickshaw.Graph( {
-            element: document.getElementById("charts-lines"),
+    var graph_volume = new Rickshaw.Graph( {
+            element: document.getElementById("item-graph-volume"),
             renderer: 'line',
             interpolation: 'linear',
             min: 0,
@@ -328,23 +338,46 @@ function draw_item_graph(data) {
             padding: {
                 top: .08,
             },
-            series: [{color: "#2f9fe0",data: data_to_rickshaw(data), name: 'Value'}]
+            series: [
+                {color: "#F6BB42", data: data_to_rickshaw(d2), name: 'Volume'}
+            ]
     });
 
-    rlc.render();    
+    new Rickshaw.Graph.Axis.Time({graph: graph_value}).render();
+    new Rickshaw.Graph.Axis.Time({graph: graph_volume}).render();
 
-    var axes = new Rickshaw.Graph.Axis.Time({graph: rlc});
-    var hoverDetail = new Rickshaw.Graph.HoverDetail({graph: rlc});
-    axes.render();
+    var formatter = function(series, x, y) {
+        var date = '<span class="date">' + new Date(x * 1000).toUTCString() + '</span>';
+        var content = series.name + ": " + y.toLocaleString() + '<br>' + date;
+        return content;
+    }
 
-    var rlc_resize = function() {                
-                rlc.configure({
-                        width: $("#charts-lines").width(),
-                        height: $("#charts-lines").height()
-                });
-                rlc.render();
-        }
+    new Rickshaw.Graph.HoverDetail( {
+        graph: graph_value,
+        formatter: formatter
+    });
 
-    window.addEventListener('resize', rlc_resize); 
-    rlc_resize();
+    new Rickshaw.Graph.HoverDetail( {
+        graph: graph_volume,
+        formatter: formatter
+    });
+
+    var resize_eve = function() {   
+        console.log(":^)")             
+        graph_value.configure({
+                width: $("#item-graph-value").width(),
+                height: $("#item-graph-value").height()
+        });
+        graph_value.render();
+
+        graph_volume.configure({
+                width: $("#item-graph-volume").width(),
+                height: $("#item-graph-volume").height()
+        });
+        graph_volume.render();
+    }
+
+    $(document).on("shown.bs.tab", resize_eve);
+    window.addEventListener('resize', resize_eve); 
+    resize_eve();
 }

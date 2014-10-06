@@ -4,6 +4,16 @@ from playhouse.migrate import *
 
 migrator = PostgresqlMigrator(db)
 
+def update_indexes():
+    migrate(
+        migrator.drop_index("marketitempricepoint", "marketitempricepoint_median"),
+        migrator.drop_index("marketitempricepoint", "marketitempricepoint_volume"),
+        migrator.add_index("marketitempricepoint", ("volume", "median", "lowest"), False),
+        migrator.drop_index("mippdaily", "mippdaily_median"),
+        migrator.drop_index("mippdaily", "mippdaily_volume"),
+        migrator.add_index("mippdaily", ("volume", "median", "lowest"), False)
+    )
+
 def add_indexes():
     migrate(
         migrator.add_index("marketitempricepoint", ("volume", ), False),
@@ -63,5 +73,4 @@ def pre(): pass
 def post(): pass
 
 def run():
-    fix_negative_volumes()
-    add_indexes()
+    update_indexes()

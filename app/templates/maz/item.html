@@ -1,5 +1,9 @@
 {% extends "maz/base.html" %}
 {% block content %}
+<style>
+    .rickshaw_graph .detail .x_label { display: none }
+</style>
+
 <div class="row">
     <div class="col-md-12">
         <div id="community-alert" class="alert alert-danger" style="display: none">
@@ -16,6 +20,10 @@
                 <div class="block-content" style="text-align: center">
                     <img src="/image/{{ item.id }}" class="img-circle">
                     <h1>{{ item.name }}</h1>
+                    {% if (item.mipp.median - 360) > 0 %}
+                        <h4><i>Keep in mind, the maximum stored price for an item is 400$, so items at or around that value may appear under or misvalued.</i></h4>
+                    {% endif %}
+                    <h1>${{ item.mipp.median }}</h1>
                 </div>
             </div>
             {% if family|length %}
@@ -33,18 +41,23 @@
                         </div>
                         </a>
                         {% endfor %}
-                    </div>                                
+                    </div>                
                 </div>
             {% endif %}
         </div>
         <div class="col-md-9">
             <div class="block">
-                <div class="block-content">                                    
-                    <h2>Estimated Item Price</h2>
-                    {% if (item.mipp.median - 360) > 0 %}
-                        <h4><i>Keep in mind, the maximum stored price for an item is 400$, so items at or around that value may appear undervalued.</i></h4>
-                    {% endif %}
-                    <div id="charts-lines" style="margin-top: 5px"></div>                                    
+                <ul class="nav nav-tabs">
+                    <li class="active"><a href="#tab-value" data-toggle="tab">Value</a></li>
+                    <li class=""><a href="#tab-volume" data-toggle="tab">Volume</a></li>
+                </ul>
+                <div class="block-content tab-content">
+                    <div class="tab-pane active" id="tab-value">
+                        <div id="item-graph-value" style="margin-top: 5px"></div>    
+                    </div>
+                    <div class="tab-pane" id="tab-volume">
+                        <div id="item-graph-volume" style="margin-top: 5px"></div>    
+                    </div>                      
                 </div>
             </div>
         </div>

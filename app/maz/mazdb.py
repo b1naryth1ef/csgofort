@@ -3,10 +3,9 @@ from database import *
 from fortdb import User
 from util.steam import SteamMarketAPI
 
+from dateutil.relativedelta import relativedelta
+
 market_api = SteamMarketAPI(730)
-class BModel(Model):
-    class Meta:
-        database = db
 
 MARKET_ITEM_INDEXES = (
     (("name", ), True),
@@ -45,9 +44,20 @@ class MarketItem(BModel):
         else:
             volume, low, med = market_api.get_item_price(self.name)
 
-        # TODO: find a MIPP in the last 5 minutes and update that instead
+        five_minutes_ago = datetime.datetime.utcnow() - relativedelta(minutes=5)
 
-        mipp = MarketItemPricePoint()
+        # Find a MIPP in the latest five minutes
+        q = MarketItemPricePoint.where(
+            (MarketItemPricePoint.item == self) &
+            (MarketItemPricePoint.time >= five_minutes_ago)
+        )
+
+        # If we have one, we just update that, otherwise create a fresh one
+        if q.count():
+            mipp = q.get()
+        else:
+            mipp = MarketItemPricePoint()
+
         mipp.item = self
         mipp.volume = volume if volume != -1 else 0
         mipp.lowest = low
@@ -115,8 +125,7 @@ class MarketItem(BModel):
 
 
 MARKET_ITEM_PRICE_POINT_INDEXES = (
-    (("volume", ), False),
-    (("median", ), False),
+    (("volume", "median", "lowest"), False),
     (("time"), False),
 )
 
@@ -147,8 +156,7 @@ class MarketItemPricePoint(BModel):
         }
 
 MIPP_DAILY_INDEXES = (
-    (("volume", ), False),
-    (("median", ), False),
+    (("volume", "median", "lowest"), False),
     (("time", ), False)
 )
 

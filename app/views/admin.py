@@ -26,6 +26,27 @@ TABLE_SIZE_QUERY = """SELECT nspname || '.' || relname AS "relation",
   LIMIT 20;
 """
 
+INDEX_INFO_QUERY = """SELECT t.tablename, indexname, c.reltuples AS num_rows,
+    pg_size_pretty(pg_relation_size(quote_ident(t.tablename)::text)) AS table_size,
+    pg_size_pretty(pg_relation_size(quote_ident(indexrelname)::text)) AS index_size,
+    CASE WHEN indisunique THEN 'Y'
+       ELSE 'N'
+    END AS UNIQUE,
+    idx_scan AS number_of_scans, idx_tup_read AS tuples_read, idx_tup_fetch AS tuples_fetched
+FROM pg_tables t
+LEFT OUTER JOIN pg_class c ON t.tablename=c.relname
+LEFT OUTER JOIN
+    ( SELECT c.relname AS ctablename, ipg.relname AS indexname, x.indnatts AS number_of_columns,
+        idx_scan, idx_tup_read, idx_tup_fetch, indexrelname, indisunique FROM pg_index x
+           JOIN pg_class c ON c.oid = x.indrelid
+           JOIN pg_class ipg ON ipg.oid = x.indexrelid
+           JOIN pg_stat_all_indexes psai ON x.indexrelid = psai.indexrelid )
+    AS foo
+    ON t.tablename = foo.ctablename
+WHERE t.schemaname='public'
+ORDER BY 1,2;
+"""
+
 @admin.before_request
 def admin_before_request():
     if not g.user or not g.user.level >= User.Level.ADMIN:
@@ -107,7 +128,8 @@ def admin_api_postgres_raw():
 @admin.route("/api/postgres/queries")
 def admin_api_postgres_queries():
     query_count = db.get_conn().cursor()
-    query_count.execute("SELECT xact_commit+xact_rollback FROM pg_stat_database WHERE datname = 'fort';")
+    query_count.execute(
+        "SELECT xact_commit+xact_rollback FROM pg_stat_database WHERE datname = 'fort';")
     query_count = query_count.fetchall()[0][0]
 
     return jsonify({
@@ -126,13 +148,20 @@ def multi(a, b):
 def admin_api_postgres_status():
     relations = db.get_conn().cursor()
     relations.execute(RELATION_SIZE_QUERY)
-    relations = map(lambda i: {"name": i[0], "size": i[1], "real": multi(*i[1].split(" ", 1))}, relations.fetchall())
+    relations = map(lambda i: {"name": i[0], "size": i[1], "real": multi(*i[1].split(" ", 1))},
+        relations.fetchall())
 
     tables = db.get_conn().cursor()
     tables.execute(TABLE_SIZE_QUERY)
-    tables = map(lambda i: {"name": i[0], "size": i[1], "real": multi(*i[1].split(" ", 1))}, tables.fetchall())
+    tables = map(lambda i: {"name": i[0], "size": i[1], "real": multi(*i[1].split(" ", 1))},
+        tables.fetchall())
+
+    indexes = db.get_conn().cursor()
+    indexes.execute(INDEX_INFO_QUERY)
+    indexes = map(lambda i: i[:7], indexes.fetchall())
 
     return jsonify({
         "relations": relations,
-        "tables": tables
+        "tables": tables,
+        "indexes": indexes
     })

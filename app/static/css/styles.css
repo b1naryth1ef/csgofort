@@ -4674,3 +4674,17 @@ li.ext_zip {
 .hideme {
     display: none;
 }
+
+.success {
+    color: #587f2e;
+}
+.info {
+    color: #1790bb;
+}
+.warning {
+    color: #c88a0a;
+}
+.danger {
+    color: #9a1e2b;
+}
+

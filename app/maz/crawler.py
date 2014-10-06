@@ -8,9 +8,10 @@ from util.steam import SteamMarketAPI
 from mazdb import *
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
-import time, requests
+import time, requests, logging
 
 api = SteamMarketAPI(730)
+log = logging.getLogger(__name__)
 
 def index_all_items():
     """
@@ -27,7 +28,7 @@ def index_all_items():
 
     pages = int(api.get_item_count() / 100.0) + 2
     for page_n in range(pages):
-        print "Reading page %s of %s" % (page_n, pages)
+        log.info("Reading page %s of %s" % (page_n, pages))
 
         # Get a listing of items
         items = api.list_items(sort="name", start=page_n * 100, count=100)
@@ -39,11 +40,13 @@ def index_all_items():
             try:
                 mi = MarketItem.get(MarketItem.name == item_name)
             except MarketItem.DoesNotExist:
+                log.debug("Crawled new MarketItem `%s`" % item_name)
                 mi = MarketItem(name=item_name, discovered=datetime.utcnow())
                 mi.item, mi.skin, mi.wear, mi.stat, mi.holo = api.parse_item_name(mi.name)
                 mi.nameid = api.get_item_nameid(mi.name)
                 mi.image = api.get_item_image(mi.name)
 
+            log.debug("Updated MarketItem %s on crawl" % mi.name)
             mi.last_crawl = datetime.utcnow()
             mi.save()
 
@@ -55,20 +58,19 @@ def index_all_prices():
     """
     Creates new MIPP's for every market item in the database.
     """
-    print "Re-pricing %s items!" % MarketItem.select().count()
+    log.info("Re-pricing %s items!" % MarketItem.select().count())
     for item in MarketItem.select().naive().iterator():
         item.store_price()
 
 def index_all_images():
-    print "Re-indexing all %s item images!" % MarketItem.select().count()
+    log.info("Re-indexing all %s item images!" % MarketItem.select().count())
     for item in MarketItem.select().naive().iterator():
         item.image = api.get_item_image(item.name)
         if item.image:
             item.save()
-    print "Finished re-indexing all item images!"
 
 def check_community_status():
-    print "Checking Steam Community status..."
+    log.info("Checking Steam Community status...")
     for _ in range(5):
         try:
             r = requests.get("http://steamcommunity.com/market/")
@@ -77,10 +79,8 @@ def check_community_status():
         except:
             time.sleep(5)
     else:
-        if red.get("maz:community_status") < 5:
+        if int(red.get("maz:community_status") or 0) < 5:
             red.incr("maz:community_status", 1)
-    print "Done checking Steam Community Status."
-
 
 def build_single_daily_mipp(item, yesterday, today):
     q = MarketItemPricePoint.select().where(
@@ -90,7 +90,7 @@ def build_single_daily_mipp(item, yesterday, today):
     )
 
     if not q.count():
-        # print "No MIPP's for daily aggregation (%s)!" % item.id
+        log.debug("No MIPP's for daily aggregation (%s)!" % item.id)
         return False
     q = list(q)
 
@@ -114,10 +114,10 @@ def build_daily_mipps():
             if build_single_daily_mipp(item, yesterday, today):
                 built += 1
 
-    print "Built %s daily aggregate MIPP's" % built
+    log.info("Built %s daily aggregate MIPP's" % built)
 
 def index_market_search():
-    print "Indexing %s Market Items in search" % MarketItem.select().count()
+    log.info("Indexing %s Market Items in search" % MarketItem.select().count())
 
     for item in MarketItem.select().naive().iterator():
         doc = {
@@ -149,7 +149,7 @@ def track_inventories():
         except:
             ipp.status = InventoryPricePoint.Status.ERROR
             ipp.save()
-            print "Failed to update inventory %s" % inv.id
+            log.warning("Failed to update inventory %s" % inv.id)
             continue
 
         old_ids = set(map(lambda i: i["s"].split("_", 1)[0], inv.inventory))
@@ -170,4 +170,4 @@ def track_inventories():
         inv.save()
         updated += 1
 
-    print "Updated %s inventories" % updated
+    log.info("Updated %s inventories" % updated)

@@ -38,4 +38,3 @@ app.sortTable = function(table, order) {
         }
     }).appendTo(tbody);
 }
-
