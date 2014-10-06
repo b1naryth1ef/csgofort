@@ -47,7 +47,7 @@ class MarketItem(BModel):
         five_minutes_ago = datetime.datetime.utcnow() - relativedelta(minutes=5)
 
         # Find a MIPP in the latest five minutes
-        q = MarketItemPricePoint.where(
+        q = MarketItemPricePoint.select().where(
             (MarketItemPricePoint.item == self) &
             (MarketItemPricePoint.time >= five_minutes_ago)
         )
