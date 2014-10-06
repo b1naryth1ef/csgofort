@@ -1,5 +1,5 @@
 # CSGO Fort
-CSGO Fort is an ambitious project to create a central portal for trading, betting, and market analytics around Counter-Strike: Global Offensive. It's goal is to foster an open-source community around most, if not all, of these projects.
+CSGO Fort is an ambitious project to create a central portal for trading, betting, and market analytics around Counter-Strike: Global Offensive. It's goal is to foster an open-source community around most, if not all, of these projects. If you have questions about the roadmap or general issues, the [Trello Board](https://trello.com/b/SiuQa4JZ/csgo-fort) is generally the best place to check.
 
 ## Maz (Market Analytics)
 Maz is the portal for extensive Steam Community Market analytics and stats. At it's core is an intelligent market crawler which regularly polls for pricing and item data from the Steam website. Maz also provides a simple frontend to viewing and aggregating this data, and a extensive backend API for those that want to plug into the stored data. Maz is currently in development.
