@@ -5,12 +5,19 @@ from flask.ext.openid import OpenID
 from flask.ext.cors import cross_origin
 from config import SECRET_KEY
 
+LOCAL = (socket.gethostname() != "kato")
+
 class CustomFlask(Flask):
     @cross_origin()
     def send_static_file(self, filename):
         return Flask.send_static_file(self, filename)
 
-csgofort = CustomFlask("csgofort")
+# If we're local, we need to enable CORS. Remote uses nginx for this.
+if LOCAL:
+    csgofort = CustomFlask("csgofort")
+else:
+    csgofort = Flask("csgofort")
+
 csgofort.secret_key = SECRET_KEY
 openid = OpenID(csgofort)
 
@@ -18,7 +25,7 @@ openid = OpenID(csgofort)
 csgofort.config['PROPAGATE_EXCEPTIONS'] = True
 
 # Setup domain based on host
-LOCAL = (socket.gethostname() != "kato")
+
 if LOCAL:
     csgofort.config["SERVER_NAME"] = "dev.csgofort.com:6015"
 else:
