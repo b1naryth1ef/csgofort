@@ -19,6 +19,10 @@ def migrate():
     with cd("/root/csgofort/app/"):
         run("python database.py migrate develop")
 
+def builddb():
+    with cd("/root/csgofort/app/"):
+        run("python database.py build")
+
 def restart():
     # Restart nginx
     run("kill -HUP $(cat /var/run/nginx.pid)")

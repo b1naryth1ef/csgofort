@@ -88,7 +88,7 @@ def check_community_status():
             red.incr("maz:community_status", 1)
 
 def build_single_daily_mipp(item, yesterday, today):
-    q = list(qMarketItemPricePoint.select().where(
+    q = list(MarketItemPricePoint.select().where(
         (MarketItemPricePoint.item == item) &
         (MarketItemPricePoint.time >= yesterday) &
         (MarketItemPricePoint.time <= today)
