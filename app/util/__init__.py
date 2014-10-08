@@ -1,7 +1,11 @@
 from flask import flash, redirect, request, jsonify
 from app import csgofort
 
-import json
+import json, time
+
+def with_timing(f, args, kwargs={}):
+    start = time.time()
+    return (f(*args, **kwargs), time.time() - start)
 
 def flashy(m, f="danger", u="/"):
     flash(m, f)

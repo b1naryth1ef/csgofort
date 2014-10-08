@@ -6,8 +6,10 @@ paces itself (while remaining error-safe) to avoid getting blocked by steam
 
 from util.steam import SteamMarketAPI
 from mazdb import *
+from fortdb import GraphMetric
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
+from util import with_timing
 import time, requests, logging
 
 api = SteamMarketAPI(730)
@@ -73,9 +75,12 @@ def check_community_status():
     log.info("Checking Steam Community status...")
     for _ in range(5):
         try:
-            r = requests.get("http://steamcommunity.com/market/")
+            r, ti = with_timing(requests.get, ("http://steamcommunity.com/market/", ))
+            GraphMetric.mark("community_rcode_%s" % r.status_code, 1)
             r.raise_for_status()
+            GraphMetric.mark("community_response_time", ti)
             red.incr("maz:community_status", -1)
+            break
         except:
             time.sleep(5)
     else:
@@ -83,16 +88,14 @@ def check_community_status():
             red.incr("maz:community_status", 1)
 
 def build_single_daily_mipp(item, yesterday, today):
-    q = MarketItemPricePoint.select().where(
+    q = list(qMarketItemPricePoint.select().where(
         (MarketItemPricePoint.item == item) &
         (MarketItemPricePoint.time >= yesterday) &
         (MarketItemPricePoint.time <= today)
-    )
+    ))
 
-    if not q.count():
-        log.debug("No MIPP's for daily aggregation (%s)!" % item.id)
+    if not len(q):
         return False
-    q = list(q)
 
     m = MIPPDaily()
     m.item = item

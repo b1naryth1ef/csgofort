@@ -1,10 +1,18 @@
 from database import *
 from util.steam import SteamAPI
 from util import build_url
+from datetime import datetime
 
 steam = SteamAPI.new()
 
+USER_INDEXES = (
+    (("steamid", ), True)
+)
+
 class User(BModel):
+    class Meta:
+        indexes = USER_INDEXES
+
     class Level:
         BASIC = 0
         ADMIN = 100
@@ -58,3 +66,24 @@ class User(BModel):
         data = steam.getUserInfo(steamid)
         red.setex("nick:%s" % steamid, data["personaname"], 60 * 120)
         return data['personaname']
+
+GRAPH_METRIC_INDEXES = (
+    (("metric", ), False),
+)
+
+class GraphMetric(BModel):
+    """
+    GraphMetrics are a simple way to track and graph statistics. If you
+    create a new metric (e.g. calling GraphMetric.mark) you MUST add an
+    aggregation rule in util/graph.py!!!!
+    """
+    class Meta:
+        indexes = GRAPH_METRIC_INDEXES
+
+    metric = CharField()
+    value = FloatField()
+    time = DateTimeField()
+
+    @classmethod
+    def mark(self, name, value):
+        GraphMetric.create(metric=name, time=datetime.utcnow(), value=value)

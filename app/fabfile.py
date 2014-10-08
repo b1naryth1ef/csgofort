@@ -52,27 +52,34 @@ def clear_cache():
 
 def dumpdb():
     id = random.randint(10000, 99999)
+    fname = "fort_dump_{}".format(id)
 
     with cd("/home/postgres/"):
-        fname = "fort_dump_{}".format(id)
         run('su postgres -c "pg_dump fort > {}"'.format(fname))
         run("tar -jcvf {0}.tbz2 {0}".format(fname))
 
         get("/home/postgres/{}.tbz2".format(fname), "{}.tbz2".format(fname))
         run("rm {0} {0}.tbz2".format(fname))
 
+    return fname
+
 def loaddb(name, username=None):
     local('tar -jxvf {}.tbz2'.format(name))
-    local('dropdb fort')
-    local('createdb fort')
+    local('dropdb --port 5433 fort')
+    local('createdb --port 5433 fort')
 
-    cmd = 'psql -d fort < {}'.format(name)
+    cmd = 'psql --port 5433 -d fort < {}'.format(name)
     if username:
         local('sudo su {} -c "{}"'.format(username, cmd))
     else:
         local(cmd)
 
     local('rm {}'.format(name))
+
+def syncdb():
+    fname = dumpdb()
+    loaddb(fname)
+    local("rm -rf {}.tbz2".format(fname))
 
 def deploy():
     update()

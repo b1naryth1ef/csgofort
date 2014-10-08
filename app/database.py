@@ -6,7 +6,8 @@ from peewee import *
 from playhouse.postgres_ext import *
 import redis, os
 
-db = PostgresqlExtDatabase('fort', user="b1n", password="b1n", threadlocals=True, port=os.getenv("PGPORT", 5433))
+db = PostgresqlExtDatabase('fort', user="b1n", password="b1n", threadlocals=True,
+    port=os.getenv("PGPORT", 5433))
 red = redis.Redis(db=3)
 es = Elasticsearch()
 
@@ -17,13 +18,14 @@ class BModel(Model):
 def tables():
     from maz.mazdb import (MarketItem, MarketItemPricePoint, MIPPDaily,
         Inventory, InventoryPricePoint
-    )   
+    )
 
     # from vacdex.vacdb import *
-    from fortdb import User
+    from fortdb import User, GraphMetric
 
     return [
         User,
+        GraphMetric,
         MarketItem,
         MarketItemPricePoint,
         MIPPDaily,
