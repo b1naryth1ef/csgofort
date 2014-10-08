@@ -87,3 +87,12 @@ class GraphMetric(BModel):
     @classmethod
     def mark(self, name, value):
         GraphMetric.create(metric=name, time=datetime.utcnow(), value=value)
+
+    @classmethod
+    def graph(self, name, start):
+        q = GraphMetric.select().where(
+            (GraphMetric.metric == name) &
+            (GraphMetric.time >= start)
+        )
+
+        return {i.time.strftime("%s"): i.value for i in q}

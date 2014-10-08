@@ -26,7 +26,18 @@ function run(route) {
         maz.run_value();
     } else if (route === "/inventory") {
         maz.run_inventory();
+    } else if (route === "/stats") {
+        maz.run_stats();
     }
+}
+
+// Run the stats view
+maz.run_stats = function () {
+    $.ajax("/api/graphmetric/community_response_time", {
+        success: function (data) {
+            draw_generic_graph("steam_community_response_time", "Steam Community Response Time", data.data);
+        }
+    })
 }
 
 // Runs the inventory view
@@ -316,6 +327,44 @@ function draw_dashboard_graphs(d1, d2) {
     graph_resizer();
 }
 
+function draw_generic_graph(el, name, data) {
+    var graph = new Rickshaw.Graph( {
+            element: document.getElementById(el),
+            renderer: 'line',
+            interpolation: 'linear',
+            min: 0,
+            height: 250,
+            padding: {top: .08},
+            series: [
+                {color: "#1FCC7B", data: data_to_rickshaw(data), name: name}
+            ]
+    });
+
+    new Rickshaw.Graph.Axis.Time({graph: graph}).render();
+
+    var formatter = function(series, x, y) {
+        var date = '<span class="date">' + new Date(x * 1000).toUTCString() + '</span>';
+        var content = series.name + ": " + y.toLocaleString() + '<br>' + date;
+        return content;
+    }
+
+    new Rickshaw.Graph.HoverDetail( {
+        graph: graph,
+        formatter: formatter
+    });
+
+    var resize_eve = function() {          
+        graph.configure({
+                width: $("#"+el).width(),
+                height: $("#"+el).height()
+        });
+        graph.render();
+    }
+
+    window.addEventListener('resize', resize_eve); 
+    resize_eve();
+}
+
 function draw_item_graph(d1, d2) {
     var graph_value = new Rickshaw.Graph( {
             element: document.getElementById("item-graph-value"),
@@ -362,8 +411,7 @@ function draw_item_graph(d1, d2) {
         formatter: formatter
     });
 
-    var resize_eve = function() {   
-        console.log(":^)")             
+    var resize_eve = function() {             
         graph_value.configure({
                 width: $("#item-graph-value").width(),
                 height: $("#item-graph-value").height()

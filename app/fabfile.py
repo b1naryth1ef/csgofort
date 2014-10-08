@@ -5,22 +5,24 @@ import random
 env.user = "root"
 env.hosts = ["csgofort.com"]
 
-def install():
-    upload_template("configs/csgofort.nginx", "/etc/nginx/sites-enabled/csgofort", use_jinja=True)
-    upload_template("configs/uwsgi.cmd", "/root/csgofort/app/run", use_jinja=True)
-    run("chmod +x /root/csgofort/app/run")
+def config():
+    upload_template("configs/csgofort.nginx", "/etc/nginx/sites-enabled/csgofort", use_jinja=True,
+        backup=False)
+    upload_template("configs/uwsgi.cmd", "/var/www/csgofort/app/run", use_jinja=True, backup=False)
+    run("chmod +x /var/www/csgofort/app/run")
 
 def update():
-    with cd("/root/csgofort/app/"):
+    with cd("/var/www/csgofort/app/"):
         run("git stash")
         run("git pull origin develop")
+        run("chown -R www-data:www-data static/")
 
 def migrate():
-    with cd("/root/csgofort/app/"):
+    with cd("/var/www/csgofort/app/"):
         run("python database.py migrate develop")
 
 def builddb():
-    with cd("/root/csgofort/app/"):
+    with cd("/var/www/csgofort/app/"):
         run("python database.py build")
 
 def restart():
@@ -38,7 +40,7 @@ def restart():
     # TODO: restart scheduler
 
 def versions():
-    with cd("/root/csgofort/app"):
+    with cd("/var/www/csgofort/app"):
         remote_hash = run("git rev-parse HEAD").strip()
 
     local_hash = local("git rev-parse HEAD").strip()
@@ -87,6 +89,5 @@ def syncdb():
 
 def deploy():
     update()
-    install()
     restart()
     clear_cache()

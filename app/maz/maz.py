@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify, render_template, send_file, g, redirect, Response
 from mazdb import *
+from fortdb import GraphMetric
 from manalytics import *
 
 from collections import Counter
@@ -50,6 +51,10 @@ def maz_route_inventory():
     if not g.user:
         return redirect(build_url("auth", "login") + "?next=" + build_url("maz", "inventory"))
     return render_template("maz/inventory.html")
+
+@maz.route("/stats")
+def maz_route_stats():
+    return render_template("maz/stats.html")
 
 @maz.route("/item/<id>")
 def maz_route_item(id):
@@ -349,6 +354,13 @@ def dategraph(f):
 
         return f(list(ruleset)[:-1], *args, **kwargs)
     return deco
+
+@maz.route("/api/graphmetric/<name>")
+def maz_route_graph_metric(name):
+    return jsonify({
+        "data": GraphMetric.graph(name, datetime.datetime.utcnow() - relativedelta(days=7)),
+        "success": True
+    })
 
 @maz.route("/api/graph/totalvalue")
 @dategraph

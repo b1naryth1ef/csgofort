@@ -1,0 +1,17 @@
+{% extends "maz/base.html" %}
+{% block content %}
+<style>
+    .rickshaw_graph .detail .x_label { display: none }
+</style>
+<div class="block-wide">
+    <div id="steam_community_response_time" style="height: 250px; width: 100%; float: left; background-color: #e5e5e5"></div>
+</div>
+
+
+<div class="page-rest">
+</div>
+{% endblock %}
+
+{% block scripts %}
+    <script src="http://{{ DOMAIN }}/static/js/maz.js"></script>
+{% endblock %}

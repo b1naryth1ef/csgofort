@@ -2,8 +2,12 @@ server {
     listen 80;
     server_name *.csgofort.org *.csgofort.com csgofort.com csgofort.org;
 
+    location ^~ /static/  {
+        root /var/www/csgofort/app/;
+    }
+
     location / {
         include uwsgi_params;
-        uwsgi_pass /tmp/uwsgi.sock;
+        uwsgi_pass 127.0.0.1:3035;
     }
 }
