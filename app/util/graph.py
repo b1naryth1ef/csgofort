@@ -2,6 +2,7 @@ from fortdb import GraphMetric
 from dateutil.relativedelta import relativedelta
 from datetime import datetime
 from collections import defaultdict
+from util import rounds
 import logging
 
 log = logging.getLogger(__name__)
@@ -9,12 +10,32 @@ log = logging.getLogger(__name__)
 # Datetime attribute fields in order of magnitude
 DATETIME_FIELDS = ["microsecond", "second", "minute", "hour", "day", "month", "year"]
 
+def get_next(i):
+    for dex, item in enumerate(DATETIME_FIELDS):
+        if item == i:
+            return DATETIME_FIELDS[dex+1]
+
+
 def truncate_too(dt, place):
     """
     This function truncates a datetime up until a date-attribute 'place'
     """
+    etc = None
+    if ':' in place:
+        place, etc = place.split(":", 1)
+        etc = int(etc)
+
     for item in DATETIME_FIELDS:
         if item == place:
+            if etc:
+                val = int(rounds(getattr(dt, item), etc))
+
+                # TODO: fixme
+                if val == 60:
+                    nxt = get_next(item)
+                    return dt.replace(**{nxt: getattr(dt, nxt) + 1})
+
+                dt = dt.replace(**{item: val})
             return dt
 
         dt = dt.replace(**{item: 0})
@@ -25,7 +46,7 @@ AVG = lambda i: sum(i) / len(i)
 
 RULES = {
     "community_response_time": [(
-        (relativedelta(seconds=1), "minute"),
+        (relativedelta(seconds=1), "minute:5"),
         (relativedelta(days=7), "hour"),
         (relativedelta(days=30), "day"),
         (relativedelta(months=18), "drop")
@@ -82,6 +103,9 @@ def truncate_graphs():
 
             gmres = defaultdict(list)
             map(lambda i: gmres[truncate_too(i.time, place)].append(i), list(q))
+
+            if ':' in place:
+                place, _ = place.split(":", 1)
 
             for time, gms in gmres.items():
                 if len(gms) <= 1:

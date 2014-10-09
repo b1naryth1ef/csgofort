@@ -3,6 +3,9 @@ from app import csgofort
 
 import json, time
 
+def rounds(x, base=5):
+    return int(base * round(float(x) / base))
+
 def with_timing(f, args, kwargs={}):
     start = time.time()
     return (f(*args, **kwargs), time.time() - start)
