@@ -71,7 +71,7 @@ RULES = {
     ), AVG],
 
     "request_time": [(
-        (relativedelta(seconds=1), "second")
+        (relativedelta(seconds=1), "second"),
         (relativedelta(minutes=30), "minute:5"),
         (relativedelta(days=7), "hour"),
         (relativedelta(days=30), "day"),
