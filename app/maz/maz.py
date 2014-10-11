@@ -15,7 +15,7 @@ from dateutil.relativedelta import relativedelta
 maz = Blueprint("maz", __name__, subdomain="maz")
 log = logging.getLogger(__name__)
 
-with open("maz/API.json", "r") as f:
+with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "API.json"), "r") as f:
     API_DOCS = json.load(f)
 
 RATE_LIMIT_UPPER = 5000

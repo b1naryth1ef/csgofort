@@ -55,6 +55,7 @@ def index_all_items():
             except:
                 log.exception("Failed to add item `%s` to DB!" % item_name)
 
+    GraphMetric.mark("index_items_time", time.time() - start)
     print "Index Rescanned in!"
     print "Size: %s" % MarketItem.select().count()
     print "New: %s" % MarketItem.select().where((MarketItem.discovered >= start)).count()
@@ -125,6 +126,8 @@ def build_daily_mipps():
 def index_market_search():
     log.info("Indexing %s Market Items in search" % MarketItem.select().count())
 
+    start = time.time()
+
     for item in MarketItem.select().naive().iterator():
         doc = {
             "name": item.name,
@@ -136,6 +139,7 @@ def index_market_search():
         es.index(index="marketitems", doc_type='marketitem', id=item.id, body=doc)
 
     es.indices.refresh(index="marketitems")
+    GraphMetric.mark("search_index_time", time.time() - start)
 
 def track_inventories():
     LAST_HOUR = datetime.utcnow() - relativedelta(hours=1)
@@ -151,7 +155,8 @@ def track_inventories():
         ipp.inv = inv
 
         try:
-            new_inv = inv.get_latest()
+            new_inv, t2 = with_timing(inv.get_latest, ())
+            GraphMetric.mark("community_inventory_response_time", t2)
         except:
             ipp.status = InventoryPricePoint.Status.ERROR
             ipp.save()

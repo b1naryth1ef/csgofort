@@ -46,7 +46,36 @@ RULES = {
         (relativedelta(seconds=1), "minute:5"),
         (relativedelta(days=7), "hour"),
         (relativedelta(days=30), "day"),
+        (relativedelta(months=32), "drop")
+    ), AVG],
+
+    "community_inventory_response_time": [(
+        (relativedelta(seconds=1), "minute:5"),
+        (relativedelta(days=7), "hour"),
+        (relativedelta(days=30), "day"),
         (relativedelta(months=18), "drop")
+    ), AVG],
+
+    "search_index_time": [(
+        (relativedelta(seconds=1), "minute:10"),
+        (relativedelta(days=7), "hour"),
+        (relativedelta(days=30), "day"),
+        (relativedelta(months=2), "drop")
+    ), AVG],
+
+    "index_items_time": [(
+        (relativedelta(seconds=1), "minute:30"),
+        (relativedelta(days=7), "hour"),
+        (relativedelta(days=30), "day"),
+        (relativedelta(months=2), "drop")
+    ), AVG],
+
+    "request_time": [(
+        (relativedelta(seconds=1), "second")
+        (relativedelta(minutes=30), "minute:5"),
+        (relativedelta(days=7), "hour"),
+        (relativedelta(days=30), "day"),
+        (relativedelta(months=32), "drop")
     ), AVG],
 
     "community_rcode_%": [(

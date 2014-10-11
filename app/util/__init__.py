@@ -1,4 +1,4 @@
-from flask import flash, redirect, request, jsonify
+from flask import flash, redirect, request, jsonify, g
 from app import csgofort
 
 import json, time
@@ -53,3 +53,12 @@ class APIError(Exception):
 @csgofort.errorhandler(APIError)
 def handle_api_error(err):
     return jsonify(err.toDict())
+
+@csgofort.before_request
+def before_request():
+    g.start = time.time()
+
+@csgofort.teardown_request
+def teardown_request(r):
+    from fortdb import GraphMetric
+    GraphMetric.mark("request_time", time.time() - g.start)

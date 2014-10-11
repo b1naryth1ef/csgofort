@@ -10,7 +10,8 @@ var search_result_template = _.template('<a href="/item/<%= obj.id %>"  class="l
 
 var inventory_row_template = _.template('<tr value="<%= value * 100 %>"><td><a href="/item/<%= id %>"><%= name %></a></td><td>$<%= value %></td></tr>');
 
-var changelog_row_template = _.template('<li class="list-group-item"><span class="<%= cls %>"><span class="<%= icon %>"></span> <%= msg %></span></li>')
+var changelog_row_template = _.template('<span class="<%= cls %>"><span class="<%= icon %>"></span> <%= msg %></span>')
+var changelog_row_base_template = _.template('<li id="<%= id %>" class="list-group-item"></li>')
 
 // The entry point for all maz routes
 function run(route) {
@@ -36,6 +37,12 @@ maz.run_stats = function () {
     $.ajax("/api/graphmetric/community_response_time", {
         success: function (data) {
             draw_generic_graph("steam_community_response_time", "Steam Community Response Time", data.data);
+        }
+    })
+
+    $.ajax("/api/graphmetric/request_time", {
+        success: function(data) {
+            draw_generic_graph("request_time", "Fort Response Time", data.data);
         }
     })
 }
@@ -99,33 +106,41 @@ maz.load_tracking_info = function () {
         }
     })
 
+    // TODO: maybe do a proper sort?
     $.ajax("/api/tracking/"+CONFIG.USER+"/history", {
         success: function (data) {
             _.each(data.data, function (v, k) {
                 _.each(v.added, function(v1, k1) {
+                    $("#changelog").append(changelog_row_base_template({
+                        id: "added-"+k1
+                    }))
                     $.ajax("/api/asset/" + v1.split("_")[0], {
                         success: function (added_data) {
-                            $("#changelog").append(changelog_row_template({
+                            $("#added-"+k1).html(changelog_row_template({
                                 msg: "Added " + added_data.market_hash_name,
                                 icon: "glyphicon glyphicon-plus-sign",
-                                cls: "success"
+                                cls: "success",
+                                value: k
                             }))
                         }
                     })
                 })
 
                 _.each(v.removed, function(v1, k1) {
+                    $("#changelog").append(changelog_row_base_template({
+                        id: "removed-"+k1
+                    }))
                     $.ajax("/api/asset/" + v1.split("_")[0], {
                         success: function (added_data) {
-                            $("#changelog").append(changelog_row_template({
+                            $("#removed-"+k1).html(changelog_row_template({
                                 msg: "Removed " + added_data.market_hash_name,
                                 icon: "glyphicon glyphicon-minus-sign",
-                                cls: "danger"
+                                cls: "danger",
+                                value: k
                             }))
                         }
                     })
                 })
-
             })
         }
     })
