@@ -112,11 +112,11 @@ maz.load_tracking_info = function () {
             _.each(data.data, function (v, k) {
                 _.each(v.added, function(v1, k1) {
                     $("#changelog").append(changelog_row_base_template({
-                        id: "added-"+k1
+                        id: "added-"+k1+"-"+k
                     }))
                     $.ajax("/api/asset/" + v1.split("_")[0], {
                         success: function (added_data) {
-                            $("#added-"+k1).html(changelog_row_template({
+                            $("#added-"+k1+"-"+k).html(changelog_row_template({
                                 msg: "Added " + added_data.market_hash_name,
                                 icon: "glyphicon glyphicon-plus-sign",
                                 cls: "success",
@@ -128,11 +128,11 @@ maz.load_tracking_info = function () {
 
                 _.each(v.removed, function(v1, k1) {
                     $("#changelog").append(changelog_row_base_template({
-                        id: "removed-"+k1
+                        id: "removed-"+k1+"-"+k
                     }))
                     $.ajax("/api/asset/" + v1.split("_")[0], {
                         success: function (added_data) {
-                            $("#removed-"+k1).html(changelog_row_template({
+                            $("#removed-"+k1+"-"+k).html(changelog_row_template({
                                 msg: "Removed " + added_data.market_hash_name,
                                 icon: "glyphicon glyphicon-minus-sign",
                                 cls: "danger",
