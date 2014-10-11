@@ -78,6 +78,14 @@ RULES = {
         (relativedelta(months=32), "drop")
     ), AVG],
 
+    "request_count": [(
+        (relativedelta(seconds=1), "minute"),
+        (relativedelta(hours=1), "minute:5"),
+        (relativedelta(days=1), "hour"),
+        (relativedelta(months=3), "hour:3"),
+        (relativedelta(months=12), "drop"),
+    ), sum],
+
     "community_rcode_%": [(
         (relativedelta(seconds=1), "minute"),
         (relativedelta(days=1), "hour"),

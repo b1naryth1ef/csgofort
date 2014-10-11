@@ -62,3 +62,4 @@ def before_request():
 def teardown_request(r):
     from fortdb import GraphMetric
     GraphMetric.mark("request_time", time.time() - g.start)
+    GraphMetric.mark("request_count", 1)
