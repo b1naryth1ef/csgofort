@@ -83,6 +83,22 @@ class MarketItem(BModel):
         if len(res):
             return res[0]
 
+    def get_mipp_at(self, dt):
+        # TODO: fix lel
+        q = list(MarketItemPricePoint.select().where(
+            (MarketItemPricePoint.item == self) &
+            (MarketItemPricePoint.time >= (dt - relativedelta(days=2))),
+            (MarketItemPricePoint.time <= (dt + relativedelta(days=2)))
+        ))
+
+        return sorted(q, key=lambda i: (i.time - dt).seconds)[0]
+
+    def get_mipp_daily_at(self, dt):
+        return MIPPDaily.get(
+            (MIPPDaily.item == self) &
+            (MIPPDaily.time == dt.replace(hour=0, minute=0, second=0, microsecond=0))
+        )
+
     def toDict(self, tiny=False):
         latest = self.get_latest_mipp()
 

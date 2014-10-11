@@ -268,7 +268,7 @@ function draw_inventory_graphs(d1) {
             renderer: 'area',
             width: $("#inventory-chart").width(),
             height: 250,
-            min: 0,
+            padding: {top: .08},
             series: [
                 {color: "#2f9fe0", data: data_to_rickshaw(d1), name: 'Estimated Inventory Value'},
             ],
