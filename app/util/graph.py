@@ -15,7 +15,6 @@ def get_next(i):
         if item == i:
             return DATETIME_FIELDS[dex+1]
 
-
 def truncate_too(dt, place):
     """
     This function truncates a datetime up until a date-attribute 'place'
@@ -30,12 +29,10 @@ def truncate_too(dt, place):
             if etc:
                 val = int(rounds(getattr(dt, item), etc))
 
-                # TODO: fixme
-                if val == 60:
-                    nxt = get_next(item)
-                    return dt.replace(**{nxt: getattr(dt, nxt) + 1})
-
-                dt = dt.replace(**{item: val})
+                try:
+                    dt = dt.replace(**{item: val})
+                except:
+                    dt = dt + relativedelta(**{place: 1})
             return dt
 
         dt = dt.replace(**{item: 0})
