@@ -8,7 +8,6 @@ var JST = {
 var app = {}
 
 app.alert = function(msg, type) {
-    console.log(":^)")
     if (type === undefined) {
         type = "danger";
     }

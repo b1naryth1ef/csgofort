@@ -162,6 +162,7 @@ maz.load_value_info = function() {
                     "cur": CONFIG.USER.cur
                 },
                 success: function(data) {
+                    $("#loader").fadeOut()
                     var value = 0;
 
                     _.each(data.results, function(v, k) {

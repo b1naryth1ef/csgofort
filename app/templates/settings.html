@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block header_links %}
+{% endblock %}
+{% block content %}
+<div class="row"><div class="col-md-12" id="alerts"></div></div>
+<div class="row">
+    <div class="col-md-12">
+        <div class="block">
+            <div class="block-content">
+                <h2>Settings</h2>
+                <p>These settings apply to all CSGOFort apps.</p>
+            </div>
+            <div class="block-content controls">
+                <div class="row-form">
+                    <div class="col-md-3"><strong>Currency</strong></div>
+                    <div class="col-md-9">
+                        <select id="currency" value="USD" class="form-control">
+                            
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="block-footer">
+                <div class="pull-right">                                                                                    
+                    <button class="btn btn-success" id="save" type="submit">Submit</button>                                        
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+var currency_row_template = _.template('<option value="<%= name %>" <% if (sel) { %>selected="selected"<% } %>><%= name %></option>')
+
+function run(route) {
+    $.ajax("http://maz."+ CONFIG.DOMAIN +"/api/currencies", {
+        success: function (data) {
+            _.each(data.result, function (v, k) {
+                $("#currency").append(currency_row_template({name: v, sel: CONFIG.USER.cur == v}))
+            })
+        }
+    })
+
+    $("#save").click(function (ev) {
+        $.ajax("/settings", {
+            data: {
+                "currency": $("#currency").val()
+            },
+            success: function (data) {
+                if (data.success) {
+                    app.alert("Saved!", "success")
+                } else {
+                    app.alert("Error Saving!", "danger")
+                }
+            }
+        })
+    })
+}
+
+</script>
+{% endblock %}

@@ -5,20 +5,26 @@ out of *all* services, and getting user information (such as profile-overview,
 
 """
 
-from flask import Blueprint, request, session, g, send_file, jsonify
+from flask import Blueprint, request, session, g, send_file, jsonify, render_template, redirect
 
 # DB
 from database import red
 from fortdb import User
 
 from app import openid, csgofort
-from util import flashy, build_url, steam
+from util import flashy, build_url, steam, APIError
 from flask.ext.cors import cross_origin
 
 import requests, json
 from cStringIO import StringIO
 
 auth = Blueprint("auth", __name__, subdomain="auth")
+
+@auth.route("/")
+def auth_render_index():
+    if not g.user:
+        return redirect(build_url("auth", "login"))
+    return render_template("settings.html")
 
 @auth.route("/login")
 @openid.loginhandler
@@ -126,6 +132,20 @@ def get_safe_inventory(user):
         "cached": False,
         "inv": item_data
     })
+
+@auth.route("/settings")
+def auth_settings():
+    if not g.user:
+        raise APIError("No Session")
+
+    g.user.currency = request.values.get("currency", g.user.currency)
+
+    try:
+        g.user.save()
+    except Exception:
+        raise APIError("Invalid Data")
+
+    return jsonify({"success": True})
 
 @auth.route("/inventory/<int:id>", methods=["GET", "OPTIONS"])
 @auth.route("/inventory", methods=["GET", "OPTIONS"])

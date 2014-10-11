@@ -22,7 +22,7 @@ def get_currencies(cache=True):
     if red.exists("curlist") and cache:
         return json.loads(red.get("curlist"))
     li = requests.get("http://www.freecurrencyconverterapi.com/api/v2/currencies")
-    result = map(lambda i: i, li.json()["results"].keys())
+    result = sorted(map(lambda i: i, li.json()["results"].keys()))
     red.set("curlist", json.dumps(result))
     return result
 

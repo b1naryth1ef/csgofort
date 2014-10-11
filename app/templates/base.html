@@ -47,6 +47,7 @@
                             {% if g.user.level >= 100 %}
                                 <li><a href="{{ build_url("admin", "") }}">Admin</a></li>
                             {% endif %}
+                            <li><a href="{{ build_url("auth", "") }}">Settings</a></li>
                             <li><a href="{{ build_url("auth", "logout") }}">Logout</a></li>
                             
                         {% else %}

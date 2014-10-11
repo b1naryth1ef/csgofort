@@ -3,10 +3,12 @@ from mazdb import *
 from fortdb import GraphMetric
 from manalytics import *
 
+from flask.ext.cors import cross_origin
+
 from collections import Counter
 from cStringIO import StringIO
 from util import build_url, APIError
-from util.web import get_exchange_rate, CURRENCY_SYM
+from util.web import get_exchange_rate, CURRENCY_SYM, get_currencies
 
 import json, functools, requests, datetime, logging
 
@@ -136,6 +138,7 @@ def maz_route_info():
     return jsonify(payload)
 
 @maz.route("/api/convert")
+@cross_origin()
 def maz_route_convert():
     from_c = request.values.get("from")
     to_c = request.values.get("to")
@@ -152,10 +155,19 @@ def maz_route_convert():
     })
 
 @maz.route("/api/symbol")
+@cross_origin()
 def maz_route_symbol():
     return jsonify({
         "success": True,
         "symbol": CURRENCY_SYM.get(request.values.get("cur"), "$")
+    })
+
+@maz.route("/api/currencies")
+@cross_origin()
+def maz_route_currencies():
+    return jsonify({
+        "success": True,
+        "result": get_currencies()
     })
 
 @maz.route("/api/items")
