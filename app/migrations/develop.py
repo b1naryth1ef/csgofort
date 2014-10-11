@@ -10,6 +10,11 @@ from playhouse.migrate import *
 
 migrator = PostgresqlMigrator(db)
 
+def add_music_kits():
+    migrate(
+        migrator.add_column("marketitem", "mkit", MarketItem.mkit)
+    )
+
 def add_user_indexes():
     migrate(
         migrator.add_index("user", ("steamid", ), True)
@@ -19,4 +24,4 @@ def pre(): pass
 def post(): pass
 
 def run():
-    add_user_indexes()
+    add_music_kits()

@@ -28,6 +28,7 @@ class MarketItem(BModel):
     item = CharField(null=True)
     stat = BooleanField()
     holo = BooleanField()
+    mkit = BooleanField(default=False)
 
     discovered = DateTimeField()
     last_crawl = DateTimeField()

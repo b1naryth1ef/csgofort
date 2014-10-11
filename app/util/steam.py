@@ -189,6 +189,7 @@ class SteamMarketAPI(object):
         r_wear = ""
         r_stat = False
         r_holo = False
+        r_mkit = False
         parsed = False
 
         if name.strip().startswith("Sticker"):
@@ -200,6 +201,10 @@ class SteamMarketAPI(object):
             if "|" in r_skin:
                 r_skin, r_wear = r_skin.split("|", 1)
             parsed = True
+        elif name.strip().startswith("Music Kit"):
+            r_item = "musickit"
+            r_skin = name.split("|", 1)[-1]
+            r_mkit = True
         else:
             if '|' in name:
                 start, end = name.split(" | ")
@@ -227,7 +232,8 @@ class SteamMarketAPI(object):
             r_skin.lower().strip() or None,
             r_wear.lower().strip() or None,
             r_stat,
-            r_holo
+            r_holo,
+            r_mkit
         )
 
     def get_item_count(self, query=""):

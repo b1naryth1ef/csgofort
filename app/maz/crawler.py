@@ -40,17 +40,20 @@ def index_all_items():
         #  time.
         for item_name in items:
             try:
-                mi = MarketItem.get(MarketItem.name == item_name)
-            except MarketItem.DoesNotExist:
-                log.debug("Crawled new MarketItem `%s`" % item_name)
-                mi = MarketItem(name=item_name, discovered=datetime.utcnow())
-                mi.item, mi.skin, mi.wear, mi.stat, mi.holo = api.parse_item_name(mi.name)
-                mi.nameid = api.get_item_nameid(mi.name)
-                mi.image = api.get_item_image(mi.name)
+                try:
+                    mi = MarketItem.get(MarketItem.name == item_name)
+                except MarketItem.DoesNotExist:
+                    log.debug("Crawled new MarketItem `%s`" % item_name)
+                    mi = MarketItem(name=item_name, discovered=datetime.utcnow())
+                    mi.item, mi.skin, mi.wear, mi.stat, mi.holo, mi.mkit = api.parse_item_name(mi.name)
+                    mi.nameid = api.get_item_nameid(mi.name)
+                    mi.image = api.get_item_image(mi.name)
 
-            log.debug("Updated MarketItem %s on crawl" % mi.name)
-            mi.last_crawl = datetime.utcnow()
-            mi.save()
+                log.debug("Updated MarketItem %s on crawl" % mi.name)
+                mi.last_crawl = datetime.utcnow()
+                mi.save()
+            except:
+                log.exception("Failed to add item `%s` to DB!" % item_name)
 
     print "Index Rescanned in!"
     print "Size: %s" % MarketItem.select().count()
