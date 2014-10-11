@@ -2,6 +2,7 @@ import datetime
 from database import *
 from fortdb import User
 from util.steam import SteamMarketAPI
+from util.web import usd_convert, CURRENCY_SYM
 
 from dateutil.relativedelta import relativedelta
 
@@ -99,7 +100,7 @@ class MarketItem(BModel):
             (MIPPDaily.time == dt.replace(hour=0, minute=0, second=0, microsecond=0))
         )
 
-    def toDict(self, tiny=False):
+    def toDict(self, cur="USD", tiny=False):
         latest = self.get_latest_mipp()
 
         data = {
@@ -107,9 +108,9 @@ class MarketItem(BModel):
             "name": self.name,
             "image": self.image,
             "price": {
-                "volume": latest.volume,
-                "low": latest.lowest,
-                "med": latest.median
+                "volume": usd_convert(latest.volume, cur),
+                "low": usd_convert(latest.lowest, cur),
+                "med": usd_convert(latest.median, cur),
             }
         }
 

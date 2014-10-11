@@ -1,5 +1,6 @@
 from database import *
 from util.steam import SteamAPI
+from util.web import get_currencies, get_sym
 from util import build_url
 from datetime import datetime
 
@@ -23,6 +24,12 @@ class User(BModel):
     active = BooleanField(default=True)
     level = IntegerField(default=0)
 
+    # The selected currency, default is USD
+    currency = EnumField(choices=get_currencies(), default='USD')
+
+    def get_currency_sym(self):
+        return get_sym(self.currency)
+
     def toDict(self, admin=False):
         data = {
             "id": self.id,
@@ -30,7 +37,8 @@ class User(BModel):
             "nickname": self.get_nickname(),
             "avatar": self.get_avatar(),
             "level": self.level,
-            "active": self.active
+            "active": self.active,
+            "cur": self.currency
         }
 
         return data

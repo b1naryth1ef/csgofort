@@ -6,6 +6,7 @@ from manalytics import *
 from collections import Counter
 from cStringIO import StringIO
 from util import build_url, APIError
+from util.web import get_exchange_rate, CURRENCY_SYM
 
 import json, functools, requests, datetime, logging
 
@@ -134,6 +135,29 @@ def maz_route_info():
 
     return jsonify(payload)
 
+@maz.route("/api/convert")
+def maz_route_convert():
+    from_c = request.values.get("from")
+    to_c = request.values.get("to")
+    value = request.values.get("value")
+
+    if not all([from_c, to_c, value]):
+        raise APIError("Must provide from, to, and value!")
+
+    val = get_exchange_rate(from_c, to_c) * float(value)
+
+    return jsonify({
+        "value": val,
+        "success": (val is not None)
+    })
+
+@maz.route("/api/symbol")
+def maz_route_symbol():
+    return jsonify({
+        "success": True,
+        "symbol": CURRENCY_SYM.get(request.values.get("cur"), "$")
+    })
+
 @maz.route("/api/items")
 def maz_route_items():
     """
@@ -168,7 +192,7 @@ def maz_route_api_item(id):
 
     return jsonify({
         "success": True,
-        "item": mi.toDict(request.values.get("tiny", False)),
+        "item": mi.toDict(tiny=request.values.get("tiny", False)),
     })
 
 @maz.route("/api/items/bulk")
@@ -187,7 +211,8 @@ def maz_route_api_items_bulk():
             results[id] = {}
             continue
 
-        results[id] = mi.toDict(request.values.get("tiny", False))
+        results[id] = mi.toDict(cur=request.values.get("cur", "USD"),
+            tiny=request.values.get("tiny", False))
 
     return jsonify({
         "success": True,

@@ -8,7 +8,7 @@ var search_result_template = _.template('<a href="/item/<%= obj.id %>"  class="l
     '<div class="list-item-content"><img height="64px" src="/image/<%= obj.id %>" class="img-circle pull-left"><h1><%= obj.data.name %></h3>'+
     '</div></a>');
 
-var inventory_row_template = _.template('<tr value="<%= value * 100 %>"><td><a href="/item/<%= id %>"><%= name %></a></td><td>$<%= value %></td></tr>');
+var inventory_row_template = _.template('<tr value="<%= value * 100 %>"><td><a href="/item/<%= id %>"><%= name %></a></td><td><%= tvalue %></td></tr>');
 
 var changelog_row_template = _.template('<span class="<%= cls %>"><span class="<%= icon %>"></span> <%= msg %></span>')
 var changelog_row_base_template = _.template('<li id="<%= id %>" class="list-group-item"></li>')
@@ -100,14 +100,14 @@ maz.run_inventory = function () {
 }
 
 maz.load_tracking_info = function () {
-    $.ajax("/api/tracking/"+CONFIG.USER+"/graph/value", {
+    $.ajax("/api/tracking/"+CONFIG.USER.id+"/graph/value", {
         success: function (data) {
             draw_inventory_graphs(data.data)
         }
     })
 
     // TODO: maybe do a proper sort?
-    $.ajax("/api/tracking/"+CONFIG.USER+"/history", {
+    $.ajax("/api/tracking/"+CONFIG.USER.id+"/history", {
         success: function (data) {
             _.each(data.data, function (v, k) {
                 _.each(v.added, function(v1, k1) {
@@ -147,7 +147,7 @@ maz.load_tracking_info = function () {
 }
 
 maz.load_value_info = function() {
-    $.ajax("http://auth." + CONFIG.DOMAIN + "/inventory/" + CONFIG.USER, {
+    $.ajax("http://auth." + CONFIG.DOMAIN + "/inventory/" + CONFIG.USER.id, {
         success: function (data) {
             if (!data.success) {
                 app.alert("<strong>Uh Oh!</strong> We can't grab your inventory! Looks like either your inventory is private, or the steam community is having some problems.");
@@ -158,7 +158,8 @@ maz.load_value_info = function() {
                 data: {
                     "ids": _.map(data.inv, function (v, k) {
                         return v.i
-                    }).join(",")
+                    }).join(","),
+                    "cur": CONFIG.USER.cur
                 },
                 success: function(data) {
                     var value = 0;
@@ -167,6 +168,7 @@ maz.load_value_info = function() {
                         try {
                             var data = inventory_row_template({
                                 name: v.name,
+                                tvalue: CONFIG.SYM + v.price.med.toLocaleString(),
                                 value: v.price.med,
                                 id: v.id
                             })
@@ -179,7 +181,7 @@ maz.load_value_info = function() {
                         } catch (err) {}
                     })
 
-                    $("#worth").text(Math.floor(value));
+                    $("#worth").text(CONFIG.SYM + value.toLocaleString());
                     app.sortTable($("#inv-table"), 'desc');
                 }
             })
@@ -221,7 +223,10 @@ maz.run_market_index = function() {
 
             $("#stat-unique").text(data.totals.items.toLocaleString());
             $("#stat-listed").text(data.totals.listings.toLocaleString());
-            $("#stat-value").text(data.totals.value.toLocaleString());
+            app.convert(data.totals.value, function (v) {
+                $("#stat-value").text(CONFIG.SYM + v.toLocaleString());
+            })
+            
         }
     })
 }

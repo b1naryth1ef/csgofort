@@ -7,8 +7,16 @@ really only used for deployments.
 from database import *
 from maz.mazdb import *
 from playhouse.migrate import *
+from util.migrations import *
 
-migrator = PostgresqlMigrator(db)
+migrator = PostgresqlFortMigrator(db)
+
+def add_currency_field():
+    migrate(
+        migrator.pre_add_enum(User.currency),
+        migrator.add_column("user", "currency", User.currency),
+        migrator.post_add_enum(User.currency)
+    )
 
 def add_music_kits():
     migrate(
@@ -24,4 +32,4 @@ def pre(): pass
 def post(): pass
 
 def run():
-    add_music_kits()
+    add_currency_field()

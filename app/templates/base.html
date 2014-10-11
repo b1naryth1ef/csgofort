@@ -14,7 +14,8 @@
             var CONFIG = {
                 DOMAIN: "{{ DOMAIN }}",
                 REALM: "{{ REALM }}",
-                USER: {% if g.user %}{{ g.user.id }}{% else %}-1{% endif %}
+                USER: {% if g.user %}{{ g.user.toDict()|jsonify|safe }}{% else %}{id: -1}{% endif %},
+                SYM: "$"
             }
         </script> 
     </head>

@@ -154,7 +154,8 @@ class SteamMarketAPI(object):
         item_data = []
         for key, value in result["rgDescriptions"].items():
             try:
-                item = MarketItem.select(MarketItem.id).where(MarketItem.name == value["market_hash_name"]).get().id
+                item = MarketItem.select(MarketItem.id).where(
+                    MarketItem.name == value["market_hash_name"]).get().id
             except:
                 item = -1
 
@@ -281,7 +282,7 @@ class SteamMarketAPI(object):
         url = ITEM_PAGE_QUERY.format(name=item_name, appid=self.appid)
 
         for _ in range(self.retries):
-            try:    
+            try:
                 r = requests.get(url)
                 r.raise_for_status()
                 break
@@ -334,4 +335,3 @@ class SteamMarketAPI(object):
             float(r["lowest_price"].split(";")[-1]) if 'lowest_price' in r else 0.0,
             float(r["median_price"].split(";")[-1]) if 'median_price' in r else 0.0,
         )
-

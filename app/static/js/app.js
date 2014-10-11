@@ -21,6 +21,15 @@ app.alert = function(msg, type) {
 app.setup = function() {}
 
 app.run = function(route) {
+    $.ajax("http://maz."+ CONFIG.DOMAIN +"/api/symbol", {
+        data: {
+            "cur": CONFIG.USER.cur
+        },
+        success: function (data) {
+            CONFIG.SYM = data.symbol
+        }
+    })
+
     app.setup();
     run(route);
 }
@@ -37,4 +46,18 @@ app.sortTable = function(table, order) {
             return parseInt($(b).attr("value")) - parseInt($(a).attr("value"));
         }
     }).appendTo(tbody);
+}
+
+app.convert = function(value, f, async) {
+    $.ajax("http://maz."+ CONFIG.DOMAIN +"/api/convert", {
+        async: async || true,
+        data: {
+            from: "USD",
+            to: CONFIG.USER.cur,
+            value: value
+        },
+        success: function(data) {
+            f(data.value)
+        }
+    })
 }

@@ -21,9 +21,10 @@
                     <img src="/image/{{ item.id }}" class="img-circle">
                     <h1>{{ item.name }}</h1>
                     {% if (item.mipp.median - 360) > 0 %}
+                    {# TODO: fix localization #}
                         <h4><i>Keep in mind, the maximum stored price for an item is 400$, so items at or around that value may appear under or misvalued.</i></h4>
                     {% endif %}
-                    <h1>${{ item.mipp.median }}</h1>
+                    <h1>{{ item.mipp.median|convertu(g.user) }}</h1>
                 </div>
             </div>
             {% if family|length %}
@@ -36,7 +37,7 @@
                         <a href="/item/{{ x.id }}">
                         <div class="list-item" style="height: 30px;">
                             <div class="list-item-content">
-                                <h1 style="font-size: 22px">{{ x.wear|title }} @ {{ x.mipp.median }}</h1>
+                                <h1 style="font-size: 22px">{{ x.wear|title }} @ {{ x.mipp.median|convertu(g.user) }}</h1>
                             </div>                                        
                         </div>
                         </a>

@@ -1,6 +1,8 @@
 from flask import flash, redirect, request, jsonify, g
 from app import csgofort
 
+from util.web import usd_convert, get_sym
+
 import json, time
 
 def rounds(x, base=5):
@@ -32,6 +34,14 @@ def util_ctx_proc():
 @csgofort.template_filter("jsonify")
 def jsonify_filter(x):
     return json.dumps(x, indent=4)
+
+@csgofort.template_filter("convertu")
+def convertu_filter(value, user):
+    if user:
+        cur = user.currency
+    else:
+        cur = "USD"
+    return u"{0}{1:.2f}".format(get_sym(cur), usd_convert(value, cur))
 
 class APIError(Exception):
     def __init__(self, message, payload=None):

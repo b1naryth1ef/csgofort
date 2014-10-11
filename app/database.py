@@ -6,14 +6,32 @@ from peewee import *
 from playhouse.postgres_ext import *
 import redis, os
 
+from util.fields import EnumField
+
 db = PostgresqlExtDatabase('fort', user="b1n", password="b1n", threadlocals=True,
     port=os.getenv("PGPORT", 5433))
 red = redis.Redis(db=3)
 es = Elasticsearch()
 
+db.register_fields({
+    "enum": EnumField
+})
+
 class BModel(Model):
     class Meta:
         database = db
+
+    @classmethod
+    def create_table(cls, *args, **kwargs):
+        for field in cls._meta.get_fields():
+            if hasattr(field, "pre_field_create"):
+                field.pre_field_create()
+
+        cls._meta.database.create_table(cls)
+
+        for field in cls._meta.get_fields():
+            if hasattr(field, "post_field_create"):
+                field.post_field_create()
 
 def tables():
     from maz.mazdb import (MarketItem, MarketItemPricePoint, MIPPDaily,
@@ -102,7 +120,7 @@ if __name__ == "__main__":
         print "Resetting DB..."
         for table in tables():
             table.drop_table(True, cascade=True)
-            table.create_table(True)
+            table.create_table()
 
     if sys.argv[1] == "re":
 
