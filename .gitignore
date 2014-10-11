@@ -3,3 +3,5 @@
 rip/
 config.py
 *.tbz2
+
+app/test.py
