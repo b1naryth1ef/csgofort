@@ -26,7 +26,7 @@ def index_all_items():
         they lack volume) from the market for months at a time.
     """
 
-    start = datetime.utcnow()
+    start = time.time()
 
     pages = int(api.get_item_count() / 100.0) + 2
     for page_n in range(pages):
@@ -56,9 +56,7 @@ def index_all_items():
                 log.exception("Failed to add item `%s` to DB!" % item_name)
 
     GraphMetric.mark("index_items_time", time.time() - start)
-    print "Index Rescanned in!"
-    print "Size: %s" % MarketItem.select().count()
-    print "New: %s" % MarketItem.select().where((MarketItem.discovered >= start)).count()
+    print "Index Rescanne, size is: %s" % MarketItem.select().count()
 
 def index_all_prices():
     """
