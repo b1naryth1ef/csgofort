@@ -152,27 +152,31 @@ class SteamMarketAPI(object):
         result = self.get_inventory(steamid)
 
         item_data = []
-        for key, value in result["rgDescriptions"].items():
+        for key, value in result["rgInventory"].items():
+            asset_id = "%s_%s" % (value["classid"], value["instanceid"])
+            desc = result['rgDescriptions'][asset_id]
+
             try:
                 item = MarketItem.select(MarketItem.id).where(
-                    MarketItem.name == value["market_hash_name"]).get().id
+                    MarketItem.name == desc["market_hash_name"]
+                ).get().id
             except:
                 item = -1
 
-            i = {
-                "s": key,
+            idata = {
+                "s": asset_id,
                 "i": item,
-                "t": value['tradable'],
-                "m": value['marketable'],
+                "t": desc["tradable"],
+                "m": desc["marketable"]
             }
 
             if item == -1:
-                i["name"] = value["market_hash_name"]
+                idata['name'] = desc["market_hash_name"]
 
-            if 'fraudwarnings' in value:
-                i["fraud"] = value["fraudwarnings"]
-            item_data.append(i)
+            if 'fraudwarnings' in desc:
+                idata['fraud'] = desc["fraudwarnings"]
 
+            item_data.append(idata)
         return item_data
 
     def get_inventory(self, id):

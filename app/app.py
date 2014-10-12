@@ -24,9 +24,12 @@ openid = OpenID(csgofort)
 # This allows exceptions to bubble to uwsgi
 csgofort.config['PROPAGATE_EXCEPTIONS'] = True
 
-# Setup domain based on host
-
+# Setup domain based on host, dev.csgofort.com is aliased to 127.0.0.1
+#  for ease of development.
 if LOCAL:
     csgofort.config["SERVER_NAME"] = "dev.csgofort.com:6015"
 else:
     csgofort.config["SERVER_NAME"] = "csgofort.com"
+
+if __name__ == "__main__":
+    print "Run the web app with: ./run.py app"

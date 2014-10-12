@@ -1,7 +1,6 @@
 
 var maz = {
     search_xhr: null,
-
 }
 
 var search_result_template = _.template('<a href="/item/<%= obj.id %>"  class="list-item" style="height: 60px; overflow: hidden;">'+
@@ -106,6 +105,16 @@ maz.load_tracking_info = function () {
         }
     })
 
+    function add_item(key, category, data) {
+        msg_prefix = category.charAt(0).toUpperCase() + category.slice(1);
+        $(key).html(changelog_row_template({
+            msg: msg_prefix + " " + data.market_hash_name,
+            icon: "glyphicon glyphicon-plus-sign",
+            cls: (category == "added" ? "success" :"danger"),
+            value: key
+        }))
+    }
+
     // TODO: maybe do a proper sort?
     $.ajax("/api/tracking/"+CONFIG.USER.id+"/history", {
         success: function (data) {
@@ -115,13 +124,8 @@ maz.load_tracking_info = function () {
                         id: "added-"+k1+"-"+k
                     }))
                     $.ajax("/api/asset/" + v1.split("_")[0], {
-                        success: function (added_data) {
-                            $("#added-"+k1+"-"+k).html(changelog_row_template({
-                                msg: "Added " + added_data.market_hash_name,
-                                icon: "glyphicon glyphicon-plus-sign",
-                                cls: "success",
-                                value: k
-                            }))
+                        success: function (d1) {
+                            add_item("#added"+"-"+k1+"-"+k, "added", d1)
                         }
                     })
                 })
@@ -131,13 +135,8 @@ maz.load_tracking_info = function () {
                         id: "removed-"+k1+"-"+k
                     }))
                     $.ajax("/api/asset/" + v1.split("_")[0], {
-                        success: function (added_data) {
-                            $("#removed-"+k1+"-"+k).html(changelog_row_template({
-                                msg: "Removed " + added_data.market_hash_name,
-                                icon: "glyphicon glyphicon-minus-sign",
-                                cls: "danger",
-                                value: k
-                            }))
+                        success: function (d1) {
+                            add_item("#removed"+"-"+k1+"-"+k, "removed", d1)
                         }
                     })
                 })
@@ -161,25 +160,30 @@ maz.load_value_info = function() {
                     }).join(","),
                     "cur": CONFIG.USER.cur
                 },
-                success: function(data) {
+                success: function(assets) {
                     $("#loader").fadeOut()
                     var value = 0;
 
-                    _.each(data.results, function(v, k) {
-                        try {
-                            var data = inventory_row_template({
-                                name: v.name,
-                                tvalue: CONFIG.SYM + v.price.med.toLocaleString(),
-                                value: v.price.med,
-                                id: v.id
-                            })
+                    // TODO: instead of repeating items have a count?
+                    _.each(data.inv, function(v, k) {
+                        var entry = assets.results[v.i];
 
-                            $("#inv-body").append(data)
+                        // Might be a shitty weird item
+                        if (!entry || !entry.price) {
+                            return;
+                        }
 
-                            if (v.price.med > 0) {
-                                value = value + v.price.med;
-                            }
-                        } catch (err) {}
+                        var content = inventory_row_template({
+                            name: entry.name,
+                            tvalue: CONFIG.SYM + entry.price.med.toLocaleString(),
+                            value: entry.price.med,
+                            id: entry.id
+                        });
+
+                        $("#inv-body").append(content);
+                        if (entry.price.med > 0) {
+                            value = value + entry.price.med;
+                        }
                     })
 
                     $("#worth").text(CONFIG.SYM + value.toLocaleString());

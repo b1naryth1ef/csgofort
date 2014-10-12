@@ -3,21 +3,21 @@ from app import csgofort
 from util.log import setup_logging
 import sys
 
-# Import and register routes
+# Import all the routes we need
 from views.public import public
 from views.auth import auth
 from views.ui import ui
 from views.admin import admin
 from maz.maz import maz
-from vacdex.vacdex import vacdex
 
+# Register the routes with the flask app
 csgofort.register_blueprint(public)
 csgofort.register_blueprint(auth)
 csgofort.register_blueprint(ui)
 csgofort.register_blueprint(admin)
 csgofort.register_blueprint(maz)
-csgofort.register_blueprint(vacdex)
 
+# Setup logging and mute some annoying loggers
 setup_logging()
 
 if __name__ == "__main__":

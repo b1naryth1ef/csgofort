@@ -2,7 +2,7 @@ import datetime
 from database import *
 from fortdb import User
 from util.steam import SteamMarketAPI
-from util.web import usd_convert, CURRENCY_SYM
+from util.web import usd_convert
 
 from dateutil.relativedelta import relativedelta
 
