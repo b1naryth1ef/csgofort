@@ -6,8 +6,11 @@ class EnumField(Field):
     """
     db_field = "enum"
 
-    def pre_field_create(self):
+    def pre_field_create(self, safe):
         field = "e_%s" % self.name
+
+        # TODO: fixme plz
+        if safe: return
 
         self.get_database().get_conn().cursor().execute(
             "DROP TYPE IF EXISTS %s;" % field

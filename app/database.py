@@ -22,12 +22,12 @@ class BModel(Model):
         database = db
 
     @classmethod
-    def create_table(cls, *args, **kwargs):
+    def create_table(cls, safe):
         for field in cls._meta.get_fields():
             if hasattr(field, "pre_field_create"):
-                field.pre_field_create()
+                field.pre_field_create(safe)
 
-        cls._meta.database.create_table(cls)
+        cls._meta.database.create_table(cls, safe)
 
         for field in cls._meta.get_fields():
             if hasattr(field, "post_field_create"):
@@ -38,8 +38,8 @@ def tables():
         Inventory, InventoryPricePoint
     )
 
-    # from vacdex.vacdb import *
     from fortdb import User, GraphMetric
+    from vactrak.vacdb import VacList, VacID
 
     return [
         User,
@@ -49,6 +49,8 @@ def tables():
         MIPPDaily,
         Inventory,
         InventoryPricePoint,
+        VacList,
+        VacID
     ]
 
 def migrate(module):
@@ -120,7 +122,7 @@ if __name__ == "__main__":
         print "Resetting DB..."
         for table in tables():
             table.drop_table(True, cascade=True)
-            table.create_table()
+            table.create_table(True)
 
     if sys.argv[1] == "re":
 

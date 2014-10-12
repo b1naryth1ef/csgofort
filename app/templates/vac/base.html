@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block header_links %}
+<li {% if request.path == "/" %} class="active" {% endif %}><a href="{{ build_url('vac', '') }}">Home</a></li>
+{% if g.user %}
+    <li {% if request.path == "/tracked" %} class="active" {% endif %}><a href="{{ build_url('vac', 'tracked') }}">Tracked</a></li>
+{% endif %}
+<li {% if request.path == "/top" %} class="active" {% endif %}><a href="{{ build_url('vac', 'top') }}">Top</a></li>
+
+<li class="search" id="top-search">
+    <input id="top-search-box" type="text" class="form-control" placeholder="Search...">
+    <div class="popup closed" id="top-search-drop">
+        <div id="search-results" class="list no-controls"></div>
+    </div>
+</li>
+{% endblock %}
+{% block scripts %}
+    <script src="http://{{ DOMAIN }}/static/js/vac.js"></script>
+{% endblock %}

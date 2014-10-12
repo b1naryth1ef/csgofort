@@ -9,7 +9,7 @@ ITEM_PAGE_QUERY = u"http://steamcommunity.com/market/listings/{appid}/{name}"
 BULK_ITEM_PRICE_QUERY = u"http://steamcommunity.com/market/itemordershistogram?country=US&language=english&currency=1&item_nameid={nameid}"
 INVENTORY_QUERY = u"{url}/inventory/json/{appid}/2"
 
-API_FMT = "http://api.steampowered.com/{iface}/{cmd}/v001/" #?key=&appid=730&class_count=1&classid0=587951628"
+API_FMT = "http://api.steampowered.com/{iface}/{cmd}/v001/"
 
 steam_id_re = re.compile('steamcommunity.com/openid/id/(.*?)$')
 
@@ -83,6 +83,14 @@ class SteamAPI(object):
         if len(bans):
             return int(bans[0].text_content().split("day(s)", 1)[0].rsplit("\t", 1)[-1].strip())
         return None
+
+    def getPlayerBans(self, id):
+        r = requests.get("http://api.steampowered.com/ISteamUser/GetPlayerBans/v1", params={
+            "key": self.key,
+            "steamids": str(id)
+        })
+
+        return r.json()["players"][0]
 
     def getWorkshopFile(self, id):
         r = requests.get("http://steamcommunity.com/sharedfiles/filedetails/", params={"id": id})

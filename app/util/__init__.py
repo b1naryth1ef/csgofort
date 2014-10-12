@@ -1,7 +1,16 @@
 from flask import flash, redirect, request, jsonify, g
 from app import csgofort, LOCAL
 
-import json, time
+import json, time, sys
+
+def reraise(new_tb):
+    raise new_tb, None, sys.exc_info()[2]
+
+def convert_steamid(id):
+    if len(id) == 17:
+        return int(id[3:]) - 61197960265728
+    else:
+        return '765' + str(int(id) + 61197960265728)
 
 def rounds(x, base=5):
     return int(base * round(float(x) / base))

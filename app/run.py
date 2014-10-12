@@ -9,6 +9,7 @@ from views.auth import auth
 from views.ui import ui
 from views.admin import admin
 from maz.maz import maz
+from vactrak.vactrak import vactrak
 
 # Register the routes with the flask app
 csgofort.register_blueprint(public)
@@ -16,6 +17,7 @@ csgofort.register_blueprint(auth)
 csgofort.register_blueprint(ui)
 csgofort.register_blueprint(admin)
 csgofort.register_blueprint(maz)
+csgofort.register_blueprint(vactrak)
 
 # Setup logging and mute some annoying loggers
 setup_logging()
