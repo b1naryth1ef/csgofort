@@ -1,5 +1,5 @@
 from flask import flash, redirect, request, jsonify, g
-from app import csgofort
+from app import csgofort, LOCAL
 
 import json, time
 
@@ -26,7 +26,8 @@ def util_ctx_proc():
     return {
         "build_url": build_url,
         "DOMAIN": csgofort.config["SERVER_NAME"],
-        "REALM": request.blueprint
+        "REALM": request.blueprint,
+        "PROD": (not LOCAL)
     }
 
 @csgofort.template_filter("jsonify")
