@@ -11,6 +11,14 @@ from util.migrations import *
 
 migrator = PostgresqlFortMigrator(db)
 
+def rmv_junk_mipp_data():
+    c = MarketItemPricePoint.delete().where(
+        (MarketItemPricePoint.volume == 0) &
+        (MarketItemPricePoint.lowest == 0) &
+        (MarketItemPricePoint.median == 0)
+    ).execute()
+    print "Deleted %s invalid mipps" % c
+
 def add_currency_field():
     migrate(
         migrator.pre_add_enum(User.currency),
@@ -32,4 +40,4 @@ def pre(): pass
 def post(): pass
 
 def run():
-    add_currency_field()
+    rmv_junk_mipp_data()

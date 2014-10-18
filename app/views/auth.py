@@ -83,16 +83,11 @@ def before_request():
 
 @auth.route("/avatar/<int:id>")
 def auth_route_avatar(id):
-    try:
-        u = User.select(User.steamid).where(User.id == id).get()
-    except User.DoesNotExist:
-        return "", 404
-
-    key = "avatar:%s" % u.id
+    key = "avatar:%s" % id
     if red.exists(key):
         buffered = StringIO(red.get(key))
     else:
-        data = steam.SteamAPI.new().getUserInfo(u.steamid)
+        data = steam.SteamAPI.new().getUserInfo(id)
 
         try:
             r = requests.get(data.get('avatarfull'))
@@ -100,9 +95,9 @@ def auth_route_avatar(id):
         except:
             return "", 500
 
-        # Cached for 15 minutes
+        # Cached for 1 hour
         buffered = StringIO(r.content)
-        red.setex(key, r.content, (60 * 15))
+        red.setex(key, r.content, (60 * 60))
 
     buffered.seek(0)
     return send_file(buffered, mimetype="image/jpeg")

@@ -5,7 +5,9 @@ var JST = {
         '<%= msg %></div></div>')
 }
 
-var app = {}
+var app = {
+    templates: {}
+}
 
 app.alert = function(msg, type) {
     if (type === undefined) {
@@ -48,6 +50,10 @@ app.sortTable = function(table, order) {
 }
 
 app.convert = function(value, f, async) {
+    if (CONFIG.USER.cur === "USD") {
+        return value;
+    }
+
     $.ajax("http://maz."+ CONFIG.DOMAIN +"/api/convert", {
         async: async || true,
         data: {

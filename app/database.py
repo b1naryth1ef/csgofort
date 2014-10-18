@@ -7,6 +7,7 @@ from playhouse.postgres_ext import *
 import redis, os
 
 from util.fields import EnumField
+from util.elasticindexes import ES_INDEXES, ES_MAPPINGS
 
 db = PostgresqlExtDatabase('fort', user="b1n", password="b1n", threadlocals=True,
     port=os.getenv("PGPORT", 5433))
@@ -61,51 +62,24 @@ def migrate(module):
     module.post()
 
 def setup_es():
-    try:
-        es.indices.delete(index="marketitems")
-    except: pass
-    es.indices.create(
-        index="marketitems",
-        body={
-            "settings": {
-                "number_of_shards": 1,
-                "analysis": {
-                    "filter": {
-                        "autocomplete_filter": {
-                            "type":     "edge_ngram",
-                            "min_gram": 3,
-                            "max_gram": 25
-                        }
-                    },
-                    "analyzer": {
-                        "autocomplete": {
-                            "type":      "custom",
-                            "tokenizer": "standard",
-                            "filter": [
-                                "lowercase",
-                                "autocomplete_filter"
-                            ]
-                        }
-                    }
-                }
-            }
-        },
-        ignore=400
-    )
-    es.indices.put_mapping(
-        index="marketitems",
-        doc_type="marketitem",
-        body={
-            "marketitem": {
-                "properties": {
-                    "name": {
-                        "type":     "string",
-                        "analyzer": "autocomplete"
-                    }
-                }
-            }
-        }
-    )
+    for k, v in ES_INDEXES.items():
+        try:
+            es.indices.delete(index="marketitems")
+        except: pass
+
+        es.indices.create(
+            index=k,
+            body=v,
+            ignore=400
+        )
+
+        for dtype, mp in ES_MAPPINGS.get(k, {}).items():
+            es.indices.put_mapping(
+                index=k,
+                doc_type=dtype,
+                body=mp
+            )
+
 
 if __name__ == "__main__":
     if len(sys.argv) <= 1:

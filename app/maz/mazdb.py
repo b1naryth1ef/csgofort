@@ -46,6 +46,11 @@ class MarketItem(BModel):
         else:
             volume, low, med = market_api.get_item_price(self.name)
 
+        # Because this happens... a lot
+        if not any([volume, low, med]):
+            log.warning("Got shitty data for store_price on %s, skipping save", self.id)
+            return
+
         five_minutes_ago = datetime.datetime.utcnow() - relativedelta(minutes=5)
 
         # Find a MIPP in the latest five minutes

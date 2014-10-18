@@ -59,6 +59,13 @@ class SteamAPI(object):
         resp.raise_for_status()
         return resp.json()
 
+    def getFromVanity(self, vanity):
+        r = requests.get("http://api.steampowered.com/ISteamUser/ResolveVanityURL/v0001/", params={
+            "key": self.key,
+            "vanityurl": vanity
+        })
+        return int(r.json()["response"].get("steamid", 0))
+
     def getGroupMembers(self, id):
         """
         Returns a list of steam 64bit ID's for every member in group `group`,

@@ -12,6 +12,16 @@ def convert_steamid(id):
     else:
         return '765' + str(int(id) + 61197960265728)
 
+def convert_steamid32(id):
+    """
+    Takes a 32bit full steam id (STEAM_0:1:XXXXXX) and converts to 64bit
+    """
+    head, mid, tail = id.split(":")
+
+    universe = int(head[-1]) or 1
+
+    return (universe << 56) | (1 << 54) | (1 << 32) | (int(tail) << 1) | int(mid)
+
 def rounds(x, base=5):
     return int(base * round(float(x) / base))
 

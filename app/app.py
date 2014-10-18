@@ -1,4 +1,4 @@
-import socket
+import socket, os
 
 from flask import Flask
 from flask.ext.openid import OpenID
@@ -30,6 +30,24 @@ if LOCAL:
     csgofort.config["SERVER_NAME"] = "dev.csgofort.com:6015"
 else:
     csgofort.config["SERVER_NAME"] = "csgofort.com"
+
+def build_js_templates():
+    TEMPLATES = "var T = {};"
+
+    for (curdir, dirs, files) in os.walk("templates/"):
+        for fname in files:
+            if "js" in curdir and fname.endswith(".html"):
+                p = open(os.path.join(curdir, fname))
+                TEMPLATES += 'T["%s"] = _.template("%s");' % (
+                    fname.rsplit(".", 1)[0],
+                    p.read().replace("\n", "").replace('"', "'")
+                )
+                p.close()
+
+    with open("static/js/templates.js", "w") as f:
+        f.write(TEMPLATES)
+
+build_js_templates()
 
 if __name__ == "__main__":
     print "Run the web app with: ./run.py app"

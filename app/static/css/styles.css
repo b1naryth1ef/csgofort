@@ -2006,9 +2006,6 @@ ul.list-extensions li {
     float: left;
     width: 100%;
     padding: 5px;
-    -moz-border-radius: 3px;
-    -webkit-border-radius: 3px;
-    border-radius: 3px;
     background: #334454;
     color: #FFF;
     margin-top: 10px;

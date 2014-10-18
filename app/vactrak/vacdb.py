@@ -1,5 +1,5 @@
 from database import *
-from fortdb import User
+from fortdb import User, SteamIDEntity
 
 from datetime import datetime
 from util.steam import SteamAPI
@@ -13,8 +13,30 @@ class VacList(BModel):
 
     active = BooleanField(default=True)
 
+    def append(self, id):
+        """
+        Atomically/Transactionally adds a tracked VacID to the tracked list
+        for this VacList.
+
+        THIS DOESNT WORK BECAUSE MAGIC?!
+        """
+        q = """UPDATE vaclist
+            SET tracked = array_append(tracked, CAST(%s AS BIGINT))
+            WHERE id=%s AND NOT (tracked @> ARRAY[CAST(%s AS BIGINT)]);"""
+        VacList.raw(q, id, self.id, id).execute()
+
+    def remove(self, id):
+        """
+        Atomically/Transactionally removes a tracked VacID from the tracked
+        list for this VacList.
+        """
+        q = """UPDATE vaclist
+            SET tracked = array_remove(tracked, CAST(%s AS BIGINT))
+            WHERE id=%s;"""
+        VacList.raw(q, id, self.id).execute()
+
     def validate(self):
-        if len(self.tracked) > 4096:
+        if len(self.tracked) > 512:
             raise Exception("Too many tracked accounts! Maximum is 4096.")
 
     def toDict(self, tiny=False):
@@ -31,7 +53,7 @@ class VacList(BModel):
 
         return result
 
-class VacID(BModel):
+class VacID(BModel, SteamIDEntity):
     steamid = BigIntegerField()
 
     vac_banned = DateTimeField(null=True)
@@ -47,6 +69,7 @@ class VacID(BModel):
     def toDict(self):
         data = {
             "id": self.id,
+            "nickname": self.get_nickname(),
             "steamid": self.steamid,
             "updated":  self.last_crawl.strftime("%s"),
             "hits": self.crawl_count,

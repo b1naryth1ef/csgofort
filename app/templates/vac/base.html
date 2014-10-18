@@ -1,10 +1,10 @@
 {% extends "base.html" %}
 {% block header_links %}
-<li {% if request.path == "/" %} class="active" {% endif %}><a href="{{ build_url('vac', '') }}">Home</a></li>
+<li {% if request.path == "/" %} class="active" {% endif %}><a href="{{ build_url('vactrak', '') }}">Home</a></li>
 {% if g.user %}
-    <li {% if request.path == "/tracked" %} class="active" {% endif %}><a href="{{ build_url('vac', 'tracked') }}">Tracked</a></li>
+    <li {% if request.path == "/tracked" %} class="active" {% endif %}><a href="{{ build_url('vactrak', 'tracked') }}">Tracked</a></li>
 {% endif %}
-<li {% if request.path == "/top" %} class="active" {% endif %}><a href="{{ build_url('vac', 'top') }}">Top</a></li>
+<li {% if request.path == "/top" %} class="active" {% endif %}><a href="{{ build_url('vactrak', 'top') }}">Top</a></li>
 
 <li class="search" id="top-search">
     <input id="top-search-box" type="text" class="form-control" placeholder="Search...">

@@ -1,0 +1,48 @@
+{% extends "vac/base.html" %}
+{% block content %}
+<div class="row"><div class="col-md-12" id="alerts"></div></div>
+
+<div class="row">
+    <div class="col-md-3">
+        <div class="block">
+            <div class="block-content" style="text-align: center">
+                <img src="{{ v.get_avatar() }}" class="img-circle">
+                <h1>{{ v.get_nickname() }}</h1>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        {% if not v.vac_banned %}
+            <div class="widget widget-success" style="text-align: center;">
+                <h1>Never VAC Banned</h1>
+            </div>
+        {% else %}
+            <div class="widget widget-danger" style="text-align: center;">
+                <h1>{{ v.vac_count }} VAC Bans on Record ({{ v.vac_days }} days ago)</h1>
+            </div>
+        {% endif %}
+    </div>
+    <div class="col-md-3">
+        {% if not v.eco_banned %}
+            <div class="widget widget-success" style="text-align: center;">
+                <h1>Not Trade Banned</h1>
+            </div>
+        {% else %}
+            <div class="widget widget-danger" style="text-align: center;">
+                <h1>Currently Trade Banned</h1>
+            </div>
+        {% endif %}
+    </div>
+    <div class="col-md-3">
+        {% if not v.com_banned %}
+            <div class="widget widget-success" style="text-align: center;">
+                <h1>Not Community Banned</h1>
+            </div>
+        {% else %}
+            <div class="widget widget-danger" style="text-align: center;">
+                <h1>Currently Community Banned</h1>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

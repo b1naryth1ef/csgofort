@@ -8,7 +8,3 @@ def public_route_index():
         return render_template("landing.html")
 
     return render_template("index.html")
-
-@public.route("/test")
-def test():
-    return render_template("new_base.html")

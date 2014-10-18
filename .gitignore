@@ -3,5 +3,6 @@
 rip/
 config.py
 *.tbz2
+templates.js
 
 app/test.py

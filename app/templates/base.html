@@ -37,7 +37,7 @@
                     <li class="dropdown">
                       <a href="#" class="dropdown-toggle" data-toggle="dropdown">
                             {% if g.user %}
-                                <img height="32px" src="http://auth.{{ DOMAIN }}/avatar/{{ g.user.id }}" class="img-circle pull-left">
+                                <img height="32px" src="http://auth.{{ DOMAIN }}/avatar/{{ g.user.steamid }}" class="img-circle pull-left">
                             {% else %}
                                 <span class="glyphicon glyphicon-user"></span>                    
                             {% endif %}
@@ -102,6 +102,7 @@
         <script type='text/javascript' src='http://{{ DOMAIN }}/static/js/plugins/noty/layouts/topRight.js'></script>
         
         <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.7.0/underscore-min.js"></script>
+        <script type="text/javascript" src="http://{{ DOMAIN }}/static/js/templates.js"></script>
         <script type="text/javascript" src="http://{{ DOMAIN }}/static/js/app.js"></script>
 
         {# Include GA tracking on prod #}

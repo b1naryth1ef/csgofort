@@ -1,3 +1,27 @@
 {% extends "vac/base.html" %}
 {% block content %}
+<div class="row"><div class="col-md-12" id="alerts"></div></div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="block">
+            <div class="block-head">
+                <div class="block-title">Tracked Users</div>
+            </div>
+            <div class="block-content">
+                <table class="table" id="tracked-table">
+                     <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>VAC</th>
+                            <th>Community</th>
+                            <th>Trade</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tracked-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
