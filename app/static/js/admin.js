@@ -1,8 +1,8 @@
-var admin = {
+var admin = app.new_realm("admin", {
     last_q_count: 0,
     users_page: 1,
     edit_user_id: null,
-}
+})
 
 var template_pg_relation = _.template('<tr value="<%= real %>"><td><%= name %></td><td><%= size %></td></tr>')
 var template_users_row = _.template(
@@ -11,17 +11,7 @@ var template_users_row = _.template(
 )
 var template_pg_index = _.template('<tr value="<%= i[2] %>"><td><%= i[0] %></td><td><%= i[1] %></td><td><%= i[2] %></td><td><%= i[3] %></td><td><%= i[4] %></td><td><%= i[5] %></td></tr>')
 
-function run(route) {
-    if (route === "" || route === "/") {
-        admin.run_index();
-    } else if (route === "/users") {
-        admin.run_users();
-    } else if (route === "/postgres") {
-        admin.run_postgres();
-    }
-}
-
-admin.run_users = function() {
+admin.route(function () {
     $("#users-table").delegate(".btn", "click", function (ev) {
         ev.stopImmediatePropagation();
         admin.edit_user_id = $(this).parent().parent().data("id");
@@ -57,20 +47,9 @@ admin.run_users = function() {
             })
         }
     })
-}
+}, "/users");
 
-admin.run_index = function () {
-    $.ajax("/api/stats", {
-        success: function (data) {
-            $("#stat-users").text(data.users)
-        }
-    })
-
-    admin.update_qps();
-    setInterval(admin.update_qps, 3000);
-}
-
-admin.run_postgres = function () {
+admin.route(function () {
     $.ajax("/api/postgres/status", {
         success: function (data) {
             _.each(data.relations, function (v, k) {
@@ -100,7 +79,18 @@ admin.run_postgres = function () {
             }
         })
     })
-}
+}, "/postgres")
+
+admin.index = function () {
+    $.ajax("/api/stats", {
+        success: function (data) {
+            $("#stat-users").text(data.users)
+        }
+    })
+
+    admin.update_qps();
+    setInterval(admin.update_qps, 3000);
+};
 
 admin.update_qps = function () {
     $.ajax("/api/postgres/queries", {

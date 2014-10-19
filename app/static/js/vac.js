@@ -1,12 +1,6 @@
-vac = {}
+var vac = app.new_realm("vactrak", {});
 
-function run(route) {
-    if (route === "" || route === "/") {
-        vac.run_index();
-    } else if (route.lastIndexOf("/tracked", 0) === 0) {
-        vac.run_single();
-    }
-
+vac.setup = function () {
     vac.bind_search();
 }
 
@@ -38,17 +32,26 @@ vac.render_tracked_list = function () {
         success: function (data) {
             $("#tracked-body").empty();
             _.each(data.result.tracked, function (v, k) {
-                $("#tracked-body").append(T.tracked_table_row({
-                    v: v
-                }));
+                $("#tracked-body").append(
+                    app.template(T.tracked_table_row, {v: v})
+                );
             });
         }
     });
 }
 
-vac.run_single = function() {}
+vac.route(function(id) {
+    $.ajax("/api/info/"+id, {
+        success: function (data) {
+            console.log(data)
+            $(".container").append(
+                app.template(T.single_tracked_entry, {v: data.result})
+            )
+        }
+    })
+}, "/tracked/(.*)?");
 
-vac.run_index = function() {
+vac.index = function() {
     if (CONFIG.USER) {
         vac.render_tracked_list();
     }

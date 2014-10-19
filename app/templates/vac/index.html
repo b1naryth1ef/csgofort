@@ -2,6 +2,7 @@
 {% block content %}
 <div class="row"><div class="col-md-12" id="alerts"></div></div>
 
+{% if g.user %}
 <div class="row">
     <div class="col-md-12">
         <div class="block">
@@ -12,6 +13,7 @@
                 <table class="table" id="tracked-table">
                      <thead>
                         <tr>
+                            <th></th>
                             <th>Username</th>
                             <th>VAC</th>
                             <th>Community</th>
@@ -24,4 +26,5 @@
         </div>
     </div>
 </div>
+{% endif %}
 {% endblock %}

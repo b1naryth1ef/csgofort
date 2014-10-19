@@ -70,7 +70,7 @@ class VacID(BModel, SteamIDEntity):
         data = {
             "id": self.id,
             "nickname": self.get_nickname(),
-            "steamid": self.steamid,
+            "steamid": str(self.steamid),  # Fuck. Javascript.
             "updated":  self.last_crawl.strftime("%s"),
             "hits": self.crawl_count,
             "trackers": VacList.select().where(VacList.tracked.contains(self.id)).count(),

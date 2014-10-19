@@ -1,0 +1,46 @@
+<div class="row">
+    <div class="col-md-3">
+        <div class="block">
+            <div class="block-content" style="text-align: center">
+                <img src="<%= app.get_avatar_for(v.steamid) %>" class="img-circle">
+                <h1><%= v.nickname %></h1>
+                <h3>
+                    <a href="http://steamcommunity.com/profiles/<%= v.steamid %>"><%= v.steamid %></a>
+                </h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <% if (!v.bans.vac) { %>
+            <div class="widget widget-success" style="text-align: center;">
+                <h1>Never VAC Banned</h1>
+            </div>
+        <% } else { %>
+            <div class="widget widget-danger" style="text-align: center;">
+                <h1><%= v.vac.count %> VAC Bans on Record <br /><%= v.vac.last %> days ago</h1>
+            </div>
+        <% } %>
+    </div>
+    <div class="col-md-3">
+        <% if (!v.bans.trade) { %>
+            <div class="widget widget-success" style="text-align: center;">
+                <h1>Not Trade Banned</h1>
+            </div>
+        <% } else { %>
+            <div class="widget widget-danger" style="text-align: center;">
+                <h1>Currently Trade Banned</h1>
+            </div>
+        <% } %>
+    </div>
+    <div class="col-md-3">
+        <% if (!v.bans.communty) { %>
+            <div class="widget widget-success" style="text-align: center;">
+                <h1>Not Community Banned</h1>
+            </div>
+        <% } else { %>
+            <div class="widget widget-danger" style="text-align: center;">
+                <h1>Currently Community Banned</h1>
+            </div>
+        <% } %>
+    </div>
+</div>

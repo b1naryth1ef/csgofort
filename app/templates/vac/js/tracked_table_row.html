@@ -1,4 +1,7 @@
 <tr data-id="<%= v.id %>">
+    <td><a href="/tracked/<%= v.id %>">
+        <img height="32px" src="http://auth.<%= CONFIG.DOMAIN %>/avatar/<%- v.steamid %>" class="img-square pull-left">
+    </a></td>
     <td><a href="/tracked/<%= v.id %>"><%= v.nickname %></a></td>
     <td>
         <% if (!v.bans.vac) { %>

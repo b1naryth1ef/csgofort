@@ -97,19 +97,25 @@ def vac_route_untrack(id):
     return jsonify({"success": True})
 
 @vactrak.route("/api/info")
-def vac_route_list():
+def vac_route_info_all():
     if not g.user:
         raise NEED_LOGIN
 
     try:
         li = VacList.get(VacList.user == g.user)
     except VacList.DoesNotExist:
-        return jsonify({
-            "sucess": True,
-            "result": {}
-        })
+        raise APIError("No VacList for current user!")
 
     return jsonify({
         "success": True,
         "result": li.toDict()
     })
+
+@vactrak.route("/api/info/<id>")
+def vac_route_info_single(id):
+    try:
+        i = VacID.get(VacID.id == id)
+    except VacID.DoesNotExist:
+        raise APIError("Invalid VacID id")
+
+    return jsonify({"success": True, "result": i.toDict()})
