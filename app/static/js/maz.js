@@ -1,7 +1,7 @@
 
-var maz = {
+var maz = app.new_realm("maz", {
     search_xhr: null,
-}
+});
 
 var search_result_template = _.template('<a href="/item/<%= obj.id %>"  class="list-item" style="height: 60px; overflow: hidden;">'+
     '<div class="list-item-content"><img height="64px" src="/image/<%= obj.id %>" class="img-circle pull-left"><h1><%= obj.data.name %></h3>'+
@@ -12,42 +12,54 @@ var inventory_row_template = _.template('<tr value="<%= value * 100 %>"><td><a h
 var changelog_row_template = _.template('<span class="<%= cls %>"><span class="<%= icon %>"></span> <%= msg %></span>')
 var changelog_row_base_template = _.template('<li id="<%= id %>" class="list-group-item"></li>')
 
-// The entry point for all maz routes
-function run(route) {
-    maz.setup_search();
+maz.index = function() {
+    var value_xhr = $.ajax("/api/graph/totalvalue");
+    var size_xhr = $.ajax("/api/graph/totalsize");
 
-    if (route === "" || route === "/") {
-        maz.run_market_index();
-    } else if (route === "/api") {
-        maz.run_api_docs();
-    } else if (route.lastIndexOf("/item", 0) === 0) {
-        maz.run_item();
-    } else if (route === "/value") {
-        maz.run_value();
-    } else if (route === "/inventory") {
-        maz.run_inventory();
-    } else if (route === "/stats") {
-        maz.run_stats();
-    }
-}
+    $.when(value_xhr, size_xhr).done(function (value_d, size_d) {
+        draw_dashboard_graphs(value_d[0].data, size_d[0].data)
+    });
 
-// Run the stats view
-maz.run_stats = function () {
-    $.ajax("/api/graphmetric/community_response_time", {
-        success: function (data) {
-            draw_generic_graph("steam_community_response_time", "Steam Community Response Time", data.data);
-        }
-    })
-
-    $.ajax("/api/graphmetric/request_time", {
+    $.ajax("/api/info", {
         success: function(data) {
-            draw_generic_graph("request_time", "Fort Response Time", data.data);
+            if (!data.success) {
+                app.alert("<strong>Uh Oh!</strong> Looks like we're having some server issues, please try refreshing the page in a few seconds.")
+                return console.log("Failed to load market info");
+            }
+
+            if (data.community > 0) {
+                app.alert("The Steam Community is experiencing some issues right now! This may effect the stability, accuracy and reliability of CS:GO Fort and it's services.");
+            }
+
+            $("#stat-unique").text(data.totals.items.toLocaleString());
+            $("#stat-listed").text(data.totals.listings.toLocaleString());
+            app.convert(data.totals.value, function (v) {
+                console.log(v)
+                $("#stat-value").text(CONFIG.SYM + v.toLocaleString());
+            })
+            
         }
     })
 }
 
-// Runs the inventory view
-maz.run_inventory = function () {
+maz.setup = function () {
+    maz.setup_search();
+}
+
+maz.route(function() {
+    
+}, "/api");
+
+maz.route(function (id) {
+    var median_xhr = $.ajax("/api/item/"+id+"/graph/median");
+    var volume_xhr = $.ajax("/api/item/"+id+"/graph/volume");
+
+    $.when(median_xhr, volume_xhr).done(function(median_d, volume_d) {
+        draw_item_graph(median_d[0].data, volume_d[0].data);
+    });
+}, "/item/(.*)?")
+
+maz.route(function () {
     $("#tracking-base").delegate("#tracking-enable-btn", "click", function (ev) {
         ev.stopImmediatePropagation();
 
@@ -96,7 +108,21 @@ maz.run_inventory = function () {
             }
         }
     })
-}
+}, "/inventory")
+
+maz.route(function () {
+    $.ajax("/api/graphmetric/community_response_time", {
+        success: function (data) {
+            draw_generic_graph("steam_community_response_time", "Steam Community Response Time", data.data);
+        }
+    })
+
+    $.ajax("/api/graphmetric/request_time", {
+        success: function(data) {
+            draw_generic_graph("request_time", "Fort Response Time", data.data);
+        }
+    })
+}, "/stats")
 
 maz.load_tracking_info = function () {
     $.ajax("/api/tracking/"+CONFIG.USER.id+"/graph/value", {
@@ -190,48 +216,6 @@ maz.load_value_info = function() {
                     app.sortTable($("#inv-table"), 'desc');
                 }
             })
-        }
-    })
-}
-
-maz.run_api_docs = function() {
-    
-}
-
-maz.run_item = function () {
-    var median_xhr = $.ajax("/api/item/"+ITEM_ID+"/graph/median");
-    var volume_xhr = $.ajax("/api/item/"+ITEM_ID+"/graph/volume");
-
-    $.when(median_xhr, volume_xhr).done(function(median_d, volume_d) {
-        draw_item_graph(median_d[0].data, volume_d[0].data);
-    });
-}
-
-maz.run_market_index = function() {
-    var value_xhr = $.ajax("/api/graph/totalvalue");
-    var size_xhr = $.ajax("/api/graph/totalsize");
-
-    $.when(value_xhr, size_xhr).done(function (value_d, size_d) {
-        draw_dashboard_graphs(value_d[0].data, size_d[0].data)
-    });
-
-    $.ajax("/api/info", {
-        success: function(data) {
-            if (!data.success) {
-                app.alert("<strong>Uh Oh!</strong> Looks like we're having some server issues, please try refreshing the page in a few seconds.")
-                return console.log("Failed to load market info");
-            }
-
-            if (data.community > 0) {
-                app.alert("The Steam Community is experiencing some issues right now! This may effect the stability, accuracy and reliability of CS:GO Fort and it's services.");
-            }
-
-            $("#stat-unique").text(data.totals.items.toLocaleString());
-            $("#stat-listed").text(data.totals.listings.toLocaleString());
-            app.convert(data.totals.value, function (v) {
-                $("#stat-value").text(CONFIG.SYM + v.toLocaleString());
-            })
-            
         }
     })
 }

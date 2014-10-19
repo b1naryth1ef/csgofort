@@ -102,15 +102,17 @@ app.sortTable = function(table, order) {
 }
 
 app.convert = function(value, f, async) {
-    if (CONFIG.USER.cur === "USD") {
-        return value;
+    cur = CONFIG.USER.cur || "USD";
+
+    if (cur === "USD") {
+        return f(value);
     }
 
     $.ajax("http://maz."+ CONFIG.DOMAIN +"/api/convert", {
         async: async || true,
         data: {
             from: "USD",
-            to: CONFIG.USER.cur,
+            to: cur,
             value: value
         },
         success: function(data) {
