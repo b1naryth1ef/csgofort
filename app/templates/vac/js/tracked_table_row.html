@@ -5,23 +5,23 @@
     <td><a href="/tracked/<%= v.id %>"><%= v.nickname %></a></td>
     <td>
         <% if (!v.bans.vac) { %>
-            <i class="fa fa-check success"></i>
+            <i class="fa fa-check fa-large success"></i>
         <% } else { %>
-            <i class="fa fa-times danger"></i>
+            <i class="fa fa-times fa-large danger"></i>
         <% } %>
     </td>
     <td>
         <% if (!v.bans.community) { %>
-            <i class="fa fa-check success"></i>
+            <i class="fa fa-check fa-large success"></i>
         <% } else { %>
-            <i class="fa fa-times danger"></i>
+            <i class="fa fa-times fa-large danger"></i>
         <% } %>
     </td>
     <td>
         <% if (!v.bans.trade) { %>
-            <i class="fa fa-check success"></i>
+            <i class="fa fa-check fa-large success"></i>
         <% } else { %>
-            <i class="fa fa-times danger"></i>
+            <i class="fa fa-times fa-large danger"></i>
         <% } %>
     </td>
 </tr>

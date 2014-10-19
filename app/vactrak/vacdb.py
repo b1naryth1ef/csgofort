@@ -17,8 +17,6 @@ class VacList(BModel):
         """
         Atomically/Transactionally adds a tracked VacID to the tracked list
         for this VacList.
-
-        THIS DOESNT WORK BECAUSE MAGIC?!
         """
         q = """UPDATE vaclist
             SET tracked = array_append(tracked, CAST(%s AS BIGINT))

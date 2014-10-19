@@ -82,6 +82,25 @@ def vac_route_track():
 
     return jsonify({"success": True, "added": added})
 
+@vactrak.route("/api/track/<id>")
+def vac_route_track_id(id):
+    if not g.user:
+        raise NEED_LOGIN
+
+    try:
+        vl = VacList.select(VacList.id).where(VacList.user == g.user).get()
+    except VacList.DoesNotExist:
+        raise APIError("You do not have any tracked users")
+
+    try:
+        assert VacID.select().where(VacID.id == id).count() == 1
+    except:
+        raise APIError("Invalid VacID id")
+
+    # Atomic operation to add this ID to the VacList
+    vl.append(int(id))
+    return jsonify({"success": True})
+
 @vactrak.route("/api/untrack/<id>")
 def vac_route_untrack(id):
     if not g.user:
@@ -119,3 +138,18 @@ def vac_route_info_single(id):
         raise APIError("Invalid VacID id")
 
     return jsonify({"success": True, "result": i.toDict()})
+
+@vactrak.route("/api/info/tracked")
+def vac_route_info_tracked():
+    if not g.user:
+        raise NEED_LOGIN
+
+    try:
+        li = VacList.select(VacList.tracked).where(VacList.user == g.user).get()
+    except VacList.DoesNotExist:
+        raise APIError("No VacList for current user!")
+
+    return jsonify({
+        "success": True,
+        "result": li.tracked
+    })

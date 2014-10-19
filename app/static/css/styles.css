@@ -16,6 +16,7 @@
 @import "dropzone/dropzone.css";
 @import "mystyles.css";
 
+
 .box-vertical {
     display: -webkit-box;
     display: -moz-box;
@@ -4684,4 +4685,9 @@ li.ext_zip {
 .danger {
     color: #9a1e2b;
 }
+
+.fa-large {
+    font-size: 30px !important;
+}
+
 

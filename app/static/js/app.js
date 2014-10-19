@@ -20,6 +20,7 @@ app.new_realm = function(name, obj) {
             _.each(Array.prototype.slice.apply(arguments).slice(1), function (v) {
                 this.routes[v] = f;
             }, this);
+            return f;
         }
     }, obj);
 
@@ -60,7 +61,6 @@ app.run = function(route) {
     for (k in realm.routes) {
         var q = parser.pathname.match(new RegExp(k));
         if (q && q.length) {
-            console.log("Matched: "+k);
             realm.routes[k].apply(realm, q.slice(1));
             return;
         }
