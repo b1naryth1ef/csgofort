@@ -28,6 +28,10 @@ csgofort.config['PROPAGATE_EXCEPTIONS'] = True
 #  for ease of development.
 if LOCAL:
     csgofort.config["SERVER_NAME"] = "dev.csgofort.com:6015"
+    from werkzeug.contrib.profiler import ProfilerMiddleware
+    csgofort.config['PROFILE'] = True
+    f = open('/tmp/profiler.log', 'w')
+    csgofort.wsgi_app = ProfilerMiddleware(csgofort.wsgi_app, f, restrictions=[30])
 else:
     csgofort.config["SERVER_NAME"] = "csgofort.com"
 

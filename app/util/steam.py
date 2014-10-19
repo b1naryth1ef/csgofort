@@ -1,6 +1,8 @@
-import requests, re, xmltodict, time
+import requests, re, xmltodict, time, logging
 from pyquery import PyQuery
 from config import STEAM_KEY
+
+log = logging.getLogger(__name__)
 
 COUNT_ITEMS_QUERY = u"http://steamcommunity.com/market/search/render/?query={query}&appid={appid}"
 LIST_ITEMS_QUERY = u"http://steamcommunity.com/market/search/render/?query={query}&start={start}&count={count}&search_descriptions=0&sort_column={sort}&sort_dir={order}&appid={appid}"
@@ -104,7 +106,7 @@ class SteamAPI(object):
         r.raise_for_status()
         q = PyQuery(r.content)
 
-        print "Queryin on %s" % id
+        log.debug("Attempting to get workshop file %s", id)
 
         breadcrumbs = [(i.text, i.get("href")) for i in q(".breadcrumbs")[0]]
         if not len(breadcrumbs):
@@ -245,7 +247,7 @@ class SteamMarketAPI(object):
             parsed = True
 
         if not parsed:
-            print "Failed to parse item name `%s`" % name
+            log.warning("Failed to parse item name `%s`" % name)
 
         return (
             r_item.lower().strip() or None,
@@ -280,7 +282,7 @@ class SteamMarketAPI(object):
             except Exception:
                 time.sleep(3)
         else:
-            print "Failed after %s retries" % self.retries
+            log.error("Failed after %s retries", self.retries)
             return None
 
         pq = PyQuery(r["results_html"])
@@ -308,7 +310,7 @@ class SteamMarketAPI(object):
             except Exception:
                 time.sleep(3)
         else:
-            print "Failed getting image %s after %s retries" % (item_name, self.retries)
+            log.error("Failed getting image %s after %s retries" % (item_name, self.retries))
             return None
 
         if "There are no listings for this item." in r.content:
@@ -318,7 +320,7 @@ class SteamMarketAPI(object):
         try:
             return pq(".market_listing_largeimage")[0][0].get("src")
         except:
-            print item_name
+            log.exception("Failed to get_item_image:")
 
     def get_bulkitem_price(self, nameid):
         url = BULK_ITEM_PRICE_QUERY.format(nameid=nameid)
@@ -343,10 +345,11 @@ class SteamMarketAPI(object):
                 if r:
                     break
             except Exception:
-                print "Error getting item price... retrying..."
+                log.exception("Failed to get item price, retrying.")
                 time.sleep(3)
         else:
-            print "Failed to get item price for (%s) after %s retries" % (item_name, self.retries)
+            log.error("Failed to get item price for (%s) after %s retries" %
+                (item_name, self.retries))
             return (0, 0.0, 0.0)
 
         return (

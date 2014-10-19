@@ -1,6 +1,8 @@
 from dateutil.relativedelta import relativedelta
 from datetime import datetime
-import time, thread
+import time, thread, logging
+
+log = logging.getLogger(__name__)
 
 class Task(object):
     def __init__(self, f, now, delta):
@@ -14,13 +16,21 @@ class Task(object):
         return (self.active and not self.running and (datetime.utcnow() > (self.last + self.delta)))
 
     def run(self):
-        print "Running task %s..." % self.f.__name__
+        log.info("Running task %s..." % self.f.__name__)
         start = time.time()
         self.last = datetime.utcnow()
         self.running = True
-        self.f()
+
+        # Attempt to run the job
+        try:
+            self.f()
+        except:
+            log.exception("Task %s failed in %ss" % (self.f.__name__, time.time() - start))
+            self.running = False
+            return
+
         self.running = False
-        print "Task %s completed in %ss" % (self.f.__name__, time.time() - start)
+        log.info("Task %s completed in %ss" % (self.f.__name__, time.time() - start))
 
 class Scheduler(object):
     def __init__(self):
@@ -36,7 +46,7 @@ class Scheduler(object):
         return deco
 
     def run(self):
-        print "Starting Scheduler..."
+        log.info("Starting Scheduler...")
         while True:
             time.sleep(.3)
 

@@ -56,7 +56,7 @@ def index_all_items():
                 log.exception("Failed to add item `%s` to DB!" % item_name)
 
     GraphMetric.mark("index_items_time", time.time() - start)
-    print "Index Rescanne, size is: %s" % MarketItem.select().count()
+    log.info("Index Rescanned, size is: %s" % MarketItem.select().count())
 
 def index_all_prices():
     """
