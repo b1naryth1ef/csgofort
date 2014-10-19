@@ -1,5 +1,6 @@
 from flask import flash, redirect, request, jsonify, g
 from app import csgofort, LOCAL
+from functools import wraps
 
 import json, time, sys
 
@@ -92,3 +93,14 @@ def teardown_request(r):
     from fortdb import GraphMetric
     GraphMetric.mark("request_time", time.time() - g.start)
     GraphMetric.mark("request_count", 1)
+
+def requires(*fields):
+    def deco(f):
+        @wraps(f)
+        def _f(*args, **kwargs):
+            flds = tuple(map(lambda i: request.values.get(i), fields))
+            if not all(flds):
+                raise APIError("That request requires the following fields: %s" % ', '.join(fields))
+            return f(*(flds + args), **kwargs)
+        return _f
+    return deco

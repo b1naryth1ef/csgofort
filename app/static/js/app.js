@@ -74,6 +74,13 @@ app.alert = function(msg, type) {
     if (type === undefined) {
         type = "danger";
     }
+
+    // Handle lots of dem alerts
+    var alerts = $("#alerts .alert");
+    if (alerts.length) {
+        $(alerts[0]).fadeOut().remove();
+    }
+
     $("#alerts").append(JST.alert({
         "msg": msg,
         "type": type

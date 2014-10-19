@@ -1,5 +1,5 @@
-from flask import Blueprint, render_template, request, jsonify, g, redirect
-from util import build_url, APIError, convert_steamid32, reraise
+from flask import Blueprint, render_template, jsonify, g, redirect
+from util import build_url, APIError, convert_steamid32, requires
 # from datetime import datetime, timedelta
 from vacdb import VacList, VacID, steam
 
@@ -28,59 +28,39 @@ def vac_route_tracked():
 @vactrak.route("/top")
 def vac_route_top(): pass
 
-@vactrak.route("/api/track")
-def vac_route_track():
+@vactrak.route("/api/search")
+@requires("q")
+def vac_route_track(q):
     if not g.user:
         raise NEED_LOGIN
 
-    if not 'ids' in request.values:
-        raise APIError("Must provide list of steam ids to track!")
+    if q.startswith("STEAM_"):
+        q = convert_steamid32(q)
+    elif q.isdigit():
+        q = int(q)
+    else:
+        q = int(steam.getFromVanity(q) or 0)
+        if not q:
+            return jsonify({
+                "success": True,
+                "result": None
+            })
 
     try:
-        v = VacList.get(VacList.user == g.user)
-    except VacList.DoesNotExist:
-        v = VacList()
-        v.user = g.user
-
-    if not v.active:
-        raise APIError("VacList not active!")
-
-    added = []
-
-    for id in request.values.get("ids").split(","):
-        if id.startswith("STEAM_"):
-            id = convert_steamid32(id)
-        elif id.isdigit():
-            id = int(id)
-        else:
-            id = steam.getFromVanity(id)
-            if not id: continue
-
+        v = VacID.get(VacID.steamid == q)
+    except VacID.DoesNotExist:
+        v = VacID()
+        v.steamid = q
         try:
-            q = VacID.get(VacID.steamid == int(id))
-        except VacID.DoesNotExist:
-            q = VacID()
-            q.steamid = id
+            v.crawl()
+        except:
+            raise APIError("Invalid SteamID")
+        v.save()
 
-            # Try to grab the latest data, otherwise fail but still save
-            try:
-                q.crawl()
-            except:
-                q.save()
-
-        if q.id in v.tracked: continue
-
-        # TODO: atomic
-        v.tracked.append(q.id)
-        added.append(q.get_nickname())
-
-    try:
-        v.validate()
-    except Exception, e:
-        reraise(APIError("Error Adding Tracked ID's: %s" % e))
-    v.save()
-
-    return jsonify({"success": True, "added": added})
+    return jsonify({
+        "success": True,
+        "result": v.id
+    })
 
 @vactrak.route("/api/track/<id>")
 def vac_route_track_id(id):

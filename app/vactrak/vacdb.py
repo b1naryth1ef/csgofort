@@ -54,6 +54,8 @@ class VacList(BModel):
 class VacID(BModel, SteamIDEntity):
     steamid = BigIntegerField()
 
+    private = BooleanField(default=False)
+
     vac_banned = DateTimeField(null=True)
     com_banned = DateTimeField(null=True)
     eco_banned = DateTimeField(null=True)
@@ -71,6 +73,7 @@ class VacID(BModel, SteamIDEntity):
             "steamid": str(self.steamid),  # Fuck. Javascript.
             "updated":  self.last_crawl.strftime("%s"),
             "hits": self.crawl_count,
+            "private": self.private,
             "trackers": VacList.select().where(VacList.tracked.contains(self.id)).count(),
             "bans": {
                 "vac": self.vac_banned.strftime("%s") if self.vac_banned else 0,
@@ -102,5 +105,8 @@ class VacID(BModel, SteamIDEntity):
 
         if result["EconomyBan"] != "none" and not self.eco_banned:
             self.eco_banned = datetime.utcnow()
+
+        result = steam.getUserInfo(self.steamid)
+        self.private = (result["communityvisibilitystate"] == 1)
 
         self.save()

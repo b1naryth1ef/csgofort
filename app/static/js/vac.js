@@ -7,19 +7,16 @@ vac.setup = function () {
 vac.bind_search = function() {
     $("#top-search").keydown(function (ev) {
         if (ev.which == 13) {
-            $.ajax("/api/track", {
+            $.ajax("/api/search", {
                 data: {
-                    ids: $("#top-search-box").val()
+                    q: $("#top-search-box").val()
                 },
                 success: function(data) {
                     $("#top-search-box").val("")
-                    if (data.success && data.added.length) {
-                        app.alert("Added " + data.added.join(", ") + " to tracking list!", "success");
-                        vac.render_tracked_list();
-                    } else if (!data.added.length) {
-                        app.alert("That user is already on your tracking list!", "warning");
+                    if (data.success) {
+                        window.location = "http://vactrak." + CONFIG.DOMAIN + "/tracked/" + data.result
                     } else {
-                        app.alert("Failed to add user to tracking list! Please make sure the STEAMID is correct!");
+                        app.alert("No results found!");
                     }
                 }
             });

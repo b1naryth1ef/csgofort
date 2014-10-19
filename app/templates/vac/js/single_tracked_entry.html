@@ -3,10 +3,16 @@
         <div class="block">
             <div class="block-content" style="text-align: center">
                 <img src="<%= app.get_avatar_for(v.steamid) %>" class="img-circle">
-                <h1><%= v.nickname %></h1>
+                <h1>
+                    <%= v.nickname %>
+                </h1>
                 <h3>
                     <a href="http://steamcommunity.com/profiles/<%= v.steamid %>"><%= v.steamid %></a>
                 </h3>
+                    <% if (v["private"]) { %>
+                       <h4 class="danger"><i>Private Profile</i></h4>
+                    <% } %>
+                <br />
                 <a id="untrack" class="btn btn-danger" style="display: none">Untrack User</a>
                 <a id="track" class="btn btn-success" style="display: none">Track User</a>
             </div>

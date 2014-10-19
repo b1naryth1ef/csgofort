@@ -4,7 +4,7 @@ from maz.crawler import (
     check_community_status, build_daily_mipps, index_market_search,
     track_inventories)
 from util.graph import truncate_graphs
-from vactrak.crawler import crawl_tracked_vacs
+from vactrak.crawler import crawl_tracked_vacs, prune_stale_vacids
 
 sched = Scheduler()
 
@@ -28,3 +28,6 @@ sched.add_task(truncate_graphs, start_now=True, hours=1)
 
 # Track VacID objects
 sched.add_task(crawl_tracked_vacs, start_now=True, minutes=30)
+
+# Prune stale vacids
+sched.add_task(prune_stale_vacids, start_now=True, minutes=30)

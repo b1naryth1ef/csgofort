@@ -8,8 +8,14 @@ from database import *
 from maz.mazdb import *
 from playhouse.migrate import *
 from util.migrations import *
+from vactrak.vacdb import VacID
 
 migrator = PostgresqlFortMigrator(db)
+
+def add_private_field():
+    migrate(
+        migrator.add_column("vacid", "private", VacID.private)
+    )
 
 def rmv_junk_mipp_data():
     c = MarketItemPricePoint.delete().where(
@@ -40,4 +46,4 @@ def pre(): pass
 def post(): pass
 
 def run():
-    rmv_junk_mipp_data()
+    add_private_field()
