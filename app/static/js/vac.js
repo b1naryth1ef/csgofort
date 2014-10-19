@@ -13,7 +13,7 @@ vac.bind_search = function() {
                 },
                 success: function(data) {
                     $("#top-search-box").val("")
-                    if (data.success) {
+                    if (data.success && data.result) {
                         window.location = "http://vactrak." + CONFIG.DOMAIN + "/tracked/" + data.result
                     } else {
                         app.alert("No results found!");
