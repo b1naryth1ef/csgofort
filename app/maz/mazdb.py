@@ -6,6 +6,9 @@ from util.web import usd_convert
 
 from dateutil.relativedelta import relativedelta
 
+import logging
+log = logging.getLogger(__name__)
+
 market_api = SteamMarketAPI(730)
 
 MARKET_ITEM_INDEXES = (
