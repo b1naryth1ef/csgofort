@@ -27,7 +27,11 @@ csgofort.config['PROPAGATE_EXCEPTIONS'] = True
 # Setup domain based on host, dev.csgofort.com is aliased to 127.0.0.1
 #  for ease of development.
 if LOCAL:
-    csgofort.config["SERVER_NAME"] = "dev.csgofort.com:6015"
+    if socket.gethostname() == "eos":
+        csgofort.config["SERVER_NAME"] = "eos.csgofort.com:6015"
+    else:
+        csgofort.config["SERVER_NAME"] = "dev.csgofort.com:6015"
+
     from werkzeug.contrib.profiler import ProfilerMiddleware
     csgofort.config['PROFILE'] = True
     f = open('/tmp/profiler.log', 'w')
