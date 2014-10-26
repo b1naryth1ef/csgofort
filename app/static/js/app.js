@@ -101,24 +101,14 @@ app.sortTable = function(table, order) {
     }).appendTo(tbody);
 }
 
-app.convert = function(value, f, async) {
+app.convert = function(value) {
     cur = CONFIG.USER.cur || "USD";
 
     if (cur === "USD") {
-        return f(value);
+        return value;
     }
 
-    $.ajax("http://maz."+ CONFIG.DOMAIN +"/api/convert", {
-        async: async || true,
-        data: {
-            from: "USD",
-            to: cur,
-            value: value
-        },
-        success: function(data) {
-            f(data.value)
-        }
-    })
+    return fx(value).from("USD").to(CONFIG.USER.cur);
 }
 
 app.template = function(t, args) {

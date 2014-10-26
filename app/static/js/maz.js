@@ -33,11 +33,7 @@ maz.index = function() {
 
             $("#stat-unique").text(data.totals.items.toLocaleString());
             $("#stat-listed").text(data.totals.listings.toLocaleString());
-            app.convert(data.totals.value, function (v) {
-                console.log(v)
-                $("#stat-value").text(CONFIG.SYM + v.toLocaleString());
-            })
-            
+            $("#stat-value").text(CONFIG.SYM + app.convert(data.totals.value).toLocaleString());
         }
     })
 }
@@ -47,7 +43,7 @@ maz.setup = function () {
 }
 
 maz.route(function() {
-    
+
 }, "/api");
 
 maz.route(function (id) {
@@ -252,7 +248,7 @@ maz.setup_search = function() {
                         obj: v
                     }))
                 })
-                
+
                 $("#top-search-drop").removeClass("closed")
                 $("#top-search-drop").addClass("open")
             }
@@ -285,7 +281,7 @@ function draw_inventory_graphs(d1) {
 
     rdc.render();
 
-    var rdc_resize = function() {                
+    var rdc_resize = function() {
             rdc.configure({
                     width: $("#inventory-chart").width(),
                     height: $("#inventory-chart").height()
@@ -295,7 +291,7 @@ function draw_inventory_graphs(d1) {
 
     var hoverDetail = new Rickshaw.Graph.HoverDetail({graph: rdc});
 
-    window.addEventListener('resize', rdc_resize);        
+    window.addEventListener('resize', rdc_resize);
 
     rdc_resize();
 }
@@ -332,7 +328,7 @@ function draw_dashboard_graphs(d1, d2) {
         formatter: formatter
     });
 
-    window.addEventListener('resize', graph_resizer);     
+    window.addEventListener('resize', graph_resizer);
     graph_resizer();
 }
 
@@ -362,7 +358,7 @@ function draw_generic_graph(el, name, data) {
         formatter: formatter
     });
 
-    var resize_eve = function() {          
+    var resize_eve = function() {
         graph.configure({
                 width: $("#"+el).width(),
                 height: $("#"+el).height()
@@ -370,7 +366,7 @@ function draw_generic_graph(el, name, data) {
         graph.render();
     }
 
-    window.addEventListener('resize', resize_eve); 
+    window.addEventListener('resize', resize_eve);
     resize_eve();
 }
 
@@ -420,7 +416,7 @@ function draw_item_graph(d1, d2) {
         formatter: formatter
     });
 
-    var resize_eve = function() {             
+    var resize_eve = function() {
         graph_value.configure({
                 width: $("#item-graph-value").width(),
                 height: $("#item-graph-value").height()
@@ -435,6 +431,6 @@ function draw_item_graph(d1, d2) {
     }
 
     $(document).on("shown.bs.tab", resize_eve);
-    window.addEventListener('resize', resize_eve); 
+    window.addEventListener('resize', resize_eve);
     resize_eve();
 }
