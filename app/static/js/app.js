@@ -37,6 +37,15 @@ app.run = function(route) {
         }
     })
 
+    // Load FX data
+    $.ajax({
+        dataType: 'jsonp',
+        url: 'http://api.fixer.io/latest',
+        success: function(data) {
+            fx.rates = data.rates;
+        }
+    });
+
     // Simple URL parser :^|
     var parser = document.createElement('a');
     parser.href = route;
