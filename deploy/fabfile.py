@@ -3,7 +3,7 @@ from fabric.api import *
 import random
 
 env.user = "root"
-env.hosts = ["csgofort.com"]
+env.hosts = ["csgofort.com:50000"]
 
 def config():
     upload_template("configs/csgofort.nginx", "/etc/nginx/sites-enabled/csgofort", use_jinja=True,
@@ -13,7 +13,7 @@ def config():
 
 def update():
     with cd("/var/www/csgofort/app/"):
-        run("git stash")
+        run("git reset --hard origin/develop")
         run("git pull origin develop")
         run("chown -R www-data:www-data static/")
 
