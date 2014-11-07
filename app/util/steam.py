@@ -291,8 +291,19 @@ class SteamMarketAPI(object):
         return map(lambda i: i.text, rows)
 
     def get_item_nameid(self, item_name):
-        url = ITEM_PAGE_QUERY.format(name=item_name, appid=self.appid)
-        r = requests.get(url)
+        for i in range(0, 5):
+            url = ITEM_PAGE_QUERY.format(name=item_name, appid=self.appid)
+            try:
+                r = requests.get(url)
+            except: continue
+            if r.status_code == 200:
+                if "An error was encountered while processing your request" in r.content:
+                    continue
+                break
+            time.sleep(3)
+        else:
+            log.error("Failed to get nameid: %s", r.status_code)
+            raise Exception("Failed to get nameid")
 
         if "Market_LoadOrderSpread(" in r.content:
             return int(r.content.split("Market_LoadOrderSpread(", 1)[-1].split(");", 1)[0].strip())

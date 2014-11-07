@@ -139,6 +139,22 @@ def index_market_search():
     es.indices.refresh(index="marketitems")
     GraphMetric.mark("search_index_time", time.time() - start)
 
+def fix_item_regressions():
+    fixed = MarketItem.select().count()
+    for item in MarketItem.select().naive().iterator():
+        nameid = api.get_item_nameid(item.name)
+        if nameid and not item.nameid:
+            log.warning("Item Data Regression for %s, is bulk item and has no nameid!" % item.id)
+            item.nameid = nameid
+            item.save()
+        elif not nameid and item.nameid:
+            log.warning("Item Data Regression for %s, is not bulk item but has a nameid!" % item.id)
+            item.nameid = None
+            item.save()
+        else:
+            fixed -= 1
+    log.info("Fixed %s item regressions" % fixed)
+
 def track_inventories():
     LAST_HOUR = datetime.utcnow() - relativedelta(hours=1)
 
