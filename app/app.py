@@ -3,22 +3,27 @@ import socket, os
 from flask import Flask
 from flask.ext.openid import OpenID
 from flask.ext.cors import cross_origin
-from config import SECRET_KEY
+import config
 
-LOCAL = (socket.gethostname() != "kato")
+# Load config data from local config, bit hackey but it works
+compiled_cfg = {}
+for attr in dir(config):
+    compiled_cfg[attr] = config.__dict__[attr]
 
+# This is a custom class for local development, which handles CORS
 class CustomFlask(Flask):
     @cross_origin()
     def send_static_file(self, filename):
         return Flask.send_static_file(self, filename)
 
 # If we're local, we need to enable CORS. Remote uses nginx for this.
-if LOCAL:
+if compiled_cfg["ENV"] == "local":
     csgofort = CustomFlask("csgofort")
 else:
     csgofort = Flask("csgofort")
 
-csgofort.secret_key = SECRET_KEY
+csgofort.config.update(compiled_cfg)
+csgofort.secret_key = csgofort.config["SECRET_KEY"]
 openid = OpenID(csgofort)
 
 # This allows exceptions to bubble to uwsgi
@@ -26,7 +31,8 @@ csgofort.config['PROPAGATE_EXCEPTIONS'] = True
 
 # Setup domain based on host, dev.csgofort.com is aliased to 127.0.0.1
 #  for ease of development.
-if LOCAL:
+if csgofort.config["ENV"] == "local":
+    # TODO: fix this up a bit
     if socket.gethostname() == "eos":
         csgofort.config["SERVER_NAME"] = "eos.csgofort.com:6015"
     else:

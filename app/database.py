@@ -1,18 +1,25 @@
 #!/usr/bin/env python
-import sys
+import sys, os
 
 from elasticsearch import Elasticsearch
 from peewee import *
 from playhouse.postgres_ext import *
-import redis, os
+from redis import Redis
 
 from util.fields import EnumField
 from util.elasticindexes import ES_INDEXES, ES_MAPPINGS
 
-db = PostgresqlExtDatabase('fort', user="b1n", password="b1n", threadlocals=True,
-    port=os.getenv("PGPORT", 5433))
-red = redis.Redis(db=3)
-es = Elasticsearch()
+from app import csgofort
+
+# Setup Postgresql Database Connection
+db = PostgresqlExtDatabase('fort',
+    user="b1n",
+    password="b1n",
+    threadlocals=True,
+    port=csgofort.config.get("POSTGRES_PORT", 5433))
+
+red = Redis(db=csgofort.config.get("REDIS_DB", 1))
+es = Elasticsearch(host=csgofort.config.get("ELASTIC_HOST", "127.0.0.1"))
 
 db.register_fields({
     "enum": EnumField

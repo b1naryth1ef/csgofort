@@ -1,6 +1,6 @@
 import requests, re, xmltodict, time, logging
 from pyquery import PyQuery
-from config import STEAM_KEY
+from app import csgofort
 
 log = logging.getLogger(__name__)
 
@@ -51,7 +51,7 @@ class SteamAPI(object):
 
     @classmethod
     def new(cls):
-        return cls(STEAM_KEY)
+        return cls(csgofort.config["STEAM_KEY"])
 
     def request(self, url, data, verb="GET"):
         url = "http://api.steampowered.com/%s" % url
