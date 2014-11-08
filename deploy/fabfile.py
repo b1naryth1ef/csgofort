@@ -71,10 +71,10 @@ def dumpdb():
 
 def loaddb(name, username=None):
     local('tar -jxvf {}.tbz2'.format(name))
-    local('dropdb --if-exists --port 5433 fort')
-    local('createdb --port 5433 fort')
+    local('dropdb --if-exists fort')
+    local('createdb fort')
 
-    cmd = 'psql --port 5433 -d fort < {}'.format(name)
+    cmd = 'psql -d fort < {}'.format(name)
     if username:
         local('sudo su {} -c "{}"'.format(username, cmd))
     else:

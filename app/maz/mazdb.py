@@ -52,6 +52,13 @@ class MarketItem(BModel):
         # This is to debug some BULLLLSHIT ass stuff
         log.debug("Store Price [%s]: %s, %s, %s" % (self.id, volume, low, med))
 
+        # (-1, 0, 0) implies that steam doesnt have data on the item currently
+        if volume == -1 and low == 0 and med == 0:
+            volume = 0
+            last_mipp = self.get_latest_mipp()
+            low = last_mipp.lowest
+            med = last_mipp.median
+
         five_minutes_ago = datetime.datetime.utcnow() - relativedelta(minutes=5)
 
         # Find a MIPP in the latest five minutes

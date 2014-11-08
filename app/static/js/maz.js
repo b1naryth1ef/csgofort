@@ -118,6 +118,12 @@ maz.route(function () {
             draw_generic_graph("request_time", "Fort Response Time", data.data);
         }
     })
+
+    $.ajax("/api/graphmetric/index_items_time", {
+        success: function (data) {
+            draw_generic_graph("index_items_time", "Item Index Time", data.data);
+        }
+    })
 }, "/stats")
 
 maz.load_tracking_info = function () {
