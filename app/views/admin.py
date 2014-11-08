@@ -85,7 +85,8 @@ def admin_api_stats():
 def admin_api_users():
     return jsonify({
         "users": map(lambda i: i.toDict(admin=True),
-            User.select().order_by(User.id).paginate(int(request.values.get("page", 1)), 100))
+            User.select().order_by(User.id).paginate(int(request.values.get("page", 1)), 25)),
+        "count": User.select().count(),
     })
 
 @admin.route("/api/user/<id>/edit")

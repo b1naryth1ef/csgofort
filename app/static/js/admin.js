@@ -11,12 +11,49 @@ var template_users_row = _.template(
 )
 var template_pg_index = _.template('<tr value="<%= i[2] %>"><td><%= i[0] %></td><td><%= i[1] %></td><td><%= i[2] %></td><td><%= i[3] %></td><td><%= i[4] %></td><td><%= i[5] %></td></tr>')
 
+admin.load_users = function () {
+  $.ajax("/api/users", {
+      data: {
+          page: admin.users_page
+      },
+      success: function (data) {
+          $(".pagination").empty();
+          if (data.count > data.users.length) {
+            pages = (data.count / 25);
+            pages = (pages > 1 ? pages + 1 : 1);
+            _.each(_.range(1, pages), function (i) {
+              if (admin.users_page == i) {
+                $(".pagination").append(
+                  '<li class="disabled"><a href="#">'+i+'</a></li>'
+                )
+              } else {
+                $(".pagination").append(
+                  '<li><a href="#" data-change="'+i+'" class="page-change">'+i+'</a></li>'
+                )
+              }
+            })
+          }
+
+          $("#users-body").empty();
+          _.each(data.users, function (v, k) {
+              $("#users-body").append(template_users_row(v))
+          })
+      }
+  })
+}
+
+
 admin.route(function () {
     $("#users-table").delegate(".btn", "click", function (ev) {
         ev.stopImmediatePropagation();
         admin.edit_user_id = $(this).parent().parent().data("id");
-
         $("#user-modal").modal("show");
+    })
+
+    $("#users-block").delegate(".page-change", "click", function (ev) {
+      ev.stopImmediatePropagation();
+      admin.users_page = $(this).data("change");
+      admin.load_users();
     })
 
     $("#user-level").change(function (ev) {
@@ -36,17 +73,7 @@ admin.route(function () {
             }
         })
     })
-
-    $.ajax("/api/users", {
-        data: {
-            page: admin.users_page
-        },
-        success: function (data) {
-            _.each(data.users, function (v, k) {
-                $("#users-body").append(template_users_row(v))
-            })
-        }
-    })
+  admin.load_users();
 }, "/users");
 
 admin.route(function () {
