@@ -157,7 +157,7 @@ class SteamMarketAPI(object):
         url = API_FMT.format(iface="ISteamEconomy", cmd="GetAssetClassInfo")
 
         return requests.get(url, params={
-            "key": STEAM_KEY,
+            "key": csgofort.config["STEAM_KEY"],
             "appid": self.appid,
             "class_count": 1,
             "classid0": assetid
