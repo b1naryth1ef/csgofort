@@ -1,6 +1,6 @@
 from fabric.contrib.files import upload_template, exists
 from fabric.api import *
-import random
+import random, os
 
 env.user = "root"
 env.hosts = ["csgofort.com:50000"]
@@ -13,8 +13,9 @@ def config():
 
 def update():
     with cd("/var/www/csgofort/app/"):
-        run("git reset --hard origin/develop")
-        run("git pull origin develop")
+        env.env = run("git rev-parse --abbrev-ref HEAD").strip()
+        run("git reset --hard origin/%s" % env.env)
+        run("git pull origin %s" % env.env)
         run("chown -R www-data:www-data static/")
 
 def migrate():
