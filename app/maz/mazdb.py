@@ -139,10 +139,10 @@ class MarketItem(BModel):
                 "stat": self.stat,
                 "holo": self.holo
             }
-        data["discovered"] = self.discovered.isoformat(),
-        data["updated"] = self.last_crawl.isoformat(),
+        data["discovered"] = self.discovered.isoformat()
+        data["updated"] = self.last_crawl.isoformat()
         data["points"] = MarketItemPricePoint.select(MarketItemPricePoint.id).where(
-            MarketItemPricePoint.item == self).count(),
+            MarketItemPricePoint.item == self).count()
 
         return data
 
