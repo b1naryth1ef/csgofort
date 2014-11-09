@@ -14,6 +14,7 @@ def setup_logging():
     set_logging_levels()
 
     file_handler = logging.FileHandler('/tmp/csgofort.log')
+    file_handler.setFormatter(logging.Formatter(FORMAT))
 
     root = logging.getLogger()
     root.addHandler(file_handler)
