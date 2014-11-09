@@ -379,15 +379,15 @@ def dategraph(f):
 
         if res == "week":
             ruleset = rrule(DAILY, count=7,
-                dtstart=datetime.datetime.utcnow() - datetime.timedelta(days=6))
+                dtstart=datetime.datetime.utcnow() - datetime.timedelta(days=5))
 
         if res == "month":
             ruleset = rrule(DAILY, count=30,
-                dtstart=datetime.datetime.utcnow() - datetime.timedelta(days=29))
+                dtstart=datetime.datetime.utcnow() - datetime.timedelta(days=28))
 
         if res == "year":
             ruleset = rrule(MONTHLY, count=12,
-                dtstart=datetime.datetime.utcnow() - relativedelta(months=11))
+                dtstart=datetime.datetime.utcnow() - relativedelta(months=10))
 
         return f(list(ruleset)[:-1], *args, **kwargs)
     return deco
@@ -430,6 +430,7 @@ def maz_route_item_graph_value(rule, id, attrib):
         except:
             val = 0
         data[int(dt.strftime('%s'))] = val
+    data[int(datetime.datetime.utcnow().strftime('%s'))] = getattr(mi.get_latest_mipp(), attrib, 0)
 
     return jsonify({
         "data": data,

@@ -7,9 +7,13 @@ paces itself (while remaining error-safe) to avoid getting blocked by steam
 from util.steam import SteamMarketAPI
 from mazdb import *
 from fortdb import GraphMetric
+from util import with_timing
+
+# Date shit
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
-from util import with_timing
+from dateutil.rrule import *
+
 import time, requests, logging
 
 api = SteamMarketAPI(730)
@@ -154,6 +158,49 @@ def fix_item_regressions():
         else:
             fixed -= 1
     log.info("Fixed %s item regressions" % fixed)
+
+def backfill_mipp_data():
+    """
+    This task was meant to assist in backfilling missing
+    pricing data. It should ONLY be run in development
+    enviroments, unless a specifc item is being fixed. It
+    will fix exactly 30 days of missing data.
+    """
+    fill = 0
+    last_30_days = rrule(DAILY, count=30,
+        dtstart=datetime.utcnow() - relativedelta(days=30))
+    last_30_days = map(lambda d: d.replace(hour=0, minute=0, second=0, microsecond=0), last_30_days)
+
+    for item in MarketItem.select().naive().iterator():
+        days = dict([(i, []) for i in last_30_days if not MIPPDaily.select().where(
+            (MIPPDaily.item == item) &
+            (MIPPDaily.time == i)).count()])
+
+        try:
+            hist = api.get_historical_price_data(item.name)
+        except:
+            log.exception("Failed to get historical data for %s" % item.name)
+            continue
+
+        for entry in hist:
+            when = datetime.strptime(entry[0].split(":", 1)[0], "%b %d %Y %H")
+            when = when.replace(hour=0, minute=0, second=0, microsecond=0)
+            if when in days:
+                days[when].append(entry[1])
+
+        for k, v in days.items():
+            if not len(v): continue
+            log.debug("Fixing day %s for item %s with %s results" % (k, item.name, len(v)))
+            md = MIPPDaily()
+            md.item = item
+            md.volume = 0
+            md.lowest = 0
+            md.median = sum(v) / len(v)
+            md.time = k
+            md.save()
+            fill += 1
+
+    log.debug("Filled %s missing MIPPDaily's" % fill)
 
 def track_inventories():
     LAST_HOUR = datetime.utcnow() - relativedelta(hours=1)

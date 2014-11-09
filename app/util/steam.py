@@ -1,4 +1,4 @@
-import requests, re, xmltodict, time, logging
+import requests, re, xmltodict, time, logging, json
 from pyquery import PyQuery
 from app import csgofort
 
@@ -19,6 +19,16 @@ def if_len(a, b):
     if len(a):
         return a
     return b
+
+def retry_request(f, count=5, delay=3):
+    for _ in range(count):
+        try:
+            r = f()
+            r.raise_for_status()
+            return r
+        except:
+            time.sleep(delay)
+    return None
 
 class WorkshopEntity(object):
     def __init__(self, id, title, desc, game, user):
@@ -342,6 +352,17 @@ class SteamMarketAPI(object):
         b_price = int(r["lowest_sell_order"]) * .01
 
         return b_volume, b_price
+
+    def get_historical_price_data(self, item_name):
+        url = ITEM_PAGE_QUERY.format(name=item_name, appid=self.appid)
+        r = retry_request(lambda: requests.get(url))
+        if not r:
+            raise Exception("Failed to get historical price data for `%s`" % item_name)
+
+        if not "var line1=[[" in r.content:
+            raise Exception("Invalid response from steam for historical price data")
+        data = json.loads(r.content.split("var line1=", 1)[-1].split(";", 1)[0])
+        return data
 
     def get_item_price(self, item_name):
         url = ITEM_PRICE_QUERY.format(
