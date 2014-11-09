@@ -26,11 +26,11 @@ class IPManager(object):
         self.ips = ips
         self.index = 0
 
-    def __next__(self):
+    def next(self):
         self.index += 1
         if self.index >= len(self.ips):
             self.index = 0
-        yield self.ips[self.index]
+        return self.ips[self.index]
 
 manager = IPManager(csgofort.config["IPS"]) if len(csgofort.config["IPS"]) else None
 
