@@ -90,7 +90,7 @@ def maz_route_item_image(id):
         try:
             r = requests.get(u.image)
             r.raise_for_status()
-        except:
+        except Exception:
             return "", 500
 
         # Cached for 12 hours
@@ -427,7 +427,7 @@ def maz_route_item_graph_value(rule, id, attrib):
     for dt in list(rule)[:-1]:
         try:
             val = getattr(mi.get_daily_mipp(dt), attrib, 0)
-        except:
+        except Exception:
             val = 0
         data[int(dt.strftime('%s'))] = val
     data[int(datetime.datetime.utcnow().strftime('%s'))] = getattr(mi.get_latest_mipp(), attrib, 0)
@@ -521,7 +521,7 @@ def maz_route_tracking_enable():
 
         try:
             i.inventory = i.get_latest()
-        except:
+        except Exception:
             return jsonify({
                 "success": False,
                 "error": "Inventory is private!"

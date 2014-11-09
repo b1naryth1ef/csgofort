@@ -53,7 +53,7 @@ def vac_route_track(q):
         v.steamid = q
         try:
             v.crawl()
-        except:
+        except Exception:
             raise APIError("Invalid SteamID")
         v.save()
 
@@ -74,7 +74,7 @@ def vac_route_track_id(id):
 
     try:
         assert VacID.select().where(VacID.id == id).count() == 1
-    except:
+    except Exception:
         raise APIError("Invalid VacID id")
 
     # Atomic operation to add this ID to the VacList

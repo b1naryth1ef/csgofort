@@ -24,7 +24,7 @@ class Task(object):
         # Attempt to run the job
         try:
             self.f()
-        except:
+        except Exception:
             log.exception("Task %s failed in %ss" % (self.f.__name__, time.time() - start))
             self.running = False
             return

@@ -92,7 +92,7 @@ def auth_route_avatar(id):
         try:
             r = requests.get(data.get('avatarfull'))
             r.raise_for_status()
-        except:
+        except Exception:
             return "", 500
 
         # Cached for 1 hour
@@ -108,7 +108,7 @@ def get_safe_inventory(user):
 
         # Cached for 1 hour
         red.setex("inv:%s" % user.id, json.dumps(item_data), 60 * 60)
-    except:
+    except Exception:
         if not red.exists("inv:%s" % user.id):
             return jsonify({
                 "success": False,

@@ -22,7 +22,7 @@ def retry_request(f, count=5, delay=3):
             r = f()
             r.raise_for_status()
             return r
-        except:
+        except Exception:
             time.sleep(delay)
     return None
 
@@ -228,7 +228,7 @@ class SteamMarketAPI(object):
                 item = MarketItem.select(MarketItem.id).where(
                     MarketItem.name == desc["market_hash_name"]
                 ).get().id
-            except:
+            except Exception:
                 item = -1
 
             idata = {
@@ -355,7 +355,7 @@ class SteamMarketAPI(object):
         pq = PyQuery(r.content)
         try:
             data["image"] = pq(".market_listing_largeimage")[0][0].get("src")
-        except:
+        except Exception:
             data["image"] = None
 
         return data

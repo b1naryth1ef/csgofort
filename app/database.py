@@ -72,7 +72,7 @@ def setup_es():
     for k, v in ES_INDEXES.items():
         try:
             es.indices.delete(index="marketitems")
-        except: pass
+        except Exception: pass
 
         es.indices.create(
             index=k,

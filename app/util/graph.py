@@ -31,7 +31,7 @@ def truncate_too(dt, place):
 
                 try:
                     dt = dt.replace(**{item: val})
-                except:
+                except Exception:
                     dt = dt + relativedelta(**{place: 1})
             return dt
 

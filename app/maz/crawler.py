@@ -62,7 +62,7 @@ def index_all_items():
                 log.debug("Updated MarketItem %s on crawl" % mi.name)
                 mi.last_crawl = datetime.utcnow()
                 mi.save()
-            except:
+            except Exception:
                 log.exception("Failed to add item `%s` to DB!" % item_name)
 
     GraphMetric.mark("index_items_time", time.time() - start)
@@ -93,7 +93,7 @@ def check_community_status():
             GraphMetric.mark("community_response_time", ti)
             red.incr("maz:community_status", -1)
             break
-        except:
+        except Exception:
             time.sleep(5)
     else:
         if int(red.get("maz:community_status") or 0) < 5:
@@ -184,7 +184,7 @@ def backfill_mipp_data():
 
         try:
             hist = api.get_historical_price_data(item.name)
-        except:
+        except Exception:
             log.exception("Failed to get historical data for %s" % item.name)
             continue
 
@@ -224,7 +224,7 @@ def track_inventories():
         try:
             new_inv, t2 = with_timing(inv.get_latest, ())
             GraphMetric.mark("community_inventory_response_time", t2)
-        except:
+        except Exception:
             ipp.status = InventoryPricePoint.Status.ERROR
             ipp.save()
             log.warning("Failed to update inventory %s" % inv.id)
