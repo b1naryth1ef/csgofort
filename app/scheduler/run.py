@@ -9,9 +9,9 @@ from vactrak.crawler import crawl_tracked_vacs, prune_stale_vacids
 sched = Scheduler()
 
 # Index tasks
-sched.add_task(index_all_items, minutes=15, start_now=True)
-sched.add_task(index_all_prices, minutes=2, start_now=True)
-sched.add_task(index_all_images, hours=6)
+sched.add_task(index_all_items, minutes=30, start_now=True)
+sched.add_task(index_all_prices, minutes=5, start_now=True)
+sched.add_task(index_all_images, hours=24)
 sched.add_task(index_market_search, start_now=True, minutes=5)
 
 # Task to fix issues with item-data vs item-schema
