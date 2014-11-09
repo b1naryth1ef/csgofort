@@ -39,7 +39,8 @@ def restart():
         run('kill -HUP $(cat /var/run/uwsgifort.pid)')
 
     # Reload scheduler code (does not restart running jobs)
-    run("kill -HUP $(cat /var/run/csgofortsched.pid)")
+    if exists("/var/run/csgofortsched.pid"):
+        run("kill -HUP $(cat /var/run/csgofortsched.pid)")
 
 def versions():
     with cd("/var/www/csgofort/app"):
