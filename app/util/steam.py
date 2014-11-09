@@ -1,6 +1,7 @@
-import requests, re, xmltodict, time, logging, json
+import re, xmltodict, time, logging, json
 from pyquery import PyQuery
 from app import csgofort
+from . import new_requester
 
 log = logging.getLogger(__name__)
 
@@ -19,7 +20,7 @@ name_id_re = re.compile('Market_LoadOrderSpread\( (\\d+) \)\;')
 def retry_request(f, count=5, delay=3):
     for _ in range(count):
         try:
-            r = f()
+            r = f(new_requester())
             r.raise_for_status()
             return r
         except Exception:
@@ -83,8 +84,7 @@ class SteamAPI(object):
     def request(self, url, data, verb="GET", **kwargs):
         url = "http://api.steampowered.com/%s" % url
         data['key'] = self.key
-        function = getattr(requests, verb.lower())
-        resp = retry_request(lambda: function(url, params=data, **kwargs))
+        resp = retry_request(lambda f: getattr(f, verb.lower())(url, params=data, **kwargs))
         if not resp:
             raise SteamAPIError("Failed to request url `%s`" % url)
         return resp.json()
@@ -93,7 +93,7 @@ class SteamAPI(object):
         """
         Returns a steamid from a vanity name
         """
-        r = retry_request(lambda: requests.get("http://api.steampowered.com/ISteamUser/ResolveVanityURL/v0001/", params={
+        r = retry_request(lambda f: f.get("http://api.steampowered.com/ISteamUser/ResolveVanityURL/v0001/", params={
             "key": self.key,
             "vanityurl": vanity
         }, timeout=10))
@@ -107,7 +107,7 @@ class SteamAPI(object):
         Returns a list of steam 64bit ID's for every member in group `group`,
         a group public shortname or ID.
         """
-        r = retry_request(lambda: requests.get("http://steamcommunity.com/groups/%s/memberslistxml/?xml=1" % id, timeout=10))
+        r = retry_request(lambda f: f.get("http://steamcommunity.com/groups/%s/memberslistxml/?xml=1" % id, timeout=10))
 
         if not r:
             raise SteamAPIError("Failed to getGroupMembers for group id `%s`" % id)
@@ -137,7 +137,7 @@ class SteamAPI(object):
         return self.request("IPlayerService/GetRecentlyPlayedGames/v0001", {"steamid": id}, timeout=10)["response"]["games"]
 
     def getPlayerBans(self, id):
-        r = retry_request(lambda: requests.get("http://api.steampowered.com/ISteamUser/GetPlayerBans/v1", params={
+        r = retry_request(lambda f: f.get("http://api.steampowered.com/ISteamUser/GetPlayerBans/v1", params={
             "key": self.key,
             "steamids": str(id)
         }, timeout=10))
@@ -148,7 +148,7 @@ class SteamAPI(object):
         return r.json()["players"][0]
 
     def getWorkshopFile(self, id):
-        r = retry_request(lambda: requests.get("http://steamcommunity.com/sharedfiles/filedetails/", params={"id": id}, timeout=10))
+        r = retry_request(lambda f: f.get("http://steamcommunity.com/sharedfiles/filedetails/", params={"id": id}, timeout=10))
         q = PyQuery(r.content)
 
         if not len(q(".breadcrumbs")):
@@ -202,7 +202,7 @@ class SteamMarketAPI(object):
     def get_asset_class_info(self, assetid):
         url = API_FMT.format(iface="ISteamEconomy", cmd="GetAssetClassInfo")
 
-        r = retry_request(lambda: requests.get(url, params={
+        r = retry_request(lambda f: f.get(url, params={
             "key": csgofort.config["STEAM_KEY"],
             "appid": self.appid,
             "class_count": 1,
@@ -251,7 +251,7 @@ class SteamMarketAPI(object):
         data = SteamAPI.new().getUserInfo(id)["profileurl"]
         url = INVENTORY_QUERY.format(url=data, appid=self.appid)
 
-        r = retry_request(lambda: requests.get(url, timeout=10))
+        r = retry_request(lambda f: f.get(url, timeout=10))
         if not r:
             raise SteamAPIError("Failed to get inventory for steamid %s" % id)
 
@@ -314,8 +314,11 @@ class SteamMarketAPI(object):
 
     def get_item_count(self, query=""):
         url = COUNT_ITEMS_QUERY.format(query=query, appid=self.appid)
-        r = requests.get(url).json()
-        return r["total_count"]
+        r = retry_request(lambda f: f.get(url))
+        if not r:
+            raise SteamAPIError("Failed to get item count for query `%s`" % query)
+
+        return r.json()["total_count"]
 
     def list_items(self, query="", start=0, count=10, sort="quantity", order="desc"):
         url = LIST_ITEMS_QUERY.format(
@@ -326,7 +329,7 @@ class SteamMarketAPI(object):
             order=order,
             appid=self.appid)
 
-        r = retry_request(lambda: requests.get(url))
+        r = retry_request(lambda f: f.get(url))
         if not r:
             log.error("Failed to list items: %s", url)
             return None
@@ -337,7 +340,7 @@ class SteamMarketAPI(object):
 
     def get_item_meta(self, item_name):
         r = retry_request(
-            lambda: requests.get(ITEM_PAGE_QUERY.format(name=item_name, appid=self.appid), timeout=10))
+            lambda f: f.get(ITEM_PAGE_QUERY.format(name=item_name, appid=self.appid), timeout=10))
 
         if not r:
             raise SteamAPIError("Failed to get item meta data for item `%s`" % item_name)
@@ -362,7 +365,11 @@ class SteamMarketAPI(object):
 
     def get_bulkitem_price(self, nameid):
         url = BULK_ITEM_PRICE_QUERY.format(nameid=nameid)
-        r = requests.get(url).json()
+        r = retry_request(lambda f: f.get(url))
+
+        if not r:
+            raise SteamAPIError("Failed to get bulkitem price for nameid `%s`" % nameid)
+        r = r.json()
 
         data = PyQuery(r["sell_order_summary"])("span")
         b_volume = int(data.text().split(" ", 1)[0])
@@ -372,7 +379,7 @@ class SteamMarketAPI(object):
 
     def get_historical_price_data(self, item_name):
         url = ITEM_PAGE_QUERY.format(name=item_name, appid=self.appid)
-        r = retry_request(lambda: requests.get(url))
+        r = retry_request(lambda f: f.get(url))
         if not r:
             raise Exception("Failed to get historical price data for `%s`" % item_name)
 
@@ -386,21 +393,11 @@ class SteamMarketAPI(object):
             name=item_name,
             appid=self.appid)
 
-        for _ in range(self.retries):
-            try:
-                r = requests.get(url)
-                r.raise_for_status()
-                r = r.json()
-                if r:
-                    break
-            except Exception:
-                log.exception("Failed to get item price, retrying.")
-                time.sleep(3)
-        else:
-            log.error("Failed to get item price for (%s) after %s retries" %
-                (item_name, self.retries))
+        r = retry_request(lambda f: f.get(url))
+        if not r:
             return (0, 0.0, 0.0)
 
+        r = r.json()
         return (
             int(r["volume"].replace(",", "")) if 'volume' in r else -1,
             float(r["lowest_price"].split(";")[-1]) if 'lowest_price' in r else 0.0,

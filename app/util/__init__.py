@@ -1,8 +1,47 @@
 from flask import flash, redirect, request, jsonify, g
 from app import csgofort
 from functools import wraps
+from requests.adapters import HTTPAdapter
+from requests.packages.urllib3.poolmanager import PoolManager
 
-import json, time, sys
+import json, time, sys, requests
+
+class SourceAddressAdapter(HTTPAdapter):
+    def __init__(self, source_address, **kwargs):
+        self.source_address = source_address
+
+        super(SourceAddressAdapter, self).__init__(**kwargs)
+
+    def init_poolmanager(self, connections, maxsize, block=False):
+        self.poolmanager = PoolManager(num_pools=connections,
+                                       maxsize=maxsize,
+                                       block=block,
+                                       source_address=(self.source_address, 0))
+
+class IPManager(object):
+    """
+    Round robin IP manager
+    """
+    def __init__(self, ips):
+        self.ips = ips
+        self.index = 0
+
+    def __next__(self):
+        self.index += 1
+        if self.index >= len(self.ips):
+            self.index = 0
+        yield self.ips[self.index]
+
+manager = IPManager(csgofort.config["IPS"]) if len(csgofort.config["IPS"]) else None
+
+def new_requester():
+    if manager:
+        saa = SourceAddressAdapter(manager.next())
+        s = requests.Session()
+        s.mount("http://", saa)
+        s.mount("https://", saa)
+        return s
+    return requests
 
 def reraise(new_tb):
     raise new_tb, None, sys.exc_info()[2]
