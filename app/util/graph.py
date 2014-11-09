@@ -70,6 +70,13 @@ RULES = {
         (relativedelta(months=2), "drop")
     ), AVG],
 
+    "index_prices_time": [(
+        (relativedelta(seconds=1), "minute:30"),
+        (relativedelta(days=7), "hour"),
+        (relativedelta(days=30), "day"),
+        (relativedelta(months=2), "drop")
+    ), AVG],
+
     "request_time": [(
         (relativedelta(seconds=1), "second"),
         (relativedelta(minutes=30), "minute:5"),

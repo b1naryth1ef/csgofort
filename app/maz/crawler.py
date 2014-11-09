@@ -73,8 +73,10 @@ def index_all_prices():
     Creates new MIPP's for every market item in the database.
     """
     log.info("Re-pricing %s items!" % MarketItem.select().count())
+    start = time.time()
     for item in MarketItem.select().naive().iterator():
         item.store_price()
+    GraphMetric.mark("index_prices_time", time.time() - start)
 
 def index_all_images():
     log.info("Re-indexing all %s item images!" % MarketItem.select().count())
