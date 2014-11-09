@@ -36,7 +36,7 @@ class Scheduler(object):
     def __init__(self):
         # Write PID to a file
         with open("/var/run/csgofortsched.pid", "w") as f:
-            f.write(os.getpid())
+            f.write(str(os.getpid()))
 
         self.schedules = []
         self.paused = False
