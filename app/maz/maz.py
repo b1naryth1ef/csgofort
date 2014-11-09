@@ -583,7 +583,7 @@ def maz_route_tracking_history(id):
 
     data = []
     for entry in q:
-        data.append(entry.toDict())
+        data.append(entry.toDict(with_asset=True))
 
     return jsonify({
         "success": True,

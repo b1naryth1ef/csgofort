@@ -50,8 +50,14 @@ def index_all_items():
                     log.debug("Crawled new MarketItem `%s`" % item_name)
                     mi = MarketItem(name=item_name, discovered=datetime.utcnow())
                     mi.item, mi.skin, mi.wear, mi.stat, mi.holo, mi.mkit = api.parse_item_name(mi.name)
-                    mi.nameid = api.get_item_nameid(mi.name)
-                    mi.image = api.get_item_image(mi.name)
+                    meta = api.get_item_meta(mi.name)
+                    mi.nameid = meta["nameid"]
+                    mi.image = meta["image"]
+                    mi.classid = meta["classid"]
+
+                # Support for old items
+                if not mi.classid:
+                    mi.classid = api.get_item_meta(mi.name)["classid"]
 
                 log.debug("Updated MarketItem %s on crawl" % mi.name)
                 mi.last_crawl = datetime.utcnow()
@@ -73,7 +79,7 @@ def index_all_prices():
 def index_all_images():
     log.info("Re-indexing all %s item images!" % MarketItem.select().count())
     for item in MarketItem.select().naive().iterator():
-        item.image = api.get_item_image(item.name)
+        item.image = api.get_item_meta(item.name)["image"]
         if item.image:
             item.save()
 
@@ -146,7 +152,7 @@ def index_market_search():
 def fix_item_regressions():
     fixed = MarketItem.select().count()
     for item in MarketItem.select().naive().iterator():
-        nameid = api.get_item_nameid(item.name)
+        nameid = api.get_item_meta(item.name)["nameid"]
         if nameid and not item.nameid:
             log.warning("Item Data Regression for %s, is bulk item and has no nameid!" % item.id)
             item.nameid = nameid

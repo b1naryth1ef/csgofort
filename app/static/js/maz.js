@@ -9,8 +9,7 @@ var search_result_template = _.template('<a href="/item/<%= obj.id %>"  class="l
 
 var inventory_row_template = _.template('<tr value="<%= value * 100 %>"><td><a href="/item/<%= id %>"><%= name %></a></td><td><%= tvalue %></td></tr>');
 
-var changelog_row_template = _.template('<span class="<%= cls %>"><span class="<%= icon %>"></span> <%= msg %></span>')
-var changelog_row_base_template = _.template('<li id="<%= id %>" class="list-group-item"></li>')
+var changelog_row_template = _.template('<li class="list-group-item"><span class="<%= cls %>"><span class="<%= icon %>"></span> <%= msg %></span></li>')
 
 maz.index = function() {
     var value_xhr = $.ajax("/api/graph/totalvalue");
@@ -133,40 +132,26 @@ maz.load_tracking_info = function () {
         }
     })
 
-    function add_item(key, category, data) {
-        msg_prefix = category.charAt(0).toUpperCase() + category.slice(1);
-        $(key).html(changelog_row_template({
-            msg: msg_prefix + " " + data.market_hash_name,
-            icon: "glyphicon glyphicon-plus-sign",
-            cls: (category == "added" ? "success" :"danger"),
-            value: key
-        }))
-    }
-
     // TODO: maybe do a proper sort?
     $.ajax("/api/tracking/"+CONFIG.USER.id+"/history", {
         success: function (data) {
             _.each(data.data, function (v, k) {
                 _.each(v.added, function(v1, k1) {
-                    $("#changelog").append(changelog_row_base_template({
-                        id: "added-"+k1+"-"+k
-                    }))
-                    $.ajax("/api/asset/" + v1.split("_")[0], {
-                        success: function (d1) {
-                            add_item("#added"+"-"+k1+"-"+k, "added", d1)
-                        }
-                    })
+                  $("#changelog").append(changelog_row_template({
+                      msg: "Added " + v1,
+                      icon: "glyphicon glyphicon-plus-sign",
+                      cls: "success",
+                      value: k1
+                  }))
                 })
 
                 _.each(v.removed, function(v1, k1) {
-                    $("#changelog").append(changelog_row_base_template({
-                        id: "removed-"+k1+"-"+k
-                    }))
-                    $.ajax("/api/asset/" + v1.split("_")[0], {
-                        success: function (d1) {
-                            add_item("#removed"+"-"+k1+"-"+k, "removed", d1)
-                        }
-                    })
+                  $("#changelog").append(changelog_row_template({
+                      msg: "Removed " + v1,
+                      icon: "glyphicon glyphicon-plus-sign",
+                      cls: "danger",
+                      value: k1
+                  }))
                 })
             })
         }

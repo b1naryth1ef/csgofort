@@ -12,6 +12,11 @@ from vactrak.vacdb import VacID
 
 migrator = PostgresqlFortMigrator(db)
 
+def add_classid_field():
+    migrate(
+        migrator.add_column("marketitem", "classid", MarketItem.classid)
+    )
+
 def add_private_field():
     migrate(
         migrator.add_column("vacid", "private", VacID.private)
@@ -46,4 +51,4 @@ def pre(): pass
 def post(): pass
 
 def run():
-    add_private_field()
+    add_classid_field()

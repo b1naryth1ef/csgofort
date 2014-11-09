@@ -24,6 +24,7 @@ class MarketItem(BModel):
 
     name = CharField()
     nameid = IntegerField(null=True)
+    classid = IntegerField(null=True)
     image = TextField(null=True)
 
     # Parsed name attributes
@@ -120,6 +121,7 @@ class MarketItem(BModel):
             "id": self.id,
             "name": self.name,
             "image": self.image,
+            "classid": self.classid,
             "price": {
                 "volume": usd_convert(latest.volume, cur),
                 "low": usd_convert(latest.lowest, cur),
@@ -253,8 +255,8 @@ class InventoryPricePoint(BModel):
 
     time = DateTimeField(default=datetime.datetime.utcnow)
 
-    def toDict(self):
-        return {
+    def toDict(self, with_asset=False):
+        data = {
             "id": self.id,
             "inv": self.inv.id,
             "status": self.status,
@@ -264,3 +266,13 @@ class InventoryPricePoint(BModel):
             "removed": self.removed,
             "time": self.time
         }
+
+        if with_asset:
+            if len(self.added):
+                data["added"] = map(lambda i: i.name,
+                    list(MarketItem.select(MarketItem.name).where(MarketItem.classid << self.added)))
+            if len(self.removed):
+                data["removed"] = map(lambda i: i.name,
+                    list(MarketItem.select(MarketItem.name).where(MarketItem.classid << self.removed)))
+        return data
+

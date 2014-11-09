@@ -13,6 +13,8 @@ INVENTORY_QUERY = u"{url}/inventory/json/{appid}/2"
 API_FMT = "http://api.steampowered.com/{iface}/{cmd}/v001/"
 
 steam_id_re = re.compile('steamcommunity.com/openid/id/(.*?)$')
+class_id_re = re.compile('"classid":"(\\d+)"')
+name_id_re = re.compile('Market_LoadOrderSpread\( (\\d+) \)\;')
 
 def retry_request(f, count=5, delay=3):
     for _ in range(count):
@@ -324,7 +326,7 @@ class SteamMarketAPI(object):
             order=order,
             appid=self.appid)
 
-        r = retry_request(lambda i: requests.get(url))
+        r = retry_request(lambda: requests.get(url))
         if not r:
             log.error("Failed to list items: %s", url)
             return None
@@ -333,48 +335,30 @@ class SteamMarketAPI(object):
         rows = pq(".market_listing_row .market_listing_item_name")
         return map(lambda i: i.text, rows)
 
-    def get_item_nameid(self, item_name):
-        for i in range(0, 5):
-            url = ITEM_PAGE_QUERY.format(name=item_name, appid=self.appid)
-            try:
-                r = requests.get(url)
-            except: continue
-            if r.status_code == 200:
-                if "An error was encountered while processing your request" in r.content:
-                    continue
-                break
-            time.sleep(3)
-        else:
-            log.error("Failed to get nameid: %s", r.status_code)
-            raise Exception("Failed to get nameid")
+    def get_item_meta(self, item_name):
+        r = retry_request(
+            lambda: requests.get(ITEM_PAGE_QUERY.format(name=item_name, appid=self.appid), timeout=10))
 
-        if "Market_LoadOrderSpread(" in r.content:
-            return int(r.content.split("Market_LoadOrderSpread(", 1)[-1].split(");", 1)[0].strip())
-        else:
-            return None
+        if not r:
+            raise SteamAPIError("Failed to get item meta data for item `%s`" % item_name)
 
-    def get_item_image(self, item_name):
-        url = ITEM_PAGE_QUERY.format(name=item_name, appid=self.appid)
+        data = {}
 
-        for _ in range(self.retries):
-            try:
-                r = requests.get(url)
-                r.raise_for_status()
-                break
-            except Exception:
-                time.sleep(3)
-        else:
-            log.error("Failed getting image %s after %s retries" % (item_name, self.retries))
-            return None
+        class_id = class_id_re.findall(r.content)
+        if not len(class_id):
+            raise SteamAPIError("Failed to find class_id for item_meta `%s`" % item_name)
+        data["classid"] = int(class_id[0])
 
-        if "There are no listings for this item." in r.content:
-            return None
+        name_id = name_id_re.findall(r.content)
+        data["nameid"] = name_id[0] if len(name_id) else None
 
         pq = PyQuery(r.content)
         try:
-            return pq(".market_listing_largeimage")[0][0].get("src")
+            data["image"] = pq(".market_listing_largeimage")[0][0].get("src")
         except:
-            log.exception("Failed to get_item_image:")
+            data["image"] = None
+
+        return data
 
     def get_bulkitem_price(self, nameid):
         url = BULK_ITEM_PRICE_QUERY.format(nameid=nameid)
