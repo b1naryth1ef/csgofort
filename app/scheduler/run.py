@@ -10,9 +10,9 @@ sched = Scheduler()
 
 # Index tasks
 sched.add_task(index_all_items, minutes=30, start_now=True)
-sched.add_task(index_all_prices, minutes=5, start_now=True)
+sched.add_task(index_all_prices, minutes=5)
 sched.add_task(index_all_images, hours=24)
-sched.add_task(index_market_search, start_now=True, minutes=5)
+sched.add_task(index_market_search, minutes=5, start_now=True)
 
 # Task to fix issues with item-data vs item-schema
 sched.add_task(fix_item_regressions, hours=24, start_now=True)
