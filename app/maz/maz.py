@@ -597,7 +597,7 @@ def maz_route_asset(id):
         r.mimetype = "application/json"
         return r
 
-    data = market_api.get_asset_class_info(id)["result"][str(id)]
+    data = market_api.get_asset_class_info(id)[str(id)]
     # 2 hours cache
     red.setex("asset:%s" % id, json.dumps(data), 60 * 120)
     return jsonify(data)

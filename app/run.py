@@ -30,8 +30,11 @@ def get_all_js_templates():
 
 if __name__ == "__main__":
     if len(sys.argv) <= 1:
-        print "Usage: ./run.py <app|sched|once>"
+        print "Usage: ./run.py <app|sched|once|tests>"
         sys.exit(1)
+
+    if sys.argv[1] == "tests":
+        os.system("python -m unittest discover -vf tests")
 
     if sys.argv[1] == "app":
         csgofort.run(debug=True, port=6015, host="0.0.0.0",

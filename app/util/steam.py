@@ -10,15 +10,9 @@ ITEM_PRICE_QUERY = u"http://steamcommunity.com/market/priceoverview/?country=US&
 ITEM_PAGE_QUERY = u"http://steamcommunity.com/market/listings/{appid}/{name}"
 BULK_ITEM_PRICE_QUERY = u"http://steamcommunity.com/market/itemordershistogram?country=US&language=english&currency=1&item_nameid={nameid}"
 INVENTORY_QUERY = u"{url}/inventory/json/{appid}/2"
-
 API_FMT = "http://api.steampowered.com/{iface}/{cmd}/v001/"
 
 steam_id_re = re.compile('steamcommunity.com/openid/id/(.*?)$')
-
-def if_len(a, b):
-    if len(a):
-        return a
-    return b
 
 def retry_request(f, count=5, delay=3):
     for _ in range(count):
@@ -31,6 +25,11 @@ def retry_request(f, count=5, delay=3):
     return None
 
 class WorkshopEntity(object):
+    """
+    Represents an entity on the Steam workshop. This is a base
+    class that has some base attributes for workshop items, which
+    is inherited by sub-types/objects
+    """
     def __init__(self, id, title, desc, game, user):
         self.id = id
         self.title = title
@@ -40,6 +39,10 @@ class WorkshopEntity(object):
         self.tags = []
 
 class WorkshopFile(WorkshopEntity):
+    """
+    Represents an actual file on the workshop. Normally a map,
+    sometimes other types of files (skins, etc)
+    """
     def __init__(self, *args):
         super(WorkshopFile, self).__init__(*args)
 
@@ -50,12 +53,24 @@ class WorkshopFile(WorkshopEntity):
         self.images = []
 
 class WorkshopCollection(WorkshopEntity):
+    """
+    Represents a collection of workshop files
+    """
     def __init__(self, *args):
         super(WorkshopCollection, self).__init__(*args)
 
         self.files = []
 
+class SteamAPIError(Exception):
+    """
+    This Exception is raised when the Steam API
+    either times out, or returns invalid data to us
+    """
+
 class SteamAPI(object):
+    """
+    A wrapper around the normal steam API
+    """
     def __init__(self, key):
         self.key = key
 
@@ -63,19 +78,26 @@ class SteamAPI(object):
     def new(cls):
         return cls(csgofort.config["STEAM_KEY"])
 
-    def request(self, url, data, verb="GET"):
+    def request(self, url, data, verb="GET", **kwargs):
         url = "http://api.steampowered.com/%s" % url
         data['key'] = self.key
         function = getattr(requests, verb.lower())
-        resp = function(url, params=data)
-        resp.raise_for_status()
+        resp = retry_request(lambda: function(url, params=data, **kwargs))
+        if not resp:
+            raise SteamAPIError("Failed to request url `%s`" % url)
         return resp.json()
 
     def getFromVanity(self, vanity):
-        r = requests.get("http://api.steampowered.com/ISteamUser/ResolveVanityURL/v0001/", params={
+        """
+        Returns a steamid from a vanity name
+        """
+        r = retry_request(lambda: requests.get("http://api.steampowered.com/ISteamUser/ResolveVanityURL/v0001/", params={
             "key": self.key,
             "vanityurl": vanity
-        })
+        }, timeout=10))
+
+        if not r:
+            raise SteamAPIError("Failed to getFromVanity for vanity `%s`" % vanity)
         return int(r.json()["response"].get("steamid", 0))
 
     def getGroupMembers(self, id):
@@ -83,40 +105,52 @@ class SteamAPI(object):
         Returns a list of steam 64bit ID's for every member in group `group`,
         a group public shortname or ID.
         """
-        r = requests.get("http://steamcommunity.com/groups/%s/memberslistxml/?xml=1" % id)
-        return xmltodict.parse(r.content)['memberList']['members'].values()
+        r = retry_request(lambda: requests.get("http://steamcommunity.com/groups/%s/memberslistxml/?xml=1" % id, timeout=10))
+
+        if not r:
+            raise SteamAPIError("Failed to getGroupMembers for group id `%s`" % id)
+
+        try:
+            data = xmltodict.parse(r.content)
+        except Exception:
+            raise SteamAPIError("Failed to parse result from getGroupMembers for group id `%s`" % id)
+
+        return map(int, data['memberList']['members'].values()[0])
 
     def getUserInfo(self, id):
-        return self.request("ISteamUser/GetPlayerSummaries/v0001", {
+        """
+        Returns a dictionary of user info for a steam id
+        """
+
+        data = self.request("ISteamUser/GetPlayerSummaries/v0001", {
             "steamids": id
-        })['response']['players']['player'][0]
+        }, timeout=10)
+
+        if not data['response']['players']['player'][0]:
+            raise SteamAPIError("Failed to getUserINfo for user id `%s`" % id)
+
+        return data['response']['players']['player'][0]
 
     def getRecentGames(self, id):
-        return self.request("IPlayerService/GetRecentlyPlayedGames/v0001", {"steamid": id})
-
-    def getBanInfo(self, id):
-        r = requests.get("http://steamcommunity.com/profiles/%s" % id)
-        r.raise_for_status()
-        q = PyQuery(r.content)
-        bans = q(".profile_ban_status")
-        if len(bans):
-            return int(bans[0].text_content().split("day(s)", 1)[0].rsplit("\t", 1)[-1].strip())
-        return None
+        return self.request("IPlayerService/GetRecentlyPlayedGames/v0001", {"steamid": id}, timeout=10)["response"]["games"]
 
     def getPlayerBans(self, id):
-        r = requests.get("http://api.steampowered.com/ISteamUser/GetPlayerBans/v1", params={
+        r = retry_request(lambda: requests.get("http://api.steampowered.com/ISteamUser/GetPlayerBans/v1", params={
             "key": self.key,
             "steamids": str(id)
-        })
+        }, timeout=10))
+
+        if not r or not len(r.json()["players"]):
+            raise SteamAPIError("Failed to getPlayerBans for player id `%s`" % id)
 
         return r.json()["players"][0]
 
     def getWorkshopFile(self, id):
-        r = requests.get("http://steamcommunity.com/sharedfiles/filedetails/", params={"id": id})
-        r.raise_for_status()
+        r = retry_request(lambda: requests.get("http://steamcommunity.com/sharedfiles/filedetails/", params={"id": id}, timeout=10))
         q = PyQuery(r.content)
 
-        log.debug("Attempting to get workshop file %s", id)
+        if not len(q(".breadcrumbs")):
+            raise SteamAPIError("Failed to get workshop file id `%s`" % id)
 
         breadcrumbs = [(i.text, i.get("href")) for i in q(".breadcrumbs")[0]]
         if not len(breadcrumbs):
@@ -127,8 +161,8 @@ class SteamAPI(object):
             breadcrumbs[-1][1])[0][-1].split("/", 1)[0]
         title = q(".workshopItemTitle")[0].text
 
-        desc = if_len(q(".workshopItemDescription"),
-            q(".workshopItemDescriptionForCollection"))[0].text
+        desc = (q(".workshopItemDescription") if len(q(".workshopItemDescription"))
+            else q(".workshopItemDescriptionForCollection"))[0].text
 
         if len(breadcrumbs) == 3:
             size, posted, updated = [[x.text for x in i]
@@ -166,14 +200,19 @@ class SteamMarketAPI(object):
     def get_asset_class_info(self, assetid):
         url = API_FMT.format(iface="ISteamEconomy", cmd="GetAssetClassInfo")
 
-        return requests.get(url, params={
+        r = retry_request(lambda: requests.get(url, params={
             "key": csgofort.config["STEAM_KEY"],
             "appid": self.appid,
             "class_count": 1,
             "classid0": assetid
-        }).json()
+        }, timeout=10))
+
+        return r.json()["result"]
 
     def get_parsed_inventory(self, steamid):
+        """
+        TODO: deprecate this fucking shit
+        """
         from maz.mazdb import MarketItem
 
         result = self.get_inventory(steamid)
@@ -210,7 +249,10 @@ class SteamMarketAPI(object):
         data = SteamAPI.new().getUserInfo(id)["profileurl"]
         url = INVENTORY_QUERY.format(url=data, appid=self.appid)
 
-        r = requests.get(url)
+        r = retry_request(lambda: requests.get(url, timeout=10))
+        if not r:
+            raise SteamAPIError("Failed to get inventory for steamid %s" % id)
+
         return r.json()
 
     def parse_item_name(self, name):
@@ -282,21 +324,12 @@ class SteamMarketAPI(object):
             order=order,
             appid=self.appid)
 
-        for _ in range(self.retries):
-            try:
-                r = requests.get(url)
-                r.raise_for_status()
-                r = r.json()
-                if r:
-                    break
-            except Exception:
-                time.sleep(3)
-        else:
-            log.error("Failed after %s retries", self.retries)
+        r = retry_request(lambda i: requests.get(url))
+        if not r:
+            log.error("Failed to list items: %s", url)
             return None
 
-        pq = PyQuery(r["results_html"])
-
+        pq = PyQuery(r.json()["results_html"])
         rows = pq(".market_listing_row .market_listing_item_name")
         return map(lambda i: i.text, rows)
 
@@ -389,3 +422,4 @@ class SteamMarketAPI(object):
             float(r["lowest_price"].split(";")[-1]) if 'lowest_price' in r else 0.0,
             float(r["median_price"].split(";")[-1]) if 'median_price' in r else 0.0,
         )
+
