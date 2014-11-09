@@ -232,8 +232,12 @@ def track_inventories():
             log.warning("Failed to update inventory %s" % inv.id)
             continue
 
-        old_ids = set(map(lambda i: i["s"].split("_", 1)[0], inv.inventory))
-        new_ids = set(map(lambda i: i["s"].split("_", 1)[0], new_inv))
+        # TEMP: backwards compat for assetid -> classid migration
+        if len(inv.inventory) and not "c" in inv.inventory[0]:
+            old_ids = set(map(int, map(lambda i: i["s"].split("_", 1)[0], inv.inventory)))
+        else:
+            old_ids = set(map(lambda i: i["c"], inv.inventory))
+        new_ids = set(map(lambda i: i["c"], new_inv))
 
         # Sets are great
         ipp.removed = list(old_ids - new_ids)

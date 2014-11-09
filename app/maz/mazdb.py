@@ -250,8 +250,8 @@ class InventoryPricePoint(BModel):
     size = IntegerField(default=0)
 
     # Added/Removed items (by market ID)
-    added = ArrayField(CharField, default=[])
-    removed = ArrayField(CharField, default=[])
+    added = ArrayField(IntegerField, default=[])
+    removed = ArrayField(IntegerField, default=[])
 
     time = DateTimeField(default=datetime.datetime.utcnow)
 

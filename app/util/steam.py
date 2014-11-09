@@ -226,12 +226,13 @@ class SteamMarketAPI(object):
 
             try:
                 item = MarketItem.select(MarketItem.id).where(
-                    MarketItem.name == desc["market_hash_name"]
+                   MarketItem.name == desc["market_hash_name"]
                 ).get().id
             except Exception:
                 item = -1
 
             idata = {
+                "c": int(value["classid"]),
                 "s": asset_id,
                 "i": item,
                 "t": desc["tradable"],

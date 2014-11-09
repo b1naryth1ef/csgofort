@@ -67,6 +67,9 @@ maz.route(function () {
                 // Enable the button
                 $(ev.currentTarget).removeClass("disabled");
 
+                // Load history if we have it
+                maz.load_history_page();
+
                 if (!d1.success) {
                     app.alert("<strong>Uh Oh!</strong> We couldn't enable inventory tracking for your account! Please insure your inventory is public, and try again shortly!");
                 } else {
@@ -125,6 +128,43 @@ maz.route(function () {
     })
 }, "/stats")
 
+maz.load_history_page = function(page) {
+  page = page || 1;
+
+    $("#changelog").empty();
+    $(".pagination").empty();
+
+    $.ajax("/api/tracking/"+CONFIG.USER.id+"/changelog", {
+        data: {
+          page: page
+        },
+        success: function (data) {
+            // TODO: pagination
+            _.each(_.range(data.pages), function (pg) {
+                pg++
+                if (page == pg) {
+                    $(".pagination").append(
+                        '<li><a href="#" data-change="'+pg+'" class="page-change">'+pg+'</a></li>'
+                    )
+                } else {
+                    $(".pagination").append(
+                      '<li><a href="#" data-change="'+pg+'" class="page-change">'+pg+'</a></li>'
+                    )
+                }
+            });
+
+            _.each(data.data, function (v, k) {
+              $("#changelog").append(changelog_row_template({
+                msg: v[1] ? ("Added " + v[0]) : ("Removed " + v[0]),
+                icon: v[1] ? ("glyphicon glyphicon-plus-sign") : ("glyphicon glyphicon-minus-sign"),
+                cls: v[1] ? "success" : "danger",
+                value: v[0]
+              }))
+            })
+        }
+    })
+}
+
 maz.load_tracking_info = function () {
     $.ajax("/api/tracking/"+CONFIG.USER.id+"/graph/value", {
         success: function (data) {
@@ -132,30 +172,11 @@ maz.load_tracking_info = function () {
         }
     })
 
-    // TODO: maybe do a proper sort?
-    $.ajax("/api/tracking/"+CONFIG.USER.id+"/history", {
-        success: function (data) {
-            _.each(data.data, function (v, k) {
-                _.each(v.added, function(v1, k1) {
-                  $("#changelog").append(changelog_row_template({
-                      msg: "Added " + v1,
-                      icon: "glyphicon glyphicon-plus-sign",
-                      cls: "success",
-                      value: k1
-                  }))
-                })
-
-                _.each(v.removed, function(v1, k1) {
-                  $("#changelog").append(changelog_row_template({
-                      msg: "Removed " + v1,
-                      icon: "glyphicon glyphicon-plus-sign",
-                      cls: "danger",
-                      value: k1
-                  }))
-                })
-            })
-        }
-    })
+    $("#t2").delegate(".page-change", "click", function (ev) {
+        ev.stopImmediatePropagation();
+        maz.load_history_page($(this).data("change"));
+    });
+    maz.load_history_page(1)
 }
 
 maz.load_value_info = function() {

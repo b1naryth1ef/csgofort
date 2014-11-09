@@ -513,20 +513,20 @@ def maz_route_tracking_enable():
     if not g.user:
         return "", 401
 
-    try:
-        Inventory.get(Inventory.user == g.user)
-    except Inventory.DoesNotExist:
-        i = Inventory()
-        i.user = g.user
+    if Inventory.update(active=True).where(Inventory.user == g.user).execute() > 0:
+        return jsonify({"success": True})
 
-        try:
-            i.inventory = i.get_latest()
-        except Exception:
-            return jsonify({
-                "success": False,
-                "error": "Inventory is private!"
-            })
-        i.save()
+    i = Inventory()
+    i.user = g.user
+
+    try:
+        i.inventory = i.get_latest()
+    except Exception:
+        return jsonify({
+            "success": False,
+            "error": "Inventory is private!"
+        })
+    i.save()
 
     return jsonify({"success": True})
 
@@ -579,11 +579,51 @@ def maz_route_tracking_history(id):
 
     q = InventoryPricePoint.select().where(
         InventoryPricePoint.inv == i
-    ).order_by(InventoryPricePoint.time.desc()).limit(672)
+    ).order_by(InventoryPricePoint.time.desc()).paginate(
+        int(request.values.get("page", 1)),
+        100)
 
     data = []
     for entry in q:
         data.append(entry.toDict(with_asset=True))
+
+    return jsonify({
+        "success": True,
+        "data": data,
+        "pages": InventoryPricePoint.select().where(InventoryPricePoint.inv == i).count() / 100
+    })
+
+@maz.route("/api/tracking/<id>/changelog")
+def maz_route_changelog(id):
+    try:
+        i = Inventory.get(Inventory.user == id)
+    except Inventory.DoesNotExist:
+        return jsonify({
+            "success": False,
+            "data": []
+        })
+
+    q = InventoryPricePoint.select(
+        InventoryPricePoint.added,
+        InventoryPricePoint.removed,
+        InventoryPricePoint.time
+    ).where(
+        InventoryPricePoint.inv == i
+    ).order_by(InventoryPricePoint.time.desc()).limit(4096)
+
+    data = []
+
+    for entry in q:
+        if not len(entry.added) or not len(entry.removed): continue
+        print entry.added
+        data += map(lambda i: (i.name, i.classid in entry.added),
+            list(MarketItem.select(MarketItem.name, MarketItem.classid).where(
+                MarketItem.classid << entry.added + entry.removed)))
+
+    page = int(request.values.get("page", 1))
+    if page > (len(data) / 100 or 1):
+        return jsonify({"success": False})
+    data = data[page:page + 100]
 
     return jsonify({
         "success": True,
