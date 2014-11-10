@@ -96,6 +96,10 @@ app.alert = function(msg, type) {
     }))
 }
 
+app.clear_alerts = function() {
+    $("#alerts").empty();
+}
+
 // Sorts a table by the value
 app.sortTable = function(table, order) {
     var asc   = order === 'asc',

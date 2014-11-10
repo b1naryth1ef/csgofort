@@ -96,13 +96,35 @@ admin.route(function () {
         }
     })
 
+    $("#query-content").keydown(function (e) {
+        if (e.keyCode == 13 && e.shiftKey) {
+            $("#query-run").click();
+            e.preventDefault();
+        }
+    })
+
     $("#query-run").click(function (ev) {
+        app.clear_alerts();
         $.ajax("/api/postgres/raw", {
             data: {
                 query: $("#query-content").val()
             },
             success: function (data) {
-                $("#query-result").text(data.result)
+                if (!data.success) {
+                    app.alert("Error running query!", "danger")
+                    return;
+                }
+                $("#query-header").empty()
+                $("#query-body").empty()
+                _.each(data.header, function (h) {
+                    $("#query-header").append("<th>"+h+"</th>");
+                })
+                _.each(data.result, function (row) {
+                    x = _.map(row, function (col) {
+                        return "<td>"+col+"</td>"
+                    })
+                    $("#query-body").append("<tr>"+x.join("")+"</tr>")
+                });
             }
         })
     })

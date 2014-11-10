@@ -119,11 +119,14 @@ def admin_api_postgres_raw():
         data = query.fetchall()
     except Exception as e:
         query.execute("ROLLBACK")
-        return jsonify({"result": "ERROR %s" % e})
+        return jsonify({"success": False})
 
+    header = map(lambda i: i.name, query.description)
     query.execute("COMMIT")
     return jsonify({
-        "result": data
+        "result": data,
+        "header": header,
+        "success": True
     })
 
 @admin.route("/api/postgres/queries")

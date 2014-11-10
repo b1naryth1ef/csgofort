@@ -1,7 +1,8 @@
 {% extends "admin/base.html" %}
 {% block content %}
+<div class="row"><div class="col-md-12" id="alerts"></div></div>
 <div class="row">
-    <div class="col-md-6">
+    <div class="col-md-12">
         <div class="block">
             <div class="block-head">
                 <div class="block-title">Postgres Query</div>
@@ -17,8 +18,15 @@
                 </div>
             </div>
             <div class="row">
-                <div class="col-md-12" style="margin-top: 15px">
-                    <pre id="query-result">No Results</pre>
+                <div class="col-md-12" style="margin-top: 15px" id="query-result">
+                  <table class="table" id="query-table">
+                    <thead>
+                      <tr id="query-header"></tr>
+                    </thead>
+                    <tbody id="query-body">
+
+                    </tbody>
+                  </table>
                 </div>
             </div>
         </div>
@@ -40,7 +48,7 @@
                         </tr>
                     </thead>
                     <tbody id="pg-relation-body">
-                                
+
                     </tbody>
                 </table>
             </div>
@@ -60,7 +68,7 @@
                         </tr>
                     </thead>
                     <tbody id="pg-tsize-body">
-                                
+
                     </tbody>
                 </table>
             </div>
@@ -68,7 +76,7 @@
     </div>
 </div>
 <div class="row">
-    <div class="col-md-6">
+    <div class="col-md-12">
         <div class="block">
             <div class="block-head">
                 <div class="block-title">Postgres Index Info</div>
@@ -86,7 +94,7 @@
                         </tr>
                     </thead>
                     <tbody id="pg-index-body">
-                        
+
                     </tbody>
                 </table>
             </div>
