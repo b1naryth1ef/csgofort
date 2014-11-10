@@ -9,6 +9,7 @@ from collections import Counter
 from cStringIO import StringIO
 from util import build_url, APIError
 from util.web import get_exchange_rate, CURRENCY_SYM, get_currencies
+from util.cache import cacheable
 
 import json, functools, requests, datetime, logging
 
@@ -114,6 +115,7 @@ def maz_route_status():
     })
 
 @maz.route("/api/info")
+@cacheable("maz_api_info", 120)
 def maz_route_info():
     """
     Returns information about the global dataset
@@ -157,6 +159,7 @@ def maz_route_convert():
 @maz.route("/api/symbol")
 @cross_origin()
 def maz_route_symbol():
+    # TODO: move to javascript ffs
     return jsonify({
         "success": True,
         "symbol": CURRENCY_SYM.get(request.values.get("cur"), "$")
@@ -326,9 +329,10 @@ def maz_route_aggregate():
         "success": True
     })
 
-# TODO: cache this one! aggregate this!
 @maz.route("/api/pricechanges")
 def maz_route_pricechanges():
+    # TODO: redo this shit
+    raise APIError("This is not a thing yet")
     # Last 30 minutes
     default_time_window = datetime.datetime.utcnow() + datetime.timedelta(seconds=60 * 30)
 
@@ -389,10 +393,11 @@ def dategraph(f):
             ruleset = rrule(MONTHLY, count=12,
                 dtstart=datetime.datetime.utcnow() - relativedelta(months=10))
 
-        return f(list(ruleset)[:-1], *args, **kwargs)
+        return f(list(ruleset)[:-1], res, *args, **kwargs)
     return deco
 
 @maz.route("/api/graphmetric/<name>")
+@cacheable("maz_api_graph_metric_{kwargs[name]}", 60 * 15)
 def maz_route_graph_metric(name):
     return jsonify({
         "data": GraphMetric.graph(name, datetime.datetime.utcnow() - relativedelta(days=7)),
@@ -401,7 +406,8 @@ def maz_route_graph_metric(name):
 
 @maz.route("/api/graph/totalvalue")
 @dategraph
-def maz_route_value_total(rule):
+@cacheable("maz_api_graph_total_value_{args[1]}", 60 * 15)
+def maz_route_value_total(rule, res):
     return jsonify({
         "data": get_daily_market_value_range(rule[0], rule[-1]),
         "success": True
@@ -409,7 +415,8 @@ def maz_route_value_total(rule):
 
 @maz.route("/api/graph/totalsize")
 @dategraph
-def maz_route_listings(rule):
+@cacheable("maz_api_graph_total_size_{args[1]}", 60 * 15)
+def maz_route_listings(rule, res):
     return jsonify({
         "data": get_daily_market_size_range(rule[0], rule[-1]),
         "success": True,
@@ -417,7 +424,8 @@ def maz_route_listings(rule):
 
 @maz.route("/api/item/<id>/graph/<attrib>")
 @dategraph
-def maz_route_item_graph_value(rule, id, attrib):
+@cacheable("maz_api_item_{kwargs[id]}_graph_{kwargs[attrib]}_{args[1]}", 60 * 15)
+def maz_route_item_graph_value(rule, res, id, attrib):
     try:
         mi = MarketItem.get(MarketItem.id == id)
     except MarketItem.DoesNotExist:
@@ -627,7 +635,8 @@ def maz_route_changelog(id):
 
     return jsonify({
         "success": True,
-        "data": data
+        "data": data,
+        "pages": (len(data) / 100) or 1
     })
 
 @maz.route("/api/asset/<int:id>")
