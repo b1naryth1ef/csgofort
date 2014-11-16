@@ -94,9 +94,9 @@ def maz_route_item_image(id):
         except Exception:
             return "", 500
 
-        # Cached for 12 hours
+        # Cached for 48 hours
         buffered = StringIO(r.content)
-        red.setex(key, r.content, (60 * 60 * 12))
+        red.setex(key, r.content, (60 * 60 * 48))
 
     buffered.seek(0)
     return send_file(buffered, mimetype="image/jpeg")
@@ -107,11 +107,15 @@ def maz_route_api():
 
 @maz.route("/api/status")
 def maz_route_status():
-    # TODO: pipeline?
+    p = red.pipeline()
+    p.get("maz:limit:%s" % request.remote_addr)
+    p.ttl("maz:limit:%s" % request.remote_addr)
+
+    res = p.execute()
     return jsonify({
         "success": True,
-        "quota": red.get("maz:limit:%s" % request.remote_addr),
-        "ttl": red.ttl("maz:limit:%s" % request.remote_addr),
+        "quota": int(res[0] or 0),
+        "ttl": res[1],
     })
 
 @maz.route("/api/info")
