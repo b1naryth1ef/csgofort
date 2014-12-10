@@ -227,7 +227,7 @@ class Inventory(BModel):
         for item in self.inventory:
             try:
                 total_value += MarketItem.get(MarketItem.id == item['i']).get_latest_mipp().median
-            except MarketItem.DoesNotExist, AttributeError: pass
+            except (MarketItem.DoesNotExist, AttributeError): pass
 
         return total_value
 
