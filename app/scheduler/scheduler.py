@@ -35,8 +35,11 @@ class Task(object):
 class Scheduler(object):
     def __init__(self):
         # Write PID to a file
-        with open("/var/run/csgofortsched.pid", "w") as f:
-            f.write(str(os.getpid()))
+        try:
+            with open("/var/run/csgofortsched.pid", "w") as f:
+                f.write(str(os.getpid()))
+        except:
+            log.exception("Failed to create PID file: ")
 
         self.schedules = []
         self.paused = False

@@ -5,6 +5,10 @@ import random, os
 env.user = "root"
 env.hosts = ["csgofort.com:50000"]
 
+def version():
+    with cd("/var/www/csgofort/app/"):
+        print "Version Deployed: %s" % run("git rev-parse HEAD").strip()
+
 def config():
     upload_template("configs/csgofort.nginx", "/etc/nginx/sites-enabled/csgofort", use_jinja=True,
         backup=False)

@@ -101,7 +101,7 @@ def check_community_status():
         if int(red.get("maz:community_status") or 0) < 5:
             red.incr("maz:community_status", 1)
 
-def build_single_daily_mipp(item, yesterday, today):
+def build_daily_mipp(item, yesterday, today):
     q = list(MarketItemPricePoint.select().where(
         (MarketItemPricePoint.item == item) &
         (MarketItemPricePoint.time >= yesterday) &
@@ -109,7 +109,7 @@ def build_single_daily_mipp(item, yesterday, today):
     ))
 
     if not len(q):
-        return False
+        return
 
     m = MIPPDaily()
     m.item = item
@@ -117,10 +117,37 @@ def build_single_daily_mipp(item, yesterday, today):
     m.lowest = sum(map(lambda i: i.lowest, q)) / len(q)
     m.median = sum(map(lambda i: i.median, q)) / len(q)
     m.time = yesterday
-    m.save()
-    return True
+    return m
 
 def build_daily_mipps():
+    DAY_RANGES = []
+    for day in range(45):
+        day = (datetime.utcnow() - timedelta(days=day)).replace(hour=0, minute=0, second=0, microsecond=0)
+        day_before = day - timedelta(days=1)
+        DAY_RANGES.append((day, day_before))
+
+    for item in MarketItem.select().naive().iterator():
+        for day, day_before in DAY_RANGES:
+            q = MIPPDaily.select().where((MIPPDaily.item == item) & (MIPPDaily.time == day_before))
+            new_mipp = build_daily_mipp(item, day_before, day)
+
+            if not new_mipp:
+                log.warning("Failed to create MIPPDaily for item %s on day %s." % (item.id, day_before))
+                continue
+
+            if q.count():
+                same = (new_mipp.volume == q[0].volume, new_mipp.lowest == q[0].lowest, new_mipp.median == q[0].median)
+                if all(same):
+                    log.debug("Not updating MIPPDaily for item %s on day %s, exists and is the same." % (item.id, day_before))
+                else:
+                    log.debug("Updating MIPPDaily for item %s on day %s, exists and is not the same." % (item.id, day_before))
+                    q[0].delete_instance()
+                    new_mipp.save()
+            else:
+                log.debug("Added new MIPPDaily for item %s on day %s." % (item.id, day_before))
+                new_mipp.save()
+
+def _build_daily_mipps():
     today = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
     yesterday = today - timedelta(days=1)
 
@@ -128,7 +155,7 @@ def build_daily_mipps():
     for item in MarketItem.select().naive().iterator():
         q  = MIPPDaily.select().where((MIPPDaily.item == item) & (MIPPDaily.time == yesterday))
         if not q.count():
-            if build_single_daily_mipp(item, yesterday, today):
+            if build_daily_mipp(item, yesterday, today):
                 built += 1
 
     log.info("Built %s daily aggregate MIPP's" % built)
